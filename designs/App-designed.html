@@ -1,0 +1,1707 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERP Agent</title>
+<style>
+/* ==========================================================================
+   ERP Agent — نموذج واجهة تفاعلي (محاكاة تصميم فقط، بلا أتمتة حقيقية).
+   Interactive UI prototype. No automation logic, no network, no credentials.
+   ألوان وخطوط CementOps من tokens.css. بلا CDN — يفتح دون إنترنت.
+   الافتراضي هو ما يراه المستخدم العادي؛ أدوات المراجعة خلف زرّ في شريط الحالة.
+   ========================================================================== */
+:root{
+  --ink:#102A43; --ink-2:#243B53; --ink-3:#334E68;
+  --teal:#0F766E; --teal-600:#115E59; --teal-50:#E6F4F2; --teal-2:#14B8A6;
+  --gold:#E9B949; --gold-700:#8A6914;
+  --cream:#F8F4EC; --cream-2:#F2ECE0; --paper:#FFFFFF;
+  --muted:#486581; --muted-2:#52708C;
+  --line:rgba(16,42,67,.10); --line-strong:rgba(16,42,67,.18);
+  --nav-bg:#0B1F33; --nav-fg:rgba(248,244,236,.88); --nav-fg-soft:rgba(248,244,236,.72);
+  --nav-accent:#5EEAD4;
+  --ok:#067647; --ok-bg:#ECFDF3; --ok-line:#ABEFC6;
+  --warn:#B54708; --warn-bg:#FFFAEB; --warn-line:#FEDF89;
+  --danger:#B42318; --danger-bg:#FEF3F2; --danger-line:#FDA29B;
+  --shadow:0 16px 40px rgba(16,42,67,.14); --shadow-sm:0 6px 18px rgba(16,42,67,.07);
+  --shadow-xs:0 1px 2px rgba(16,42,67,.06);
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+html[lang="ar"]{font-size:106.25%}  /* العربية أصعب قراءةً من اللاتينية بالحجم نفسه — درجة أكبر */
+body{margin:0; overflow:auto; background:var(--nav-bg); color:var(--ink);
+  font-family:var(--font); font-size:.875rem; line-height:1.6}
+h1,h2,h3{margin:0; font-weight:700; line-height:1.3}
+p{margin:0} ul,ol{margin:0; padding:0; list-style:none}
+button{font-family:inherit; font-size:inherit; cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:2px solid var(--teal-2); outline-offset:2px; border-radius:6px}
+[hidden]{display:none !important}
+.mono{font-family:var(--font-mono); font-size:.8125em; direction:ltr; unicode-bidi:isolate;
+  display:inline-block; background:var(--cream-2); border:1px solid var(--line);
+  border-radius:4px; padding:.02em .32em; color:var(--ink-2)}
+.rqid{font-family:var(--font-mono); font-size:.75rem; color:var(--teal-600); background:var(--teal-50);
+  border:1px solid rgba(15,118,110,.25); border-radius:4px; padding:0 .25rem; white-space:nowrap; direction:ltr; unicode-bidi:isolate}
+.note{font-size:.75rem; color:var(--muted); line-height:1.5}
+
+/* ─ لغة الواجهة، وضع المراجعة، والدور ─ */
+[data-lang="en"] .t-ar{display:none}
+[data-lang="ar"] .t-en{display:none}
+[data-lang="ar"] .nav,[data-lang="ar"] .ws,[data-lang="ar"] .bar,[data-lang="ar"] .dlg,[data-lang="ar"] .tbar__who{direction:rtl}
+[data-lang="ar"] .kv dt{font-family:var(--font)}                            /* الخط الأحادي يفكّ حروف العربية */
+[data-lang="ar"] .h,[data-lang="ar"] .nav__grp{letter-spacing:0}          /* وتباعد الحروف يقطع اتصالها */
+[data-review="off"] .rv{display:none !important}
+[data-persona="user"] .auth{display:none !important}
+
+/* ─ الهيكل: حدّ أدنى لنافذة WinForms بدل تخطيط الجوال ─ */
+.app{height:100%; min-width:1100px; min-height:640px; display:flex; flex-direction:column; background:var(--nav-bg)}
+.tbar{display:flex; align-items:center; gap:.6rem; padding:.45rem .75rem; color:var(--nav-fg-soft); font-size:.8125rem; flex:none}
+.tbar b{color:#F8F4EC; font-size:.875rem; letter-spacing:.01em}
+.tbar .sp{margin-inline-start:auto; display:flex; gap:.6rem; align-items:center}
+.tbar__who{unicode-bidi:isolate}
+.sim{background:var(--gold); color:#3E2E00; border-radius:4px; padding:.05rem .45rem; font-size:.75rem; font-weight:700; letter-spacing:.06em}
+.tchip{background:rgba(94,234,212,.16); color:var(--nav-accent); border:1px solid rgba(94,234,212,.4); border-radius:999px; padding:0 .6rem; font-size:.75rem; font-weight:600}
+.env{font-family:var(--font-mono); font-size:.75rem; font-weight:700; letter-spacing:.06em; border-radius:4px; padding:0 .45rem}
+.env--prod{border:1px solid rgba(248,244,236,.35); color:var(--nav-fg)}
+.env--test{background:var(--gold); color:#3E2E00}
+.tora{font-family:var(--font-mono); font-size:.8125rem}
+.dot{width:.55rem; height:.55rem; border-radius:50%; display:inline-block; flex:none}
+.dot--ok{background:var(--teal-2)} .dot--warn{background:var(--gold)} .dot--bad{background:#FDA29B}
+.lang{border:1px solid rgba(248,244,236,.3); border-radius:4px; overflow:hidden; display:inline-flex; font-family:var(--font-mono); font-size:.75rem}
+.lang button{background:none; border:0; color:var(--nav-fg-soft); padding:.1rem .5rem}
+.lang button[aria-pressed="true"]{background:var(--nav-accent); color:#0B1F33; font-weight:700}
+.lang button[lang="ar"]{font-family:var(--font); font-size:.8125rem; line-height:1.2}
+
+.body{flex:1; display:flex; min-height:0}
+
+/* ─ القائمة ─ */
+.nav{width:216px; flex:none; display:flex; flex-direction:column; gap:.06rem; padding:.3rem .35rem .45rem; overflow-y:auto}
+.nav__sub{display:flex; flex-direction:column; gap:.06rem}
+.nav__grp{font-size:.75rem; letter-spacing:.08em; color:rgba(248,244,236,.62); padding:.6rem .55rem .2rem; font-weight:700}
+.nav__i{display:flex; align-items:center; gap:.55rem; padding:.36rem .55rem; border-radius:6px; color:var(--nav-fg-soft);
+  position:relative; white-space:nowrap; overflow:hidden; background:none; border:0; width:100%; text-align:start; font-size:.8125rem}
+.nav__i:hover{background:rgba(248,244,236,.08); color:#F8F4EC}
+.nav__i.on{background:rgba(20,184,166,.18); color:#F8F4EC; font-weight:600}
+.nav__i.on::before{content:""; position:absolute; inset-inline-start:0; top:.3rem; bottom:.3rem; width:2.5px; border-radius:2px; background:var(--nav-accent)}
+.nav__i svg,.nav__tgl svg{width:16px; height:16px; flex:none; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round}
+.nav__b{margin-inline-start:auto; background:var(--nav-accent); color:#0B1F33; border-radius:999px; font-size:.75rem; font-weight:700; padding:0 .35rem; min-width:1.3rem; text-align:center; line-height:1.45}
+.nav__sep{height:1px; background:rgba(248,244,236,.1); margin:.4rem .35rem}
+.nav__rv{border-top:1px dashed rgba(233,185,73,.45); margin-top:.5rem; padding-top:.1rem}
+.nav__grp--rv{color:var(--gold)}
+.nav__foot{margin-top:auto; padding:.5rem .55rem .25rem; border-top:1px solid rgba(248,244,236,.1); font-size:.75rem; color:rgba(248,244,236,.68); display:grid; gap:.05rem}
+.nav__tgl{display:flex; align-items:center; gap:.55rem; padding:.36rem .55rem; border-radius:6px; color:rgba(248,244,236,.72);
+  font-size:.75rem; background:none; border:0; width:100%; text-align:start}
+.nav__tgl:hover{background:rgba(248,244,236,.08); color:#F8F4EC}
+.nav__tgl kbd{font-family:var(--font-mono); font-size:.75rem; border:1px solid rgba(248,244,236,.25); border-radius:3px; padding:0 .25rem; margin-inline-start:auto}
+[data-nav="mini"] .nav{width:52px}
+[data-nav="mini"] .nav__grp,[data-nav="mini"] .nav__t,[data-nav="mini"] .nav__b,[data-nav="mini"] .nav__foot,[data-nav="mini"] .nav kbd{display:none}
+[data-nav="mini"] .nav__i,[data-nav="mini"] .nav__tgl{justify-content:center; padding-inline:0}
+[data-nav="mini"] .nav__tgl svg{transform:scaleX(-1)}
+
+/* ─ بيئة العمل، الفاصل، والمتصفّح ─ */
+.ws{width:340px; flex:none; background:var(--cream); overflow-y:auto; padding:.75rem;
+  display:grid; grid-template-columns:minmax(0,1fr); gap:.6rem; align-content:start; min-height:0}
+.ws > [data-view]{display:grid; grid-template-columns:minmax(0,1fr); gap:.6rem; align-content:start; min-width:0}
+.stack{display:grid; grid-template-columns:minmax(0,1fr); gap:.6rem}
+[data-ws="full"] .ws{flex:1}
+[data-ws="full"] .br,[data-ws="full"] .split{display:none}
+.split{flex:none; width:7px; margin-inline:-3px; z-index:3; cursor:col-resize; position:relative; touch-action:none}
+.split::before{content:""; position:absolute; top:0; bottom:0; left:3px; width:1px; background:var(--line-strong)}
+.split:hover::before,.split.drag::before,.split:focus-visible::before{left:2px; width:3px; background:var(--teal-2)}
+.split:focus-visible{outline:none}
+.br{flex:1; background:#fff; min-width:0; display:flex; flex-direction:column}
+.br__url{background:var(--cream-2); border-block-end:1px solid var(--line); padding:.4rem .7rem; display:flex; gap:.5rem; align-items:center; flex:none}
+.url{flex:1; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:.18rem .7rem;
+  font-family:var(--font-mono); font-size:.75rem; color:var(--muted); display:flex; gap:.4rem; align-items:center; overflow:hidden; white-space:nowrap}
+.url .lock{color:var(--ok)}
+.br__view{flex:1; position:relative; overflow:auto; min-height:0}
+.br[data-env="test"] .br__view{box-shadow:inset 0 0 0 3px var(--gold)}
+.br__page{padding:1rem 1.2rem; display:grid; gap:.55rem; align-content:start}
+.guard{position:absolute; inset:0; z-index:2; box-shadow:inset 0 0 0 3px var(--teal); background:rgba(15,118,110,.04);
+  cursor:not-allowed; display:flex; justify-content:center; align-items:flex-start; padding-top:.7rem}
+.guard span{background:var(--teal); color:#fff; font-size:.8125rem; font-weight:600; padding:.3rem .85rem; border-radius:999px; box-shadow:var(--shadow-sm)}
+.bar{background:var(--cream-2); border-block-start:1px solid var(--line-strong); padding:.3rem .75rem;
+  display:flex; gap:.4rem 1.2rem; font-size:.75rem; color:var(--muted); flex-wrap:wrap; flex:none; align-items:center}
+.bar__end{margin-inline-start:auto; display:flex; gap:.6rem; align-items:center}
+.warnx{color:var(--danger); font-weight:700}
+.rvbtn{border:1px dashed var(--gold-700); background:#FDF7E6; color:var(--gold-700); border-radius:999px; padding:.05rem .65rem; font-size:.75rem; font-weight:600}
+.rvbtn[aria-pressed="true"]{background:var(--gold); color:#3E2E00; border-style:solid}
+.seg{display:inline-flex; align-items:center; gap:.4rem}
+.seg__b{display:inline-flex; border:1px solid var(--line-strong); border-radius:999px; overflow:hidden}
+.seg__b button{border:0; background:var(--paper); font-size:.75rem; padding:.05rem .6rem; color:var(--muted)}
+.seg__b button[aria-pressed="true"]{background:var(--ink); color:var(--cream)}
+
+/* ─ مخطّط الحالات ─ */
+.fd{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:.5rem; overflow-x:auto}
+.fd svg{display:block; width:100%; min-width:640px; height:auto}
+.fd text{font-family:var(--font)}
+.s-n{fill:var(--paper); stroke:var(--ink-3); stroke-width:1.2}
+.s-st{fill:var(--cream-2); stroke:var(--ink-3); stroke-width:1.2}
+.s-ok{fill:var(--ok-bg); stroke:var(--ok); stroke-width:1.3}
+.s-bad{fill:var(--danger-bg); stroke:var(--danger); stroke-width:1.3}
+.s-warn{fill:var(--warn-bg); stroke:var(--warn); stroke-width:1.3}
+.s-live{fill:var(--teal-50); stroke:var(--teal); stroke-width:1.4}
+.s-t{font-size:11px; font-weight:700; fill:var(--ink)}
+.s-s{font-size:9px; fill:var(--muted)}
+.s-ar{stroke:var(--ink-3); stroke-width:1.3; fill:none}
+.s-arg{stroke:var(--teal); stroke-width:1.8; fill:none}
+.s-arb{stroke:var(--danger); stroke-width:1.4; fill:none}
+.s-ard{stroke:var(--muted-2); stroke-width:1.2; fill:none; stroke-dasharray:4 3}
+.s-hd{fill:var(--ink-3)} .s-hdg{fill:var(--teal)} .s-hdb{fill:var(--danger)} .s-hdd{fill:var(--muted-2)}
+.s-l{font-size:9px; fill:var(--muted)}
+.s-lg{font-size:9px; fill:var(--teal-600); font-weight:700}
+.s-lb{font-size:9px; fill:var(--danger); font-weight:700}
+.fdcap{font-size:.8125rem; color:var(--muted); line-height:1.55; padding:.15rem .1rem}
+
+/* ─ عناصر ─ */
+.h{font-size:.75rem; font-weight:700; color:var(--muted); letter-spacing:.05em; padding-block-start:.2rem}
+.card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:.6rem .7rem; display:grid; gap:.25rem; box-shadow:var(--shadow-xs)}
+.card b{font-size:.875rem}
+.card small{color:var(--muted); font-size:.75rem; line-height:1.5}
+.card--ok{border-color:var(--ok-line); background:var(--ok-bg)}
+.card--warn{border-color:var(--warn-line); background:var(--warn-bg)}
+.card--bad{border-color:var(--danger-line); background:var(--danger-bg)}
+.card--bad small{color:var(--danger)}
+.card--live{border-color:var(--teal); background:var(--teal-50)}
+.card--off{background:var(--cream-2); border-style:dashed; box-shadow:none}
+.card--off b{color:var(--muted)} .card--off small{color:var(--warn)}
+.btn{border:0; border-radius:6px; padding:.4rem .85rem; font-weight:600; background:var(--teal); color:#fff; font-size:.8125rem}
+.btn:hover{background:var(--teal-600)}
+.btn--ghost{background:transparent; color:var(--teal-600); border:1px solid var(--line-strong)}
+.btn--ghost:hover{background:var(--teal-50)}
+.btn--danger{background:var(--danger)} .btn--danger:hover{background:#991B12}
+.btn--block{display:block; width:100%; margin-block-start:.35rem}
+.btn:disabled,.btn:disabled:hover{background:var(--cream-2); color:var(--muted-2); border:1px solid var(--line)}
+.btn--sm{padding:.18rem .6rem; font-size:.75rem}
+.chip{font-size:.75rem; font-weight:700; padding:.05rem .45rem; border-radius:999px; border:1px solid var(--line-strong); color:var(--muted); background:var(--cream-2); white-space:nowrap; display:inline-block}
+.chip--ok{background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok)}
+.chip--warn{background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn)}
+.chip--bad{background:var(--danger-bg); border-color:var(--danger-line); color:var(--danger)}
+.chip--live{background:var(--teal-50); border-color:rgba(15,118,110,.3); color:var(--teal-600)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:.25rem .75rem; font-size:.8125rem; margin:0}
+.kv dt{color:var(--muted); font-family:var(--font-mono); font-size:.75rem}
+.kv dd{margin:0; color:var(--ink-2)}
+.kv--wide{grid-template-columns:1fr auto}
+.kv--wide dt{font-family:var(--font); font-size:.8125rem; color:var(--ink-2)}
+.kv--wide dd{font-family:var(--font-mono); font-size:.8125rem; text-align:end}
+.steps{display:grid; gap:.1rem}
+.steps li{display:flex; gap:.5rem; align-items:baseline; font-size:.8125rem; color:var(--ink-2); padding-block:.08rem}
+.steps li::before{font-family:var(--font-mono); font-size:.75rem; flex:none; width:1.4rem; content:"–"; color:var(--muted-2)}
+.steps li.ok::before{content:"OK"; color:var(--ok)}
+.steps li.run{font-weight:600; color:var(--ink)}
+.steps li.run::before{content:"..."; color:var(--teal)}
+.steps li.bad{color:var(--danger); font-weight:600}
+.steps li.bad::before{content:"X"; color:var(--danger); font-weight:700}
+.steps li.wait{color:var(--muted)}
+.plan{counter-reset:p; display:grid; gap:.35rem}
+.plan li{counter-increment:p; display:flex; gap:.55rem; align-items:baseline; font-size:.8125rem; color:var(--ink)}
+.plan li::before{content:counter(p); font-family:var(--font-mono); font-size:.75rem; font-weight:700; color:var(--teal-600); flex:none; width:1.1rem}
+.tbl{width:100%; border-collapse:collapse; font-size:.75rem; background:var(--paper)}
+.tbl th,.tbl td{padding:.38rem .55rem; text-align:start; border-block-end:1px solid var(--line); vertical-align:top}
+.tbl thead th{background:var(--cream-2); color:var(--muted); white-space:nowrap; font-size:.75rem}
+.tbl tbody tr:last-child td{border-block-end:0}
+.tbl td.empty{color:var(--muted); text-align:center; padding:.8rem}
+.wrapx{overflow-x:auto; border:1px solid var(--line); border-radius:8px}
+.tbl--ltr{direction:ltr}
+.rpt__h,.job__h{display:flex; gap:.5rem; align-items:baseline; justify-content:space-between}
+.rpt__f{display:flex; gap:.2rem .6rem; justify-content:space-between; flex-wrap:wrap; font-size:.75rem; color:var(--muted)}
+.needs{display:grid; gap:.25rem; font-size:.8125rem; color:var(--ink-2); margin-block:.2rem}
+.rfb{display:flex; justify-content:space-between; align-items:center; gap:.5rem; text-align:start; margin:0}
+
+/* ─ شريط التشغيل: مثبّت أعلى بيئة العمل في كل الشاشات ─ */
+.runbar{position:sticky; top:-.75rem; z-index:4; margin:-.75rem -.75rem 0; padding:.65rem .75rem .75rem;
+  background:var(--teal-50); border-block-end:2px solid var(--teal); display:grid; gap:.45rem; box-shadow:var(--shadow-sm)}
+.runbar[data-state="stopped"]{background:var(--warn-bg); border-color:var(--warn)}
+.runbar[data-state="refused"]{background:var(--danger-bg); border-color:var(--danger)}
+.runbar__h{display:flex; gap:.5rem; align-items:baseline; justify-content:space-between}
+.runbar__h b{font-size:.875rem}
+.prog{height:4px; background:rgba(15,118,110,.18); border-radius:2px; overflow:hidden}
+.prog i{display:block; height:100%; width:0; background:var(--teal); transition:width .3s}
+.runbar[data-state="stopped"] .prog i{background:var(--warn)}
+.runbar[data-state="refused"] .prog i{background:var(--danger)}
+.runbar__msg{font-size:.8125rem; color:var(--ink-2); display:grid; gap:.15rem}
+.runbar__msg b{font-size:.875rem; color:var(--ink)}
+.runbar__f{display:flex; gap:.4rem; flex-wrap:wrap}
+.runbar__f .btn{flex:1}
+
+/* ─ لوحة المهام ─ */
+.job{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:.6rem .7rem; display:grid; gap:.4rem; box-shadow:var(--shadow-xs)}
+.job--needs{border-inline-start:3px solid var(--gold)}
+.job--bad{background:var(--danger-bg); border-color:var(--danger-line)}
+.job__h b{font-size:.875rem}
+.job__meta{font-size:.75rem; color:var(--muted)}
+.job__f{display:flex; gap:.5rem; align-items:center; justify-content:space-between; font-size:.75rem; color:var(--muted)}
+.job__f .btn{flex:none; white-space:nowrap}
+.stepper{display:flex; font-size:.75rem}
+.stepper li{flex:1; position:relative; padding-top:.5rem; color:var(--muted); padding-inline-end:.3rem}
+.stepper li::before{content:""; position:absolute; top:0; inset-inline:0 .2rem; height:4px; border-radius:2px; background:var(--line-strong)}
+.stepper li.ok{color:var(--teal-600)} .stepper li.ok::before{background:var(--teal)}
+.stepper li.run{color:var(--teal-600); font-weight:600}
+.stepper li.run::before{background:repeating-linear-gradient(90deg,var(--teal) 0 6px,rgba(15,118,110,.25) 6px 12px)}
+.stepper li.wait{color:var(--gold-700); font-weight:600} .stepper li.wait::before{background:var(--gold)}
+.stepper li.bad{color:var(--danger); font-weight:600} .stepper li.bad::before{background:var(--danger)}
+
+/* ─ صفحات أوراكل والمنصة المحاكاة ─ */
+.ora__bar{height:24px; background:#e9eef3; border-radius:4px; display:flex; align-items:center; padding-inline:.55rem;
+  font-size:10px; color:#5b7085; font-family:var(--font-mono); justify-content:space-between}
+.ora__bar--co{background:#0B1F33; color:#F8F4EC}
+.br[data-env="test"] .oenv::after{content:" TEST"; color:#8A6914; font-weight:700}
+.ora__crumb{font-size:10px; color:#8aa0b5; font-family:var(--font-mono)}
+.ora__t{font-size:13px; font-weight:700; color:#33475b}
+.ora__grid{display:grid; grid-template-columns:130px minmax(0,420px); gap:.35rem .6rem; align-items:center; font-size:11px}
+.ora__grid label{color:#5b7085; font-family:var(--font-mono); font-size:10px}
+.ora__in{height:22px; border:1px solid #cdd8e3; border-radius:3px; background:#fbfdff; font-family:var(--font-mono); font-size:11px;
+  color:#33475b; padding-inline:.4rem; display:flex; align-items:center; overflow:hidden; white-space:nowrap}
+.ora__in.fill{background:#FDF7E6; border-color:var(--gold-700)}
+.ora__in.pwd{background:#f4f6f9; border-style:dashed}
+.ora__in.tgt,.ora__btn.tgt{outline:2px solid var(--teal); outline-offset:1px}
+.ora__in.err{outline:2px solid var(--danger); outline-offset:1px; background:var(--danger-bg)}
+.ora__row{display:flex; gap:.4rem; align-items:center; font-size:11px; color:#5b7085}
+.ora__btn{font-size:10px; border:1px solid #b9c7d6; background:#f2f6fa; border-radius:3px; padding:.12rem .55rem; color:#33475b; font-family:var(--font-mono)}
+.ora__note{font-size:10px; color:#8aa0b5; font-family:var(--font-mono)}
+.ora__nav{display:grid; grid-template-columns:repeat(2,minmax(0,220px)); gap:.9rem; font-size:11px}
+.ora__nav div{display:grid; gap:.15rem; align-content:start}
+.ora__nav b{color:#33475b}
+.ora__nav span{color:#1f5f9e; text-decoration:underline}
+.stabs{display:flex; gap:.15rem; border-block-end:1px solid var(--line)}
+.stabs button{background:none; border:0; border-block-end:2px solid transparent; padding:.35rem .75rem; font-size:.8125rem; color:var(--muted)}
+.stabs button[aria-selected="true"]{color:var(--ink); border-color:var(--teal); font-weight:600}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.8rem; align-items:start}
+
+/* ─ المحرّر والمنقّح ─ */
+.ide{display:grid; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--paper)}
+.ide__bar{background:var(--cream-2); border-block-end:1px solid var(--line); padding:.3rem .45rem; display:flex; gap:.25rem; flex-wrap:wrap; align-items:center}
+.tb{font-size:.75rem; font-family:var(--font-mono); border:1px solid var(--line-strong); background:var(--paper); border-radius:4px; padding:.1rem .45rem; color:var(--ink-2)}
+.tb:hover:not(:disabled){background:var(--teal-50)}
+.tb--main{background:var(--teal); color:#fff; border-color:var(--teal)}
+.tb--main:hover:not(:disabled){background:var(--teal-600)}
+.tb:disabled{opacity:.45}
+.code{font-family:var(--font-mono); font-size:12px; line-height:1.8; background:#fff; padding:.35rem 0; overflow-x:auto; direction:ltr}
+.code .ln{display:grid; grid-template-columns:28px 16px 1fr; align-items:start; padding-inline:.25rem}
+.code .ln:hover{background:#FAFCFE}
+.code .n{color:#8499ad; text-align:end; padding-inline-end:.4rem}
+.code .bp{color:var(--danger); text-align:center; font-size:9px; border:0; background:none; padding:0; line-height:inherit; font-family:inherit}
+.code button.bp:empty:hover::before{content:"●"; opacity:.3}
+.code .cur{background:#FFF8E1}
+.code .err{background:var(--danger-bg)}
+.code .k{color:#0F766E; font-weight:700} .code .e{color:#8A6914}
+.code .s{color:#B42318} .code .v{color:#175CD3} .code .c{color:#6f8599}
+.dbg{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; padding:.55rem .65rem; border-block-start:1px solid var(--line); background:var(--cream)}
+.dbg .h{padding:0; margin-block-end:.2rem; display:block}
+.logbar{display:flex; justify-content:space-between; align-items:center; padding:.3rem .6rem; background:var(--cream-2);
+  border-block-start:1px solid var(--line); font-size:.75rem; font-weight:700; color:var(--muted)}
+.logbar label{display:flex; gap:.35rem; align-items:center; font-weight:600; cursor:pointer}
+.tree{background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:.45rem .4rem; display:grid; gap:.1rem}
+.tree i{font-style:normal; display:flex; gap:.3rem; align-items:center; padding:.1rem .3rem; border-radius:4px;
+  font-family:var(--font-mono); font-size:.75rem; color:var(--ink-2)}
+.tree i.on{background:var(--teal-50); color:var(--teal-600); font-weight:700}
+.tree i.l2{padding-inline-start:.8rem} .tree i.l3{padding-inline-start:1.6rem}
+
+/* ─ حوار ─ */
+.scrim{position:fixed; inset:0; background:rgba(11,31,51,.55); display:grid; place-items:center; z-index:50; padding:1rem}
+.dlg{width:min(480px,100%); background:var(--paper); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; max-height:90vh; display:flex; flex-direction:column}
+.dlg:focus{outline:none}
+.dlg__h{background:var(--cream-2); padding:.65rem .9rem; font-weight:700; border-block-end:1px solid var(--line); font-size:.9375rem}
+.dlg__b{padding:.9rem; display:grid; gap:.65rem; overflow:auto}
+.dlg__f{padding:.7rem .9rem; border-block-start:1px solid var(--line); display:flex; gap:.5rem; background:var(--cream)}
+.dlg__err{color:var(--danger); font-size:.8125rem; font-weight:600}
+.field{display:grid; gap:.2rem; font-size:.8125rem}
+.field input{font-family:inherit; font-size:.875rem; padding:.32rem .5rem; border:1px solid var(--line-strong); border-radius:5px; background:var(--paper); color:var(--ink)}
+.field input[readonly]{background:var(--cream-2); color:var(--muted)}
+.dates{display:grid; gap:.65rem}
+.dates__row{display:grid; grid-template-columns:1fr 1fr; gap:.65rem}
+
+/* ─ إشعار ─ */
+.toast{position:fixed; inset-block-end:2.4rem; inset-inline-start:50%; transform:translateX(-50%);
+  background:var(--ink); color:var(--cream); padding:.55rem 1rem; border-radius:8px; font-size:.875rem;
+  box-shadow:var(--shadow); z-index:80; max-width:min(560px,90vw)}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+</head>
+<body data-lang="en" data-nav="full" data-ws="normal" data-review="off" data-persona="user">
+
+<div class="app" id="app">
+
+  <!-- ─ شريط العنوان ─ -->
+  <header class="tbar">
+    <b>ERP Agent</b>
+    <span class="sim rv">SIMULATION</span>
+    <span class="tbar__who" id="tWho"></span>
+    <span class="tchip" id="tRun" hidden></span>
+    <span class="sp">
+      <span class="env" id="tEnv" hidden></span>
+      <span class="lang" role="group" aria-label="Language · اللغة"><button id="lEn" aria-pressed="true">EN</button><button id="lAr" aria-pressed="false" lang="ar">ع</button></span>
+      <span class="dot" id="tDot"></span>
+      <span class="tora" id="tOra"></span>
+    </span>
+  </header>
+
+  <div class="body">
+
+    <!-- ─ القائمة: ما يراه المستخدم العادي، ثم التأليف لمن مُنح، ثم أدوات المراجعة ─ -->
+    <nav class="nav" aria-label="Main">
+      <span class="nav__grp"><span class="t-en">WORK</span><span class="t-ar">العمل</span></span>
+      <button class="nav__i" data-go="home"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t"><span class="t-en">Home</span><span class="t-ar">الرئيسية</span></span></button>
+      <button class="nav__i" data-go="reports"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t"><span class="t-en">Reports</span><span class="t-ar">التقارير</span></span></button>
+      <button class="nav__i" data-go="jobs"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t"><span class="t-en">Jobs</span><span class="t-ar">المهام</span></span><span class="nav__b" id="jobCount"></span></button>
+      <button class="nav__i" data-go="results"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t"><span class="t-en">Results</span><span class="t-ar">النتائج</span></span></button>
+      <button class="nav__i" data-go="queue"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t"><span class="t-en">Queue</span><span class="t-ar">الطابور</span></span></button>
+
+      <div class="nav__sub auth">
+        <span class="nav__sep"></span>
+        <span class="nav__grp"><span class="t-en">AUTHORING</span><span class="t-ar">التأليف</span></span>
+        <button class="nav__i" data-go="designer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 5L3 8l3 3M10 5l3 3-3 3"/></svg><span class="nav__t"><span class="t-en">Script designer</span><span class="t-ar">مصمّم النصوص</span></span></button>
+      </div>
+
+      <span class="nav__sep"></span>
+      <span class="nav__grp"><span class="t-en">SYSTEM</span><span class="t-ar">النظام</span></span>
+      <button class="nav__i" data-go="log"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t"><span class="t-en">Run log</span><span class="t-ar">سجلّ التشغيل</span></span></button>
+      <button class="nav__i" data-go="integrity"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t"><span class="t-en">Integrity</span><span class="t-ar">النزاهة</span></span></button>
+      <button class="nav__i" data-go="settings"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t"><span class="t-en">Settings</span><span class="t-ar">الإعدادات</span></span></button>
+      <button class="nav__i" data-go="help"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M6.2 6.2a1.9 1.9 0 1 1 2.5 1.8c-.5.2-.7.6-.7 1.1v.3"/><path d="M8 11.6v.4"/></svg><span class="nav__t"><span class="t-en">Help &amp; about</span><span class="t-ar">المساعدة</span></span></button>
+
+      <div class="nav__sub nav__rv rv">
+        <span class="nav__grp nav__grp--rv"><span class="t-en">REVIEW ONLY</span><span class="t-ar">للمراجعة فقط</span></span>
+        <button class="nav__i" data-go="flow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 3.6v4.8a2 2 0 0 0 2 2h4.8"/><path d="M4.6 10.4h6.8"/><circle cx="4.6" cy="2.4" r="1.3"/><circle cx="12.6" cy="8.4" r="1.3"/><circle cx="12.6" cy="12.4" r="1.3"/></svg><span class="nav__t"><span class="t-en">State flow</span><span class="t-ar">مخطّط الحالات</span></span></button>
+        <button class="nav__i" data-go="index"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="9" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="2.4" y="9" width="4.6" height="4.6" rx="1"/><rect x="9" y="9" width="4.6" height="4.6" rx="1"/></svg><span class="nav__t"><span class="t-en">Screen index</span><span class="t-ar">فهرس الشاشات</span></span></button>
+        <button class="nav__i" data-go="pairing"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.4" cy="8" r="2.6"/><path d="M8 8h5.6M11.6 8v2M13.4 8v1.6"/></svg><span class="nav__t"><span class="t-en">Pairing</span><span class="t-ar">الاقتران</span></span></button>
+        <button class="nav__i" data-go="presignin"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="7" width="9.2" height="6.4" rx="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7"/></svg><span class="nav__t"><span class="t-en">Before sign-in</span><span class="t-ar">قبل الدخول</span></span></button>
+        <button class="nav__i" data-go="refusals"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M4 12L12 4"/></svg><span class="nav__t"><span class="t-en">Refusals</span><span class="t-ar">حالات الرفض</span></span></button>
+        <button class="nav__i" data-demo="dlgp"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/><path d="M6 3v3M10.5 6.5v3M5 10v3"/></svg><span class="nav__t"><span class="t-en">Report parameters</span><span class="t-ar">معاملات التقرير</span></span></button>
+        <button class="nav__i" data-demo="dlgc"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="2.6" width="9.2" height="11.4" rx="1.2"/><path d="M6 2.6h4v1.6H6z"/><path d="M5.8 9l1.6 1.6 3-3.2"/></svg><span class="nav__t"><span class="t-en">Confirm run</span><span class="t-ar">التأكيد قبل التشغيل</span></span></button>
+        <button class="nav__i" data-demo="running"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M6.8 5.6v4.8L10.4 8z"/></svg><span class="nav__t"><span class="t-en">Running state</span><span class="t-ar">أثناء التشغيل</span></span></button>
+        <button class="nav__i" data-demo="dlgr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5L4.8 13.5M11.2 2.5L10 13.5M2.8 6h11M2.2 10h11"/></svg><span class="nav__t"><span class="t-en">Result</span><span class="t-ar">النتيجة</span></span></button>
+      </div>
+
+      <div class="nav__foot"><span data-who="name"></span><span data-who="unit"></span></div>
+      <button class="nav__tgl" id="navTgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg><span class="nav__t"><span class="t-en">Collapse</span><span class="t-ar">طيّ القائمة</span></span><kbd>Ctrl+B</kbd></button>
+    </nav>
+
+    <!-- ─ بيئة العمل ─ -->
+    <aside class="ws" id="ws" aria-label="Workspace">
+
+      <!-- شريط التشغيل: يبقى ظاهراً مهما تنقّلت بين الشاشات -->
+      <div class="runbar" id="runbar" hidden aria-live="polite">
+        <div class="runbar__h"><b id="runTitle"></b><span class="chip chip--live" id="runCount"></span></div>
+        <div class="prog"><i id="runProg"></i></div>
+        <ol class="steps" id="runSteps"></ol>
+        <p class="note" id="runHint"></p>
+        <div class="runbar__msg" id="runMsg" hidden></div>
+        <div class="runbar__f">
+          <button class="btn rv" id="runResume" hidden><span class="t-en">Resume (review)</span><span class="t-ar">استئناف (للمراجعة)</span></button>
+          <button class="btn btn--danger" id="stopRun"><span class="t-en">Stop</span><span class="t-ar">إيقاف</span></button>
+          <button class="btn" id="runAct" hidden></button>
+          <button class="btn btn--ghost" id="runClose" hidden><span class="t-en">Close</span><span class="t-ar">إغلاق</span></button>
+        </div>
+      </div>
+
+      <!-- HOME -->
+      <div data-view="home">
+        <span class="h"><span class="t-en">SESSION</span><span class="t-ar">الجلسة</span></span>
+        <div class="card card--ok"><b><span class="t-en">Identity matches</span><span class="t-ar">الهوية مطابقة</span></b>
+          <small><span class="t-en">Paired user = Oracle signed-in user — a detective check, re-verified before every run</span><span class="t-ar">المقترن = المسجَّل في أوراكل — ضابط كاشف يُعاد فحصه قبل كل تشغيل</span> <span class="rqid">B8</span></small></div>
+        <div class="card"><b><span class="t-en">No credential is stored in this tool</span><span class="t-ar">لا يوجد اعتماد مخزّن في هذه الأداة</span></b>
+          <small><span class="t-en">You signed in yourself on the real Oracle page</span><span class="t-ar">أنت سجّلت دخولك بنفسك في صفحة أوراكل الحقيقية</span> <span class="rqid">A1</span></small></div>
+        <span class="h"><span class="t-en">NEEDS YOU</span><span class="t-ar">بانتظارك</span></span>
+        <div id="homeNeeds" class="stack"></div>
+        <span class="h"><span class="t-en">TODAY — RUNS LEFT PER REPORT</span><span class="t-ar">اليوم — المتبقّي لكل تقرير</span></span>
+        <div class="card"><dl class="kv kv--wide" id="homeLimits"></dl>
+          <small><span class="t-en">Each report has its own daily limit, enforced on the server</span><span class="t-ar">لكل تقرير حدّه اليومي، ويُفرض على الخادم</span> <span class="rqid">J2</span></small></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div data-view="reports" hidden>
+        <span class="h"><span class="t-en">REPORTS AVAILABLE TO YOU</span><span class="t-ar">التقارير المتاحة لك</span></span>
+        <div id="catalogue" class="stack"></div>
+        <div class="card card--off"><b><span class="t-en">Maintenance cost report</span><span class="t-ar">تقرير تكلفة الصيانة</span></b>
+          <small><span class="t-en">Your Oracle account lacks this privilege</span><span class="t-ar">حسابك في أوراكل لا يملك صلاحية هذا التقرير</span> <span class="rqid">B3</span></small></div>
+        <div class="card card--off"><b><span class="t-en">Maintenance payroll</span><span class="t-ar">كشف رواتب الصيانة</span></b>
+          <small><span class="t-en">Excluded by policy — carries personal data</span><span class="t-ar">مستبعَد بالسياسة — يحمل بيانات شخصية</span> <span class="rqid">E2</span></small></div>
+      </div>
+
+      <!-- JOBS -->
+      <div data-view="jobs" hidden>
+        <div class="card card--live"><b><span class="t-en">Nothing runs while this window is closed</span><span class="t-ar">لا شيء يعمل والنافذة مغلقة</span></b>
+          <small><span class="t-en">Polling continues while your screen is locked; it stops on sign-out</span><span class="t-ar">يستمرّ الاستطلاع والشاشة مقفلة، ويتوقّف عند تسجيل الخروج</span> <span class="rqid">A13</span></small></div>
+        <div id="jobList" class="stack"></div>
+        <p class="note"><span class="t-en">Phase and status are Oracle's own values, shown exactly as Oracle states them.</span><span class="t-ar">الطور والحالة قيم أوراكل نفسها، تُعرض كما يذكرها أوراكل حرفياً.</span> <span class="rqid">M4</span></p>
+      </div>
+
+      <!-- RESULTS -->
+      <div data-view="results" hidden>
+        <span class="h"><span class="t-en">LOCAL STORE</span><span class="t-ar">المخزن المحلي</span></span>
+        <div class="card card--warn"><b><span class="t-en">Mode C — data lands on this machine</span><span class="t-ar">النمط C — بيانات تهبط على هذا الجهاز</span></b>
+          <small><span class="t-en">Folder set by policy · file deleted after load · declared retention</span><span class="t-ar">المجلّد بالسياسة · الملف يُمسح بعد التحميل · احتفاظ معلن</span> <span class="rqid">M7</span> <span class="rqid">M13</span></small></div>
+        <div class="wrapx"><table class="tbl tbl--ltr"><thead><tr>
+          <th><span class="t-en">Code</span><span class="t-ar">الرمز</span></th><th><span class="t-en">Table</span><span class="t-ar">الجدول</span></th>
+          <th><span class="t-en">Last load</span><span class="t-ar">آخر تحميل</span></th><th><span class="t-en">Rows</span><span class="t-ar">الصفوف</span></th></tr></thead>
+          <tbody id="storeRows"></tbody></table></div>
+      </div>
+
+      <!-- QUEUE -->
+      <div data-view="queue" hidden>
+        <span class="h"><span class="t-en">FROM YOUR PHONE</span><span class="t-ar">وارد من جوالك</span></span>
+        <div class="card"><b><span class="t-en">Work request — raw mill</span><span class="t-ar">بلاغ صيانة — طاحونة المواد الخام</span></b>
+          <small><span class="t-en">Will run as:</span><span class="t-ar">سيُنفَّذ باسمك:</span> <span class="mono" data-who="ora"></span></small>
+          <button class="btn btn--block" data-toast><span class="t-en">Execute</span><span class="t-ar">تنفيذ</span></button></div>
+        <div class="card"><b><span class="t-en">Time entry — 3 hours</span><span class="t-ar">ساعات عمل — 3 ساعات</span></b>
+          <small><span class="t-en">Will run as:</span><span class="t-ar">سيُنفَّذ باسمك:</span> <span class="mono" data-who="ora"></span></small></div>
+        <div class="card card--warn"><b><span class="t-en">Work request — kiln</span><span class="t-ar">بلاغ صيانة — الفرن</span></b>
+          <small><span class="t-en">Raised by S. Alqahtani; needs an approved on-behalf-of flag</span><span class="t-ar">مقدّمه م. سعد القحطاني؛ يحتاج علم «نيابةً عن» معتمَداً</span> <span class="rqid">I2</span></small></div>
+      </div>
+
+      <!-- DESIGNER — المنقّح حالة من حالاته لا شاشة مستقلّة -->
+      <div data-view="designer" hidden>
+        <div class="tree" aria-label="Work tree">
+          <i>▾ Maintenance</i><i class="l2">▾ Reports</i><i class="l3 on">RPT-DOWNTIME-W</i>
+          <i class="l3">RPT-DOWNTIME-X</i><i class="l3">RPT-OPEN-WO</i><i class="l2">▸ Write</i><i>▸ Warehouse</i>
+        </div>
+        <div class="card" id="dCard"></div>
+        <div class="ide">
+          <div class="ide__bar">
+            <button class="tb tb--main" id="dRun">Run</button><button class="tb" id="dPause">Pause</button>
+            <button class="tb" id="dStep">Step in</button><button class="tb" id="dStop">Stop</button>
+            <button class="tb" id="dDry">Dry run</button><button class="tb" id="dSave">Save</button>
+            <button class="tb" style="margin-inline-start:auto" id="dUpload">Upload as draft</button>
+          </div>
+          <div class="code" id="code"></div>
+          <div class="dbg" id="dVars" hidden>
+            <div><span class="h"><span class="t-en">VARIABLES</span><span class="t-ar">المتغيّرات</span></span>
+              <dl class="kv"><dt>plant</dt><dd>"CP-01"</dd><dt>from</dt><dd>"2026-09-14"</dd><dt>to</dt><dd>"2026-09-20"</dd><dt>id</dt><dd>&mdash;</dd></dl></div>
+            <div><span class="h"><span class="t-en">BREAKPOINTS</span><span class="t-ar">نقاط التوقّف</span></span>
+              <div id="dBps" style="display:flex; gap:.35rem; flex-wrap:wrap"></div></div>
+          </div>
+          <div class="logbar"><span><span class="t-en">RUN LOG</span><span class="t-ar">سجلّ التشغيل</span> <span class="rqid">L18</span></span>
+            <label><input type="checkbox" id="errOnly"> <span class="t-en">Errors only</span><span class="t-ar">الأخطاء فقط</span></label></div>
+          <div class="wrapx" style="border:0; border-radius:0">
+            <table class="tbl tbl--ltr"><thead><tr><th>Time</th><th>Line</th><th>Action</th><th>Target</th><th>Result</th><th>ms</th></tr></thead>
+              <tbody id="dLog"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCRIPT STUDIO — صفحة في المنصة تُفتح في المتصفّح، ليست جزءاً من الأداة -->
+      <div data-view="studio" hidden>
+        <span class="h"><span class="t-en">SCRIPT STUDIO</span><span class="t-ar">استوديو النصوص</span></span>
+        <div class="card card--live"><b><span class="t-en">A CementOps web page, not part of this tool</span><span class="t-ar">صفحة في منصة CementOps، ليست جزءاً من الأداة</span></b>
+          <small><span class="t-en">It opens on the right so you can check the draft you uploaded. Approval happens in the platform, by someone other than the author.</span><span class="t-ar">تُفتح يميناً لتراجع المسودّة التي رفعتها. والاعتماد يتمّ في المنصة، ومن شخص غير المسجِّل.</span> <span class="rqid">L6</span></small></div>
+        <div class="card"><b><span class="t-en">Steps are not edited in the studio</span><span class="t-ar">الخطوات لا تُحرَّر في الاستوديو</span></b>
+          <small><span class="t-en">They were authored in the tool, on the page itself. Editing means the designer and a new test run.</span><span class="t-ar">صُنعت في الأداة على الصفحة نفسها. التعديل يعني المصمّم وتشغيلاً تجريبياً جديداً.</span></small>
+          <button class="btn btn--ghost btn--block" data-go="designer"><span class="t-en">Back to the designer</span><span class="t-ar">العودة إلى المصمّم</span></button></div>
+      </div>
+
+      <!-- RUN LOG -->
+      <div data-view="log" hidden>
+        <span class="h"><span class="t-en">RUN LOG</span><span class="t-ar">سجلّ التشغيل</span></span>
+        <div class="wrapx"><table class="tbl tbl--ltr"><thead><tr>
+          <th><span class="t-en">Time</span><span class="t-ar">الوقت</span></th><th><span class="t-en">Script</span><span class="t-ar">النص</span></th><th>v</th>
+          <th><span class="t-en">Outcome</span><span class="t-ar">النتيجة</span></th><th><span class="t-en">Document</span><span class="t-ar">المستند</span></th></tr></thead>
+          <tbody id="logRows"></tbody></table></div>
+        <div class="card"><small><span class="t-en">Every row is also sent to your SIEM in real time.</span><span class="t-ar">كل صفّ يُرسَل أيضاً إلى نظام المراقبة عندكم لحظياً.</span> <span class="rqid">F8</span></small></div>
+      </div>
+
+      <!-- INTEGRITY -->
+      <div data-view="integrity" hidden>
+        <span class="h"><span class="t-en">INTEGRITY</span><span class="t-ar">النزاهة</span></span>
+        <dl class="kv">
+          <dt>Version</dt><dd>1.0.0 — <span class="t-en">code signed</span><span class="t-ar">موقّع رقمياً</span></dd>
+          <dt>Hash</dt><dd><span class="mono">a91f3c…d27d2c</span></dd>
+          <dt>Device</dt><dd><span class="t-en">Managed · disk encrypted</span><span class="t-ar">مُدار · القرص مشفّر</span></dd>
+          <dt>Monitoring</dt><dd><span class="t-en">Connected — last event 4 s ago</span><span class="t-ar">متّصلة — آخر حدث قبل 4 ثوانٍ</span></dd>
+          <dt>Sign-in</dt><dd><span class="t-en">Windows Integrated Auth (policy)</span><span class="t-ar">مصادقة ويندوز المدمجة (بسياسة)</span></dd>
+          <dt>Network</dt><dd><span class="t-en">Two destinations only</span><span class="t-ar">وجهتان فقط</span></dd>
+        </dl>
+        <div class="card card--ok"><b><span class="t-en">No Oracle credential is stored in this tool</span><span class="t-ar">لا يوجد اعتماد أوراكل مخزّن في هذه الأداة</span></b>
+          <small><span class="t-en">Not on disk, not in memory, not encrypted</span><span class="t-ar">لا في قرص ولا في ذاكرة ولا مشفّرة</span> <span class="rqid">A10</span></small></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div data-view="settings" hidden>
+        <span class="h"><span class="t-en">SETTINGS</span><span class="t-ar">الإعدادات</span></span>
+        <div class="card"><b><span class="t-en">Language</span><span class="t-ar">اللغة</span></b>
+          <div style="display:flex; gap:.4rem; margin-block-start:.3rem">
+            <button class="btn btn--ghost btn--sm" data-lang-set="en">English</button>
+            <button class="btn btn--ghost btn--sm" data-lang-set="ar" lang="ar">العربية</button></div></div>
+        <div class="card" id="setDesigner"></div>
+        <span class="h"><span class="t-en">SET BY POLICY — READ ONLY</span><span class="t-ar">بالسياسة — للقراءة فقط</span></span>
+        <p class="note"><span class="t-en">IT sets these through Group Policy under</span><span class="t-ar">تضبطها تقنية المعلومات بسياسة المجموعة تحت</span> <span class="mono">HKLM\SOFTWARE\Policies\CementOps\ErpAgent</span> <span class="rqid">N6</span></p>
+        <div class="field"><label for="po1"><span class="t-en">Poll interval</span><span class="t-ar">مدّة الاستطلاع</span></label><input id="po1" value="2 → 10 → 30 min (backing off)" readonly></div>
+        <div class="field"><label for="po2"><span class="t-en">Extension ceiling</span><span class="t-ar">سقف الامتداد</span></label><input id="po2" value="8 hours from sign-in" readonly></div>
+        <div class="field"><label for="po3"><span class="t-en">Download folder</span><span class="t-ar">مجلّد التنزيل</span></label><input id="po3" value="C:\ProgramData\CementOps\inbox" readonly></div>
+        <div class="field"><label for="po4"><span class="t-en">Stop polling on lock</span><span class="t-ar">إيقاف الاستطلاع عند القفل</span></label><input id="po4" value="Off" readonly></div>
+      </div>
+
+      <!-- HELP -->
+      <div data-view="help" hidden>
+        <span class="h"><span class="t-en">HELP AND ABOUT</span><span class="t-ar">المساعدة ومعلومات</span></span>
+        <dl class="kv"><dt>Version</dt><dd>1.0.0</dd><dt>Build</dt><dd><span class="mono">a91f3c…d27d2c</span></dd>
+          <dt><span class="t-en">Requirements</span><span class="t-ar">المتطلبات</span></dt><dd>ADD-002 v2.0</dd></dl>
+        <span class="h"><span class="t-en">SHORTCUTS</span><span class="t-ar">الاختصارات</span></span>
+        <dl class="kv"><dt>Ctrl+B</dt><dd><span class="t-en">Collapse or expand the menu</span><span class="t-ar">طيّ القائمة أو توسيعها</span></dd>
+          <dt>← →</dt><dd><span class="t-en">On the divider: resize the workspace</span><span class="t-ar">على الفاصل: تغيير عرض بيئة العمل</span></dd>
+          <dt>Esc</dt><dd><span class="t-en">Close a dialog</span><span class="t-ar">إغلاق الحوار</span></dd></dl>
+        <div class="card"><b><span class="t-en">Support</span><span class="t-ar">الدعم</span></b><small><span class="t-en">IT service desk — extension 4120</span><span class="t-ar">مكتب خدمة تقنية المعلومات — تحويلة 4120</span></small></div>
+      </div>
+
+      <!-- BEFORE SIGN-IN -->
+      <div data-view="presignin" hidden>
+        <span class="h"><span class="t-en">STATUS</span><span class="t-ar">الحالة</span></span>
+        <div class="card card--warn"><b><span class="t-en">Sign in yourself</span><span class="t-ar">سجّل دخولك بنفسك</span></b>
+          <small><span class="t-en">The tool does not operate on sign-in, MFA or password-change pages</span><span class="t-ar">الأداة لا تعمل على صفحات الدخول والتحقّق الثنائي وتغيير كلمة المرور</span> <span class="rqid">A2</span></small></div>
+        <div class="card card--off"><b><span class="t-en">Engine not loaded</span><span class="t-ar">المحرّك غير مُحمَّل</span></b>
+          <small><span class="t-en">Nothing is injected before the URL matches a post-login pattern</span><span class="t-ar">لا يُحقَن شيء قبل تطابق عنوان ما بعد الدخول</span> <span class="rqid">A3</span></small></div>
+        <span class="h"><span class="t-en">SCRIPTS</span><span class="t-ar">النصوص</span></span>
+        <div class="card card--off"><b><span class="t-en">Weekly downtime report</span><span class="t-ar">تقرير التوقفات الأسبوعي</span></b><small><span class="t-en">Available after sign-in</span><span class="t-ar">متاح بعد تسجيل الدخول</span></small></div>
+        <div class="card card--off"><b><span class="t-en">Open work orders</span><span class="t-ar">أوامر العمل المفتوحة</span></b><small><span class="t-en">Available after sign-in</span><span class="t-ar">متاح بعد تسجيل الدخول</span></small></div>
+        <button class="btn btn--ghost btn--block rv" data-go="home"><span class="t-en">Review: continue as signed in</span><span class="t-ar">للمراجعة: المتابعة بعد الدخول</span></button>
+      </div>
+
+      <!-- REFUSALS — تُحاكى في سياقها لا كقائمة بطاقات -->
+      <div data-view="refusals" hidden>
+        <span class="h"><span class="t-en">REFUSALS — SIMULATED IN CONTEXT</span><span class="t-ar">حالات الرفض — تُحاكى في سياقها</span></span>
+        <div class="card"><small><span class="t-en">Each one starts the weekly downtime report and stops it where the product would: in the run panel, at the step it stopped, with what to do next. It stops and does not repair.</span><span class="t-ar">كلٌّ منها يبدأ تقرير التوقفات الأسبوعي ويوقفه حيث سيوقفه المنتج: في لوحة التشغيل، عند الخطوة التي توقّف فيها، مع ما يفعله المستخدم الآن. يتوقّف ولا يعالج.</span> <span class="rqid">D7</span></small></div>
+        <div class="stack">
+          <button class="btn btn--ghost btn--block rfb" data-refuse="page"><span><span class="t-en">The page has changed</span><span class="t-ar">تغيّرت الصفحة</span></span><span class="rqid">D5</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="user"><span><span class="t-en">Oracle user changed</span><span class="t-ar">المستخدم في أوراكل تغيّر</span></span><span class="rqid">B8</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="kill"><span><span class="t-en">Automation stopped centrally</span><span class="t-ar">الأتمتة موقوفة مركزياً</span></span><span class="rqid">J3</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="limit"><span><span class="t-en">Daily limit reached</span><span class="t-ar">تجاوزت الحدّ اليومي</span></span><span class="rqid">J2</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="auth"><span><span class="t-en">Run started on a sign-in page</span><span class="t-ar">تشغيل على صفحة دخول</span></span><span class="rqid">A2</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="sig"><span><span class="t-en">Unsigned or altered script</span><span class="t-ar">نصّ غير موقّع أو معدَّل</span></span><span class="rqid">C3</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="origin"><span><span class="t-en">Page outside the script's origin</span><span class="t-ar">صفحة خارج أصل النص</span></span><span class="rqid">C5</span></button>
+          <button class="btn btn--ghost btn--block rfb" data-refuse="update"><span><span class="t-en">Update required</span><span class="t-ar">يلزم التحديث</span></span><span class="rqid">N10</span></button>
+        </div>
+      </div>
+
+      <!-- PAIRING — الدخول القائم في المنصة أولاً، والرمز بديل -->
+      <div data-view="pairing" hidden>
+        <span class="h"><span class="t-en">FIRST RUN</span><span class="t-ar">أول تشغيل</span></span>
+        <div class="card card--live"><b><span class="t-en">Link this tool to your CementOps account</span><span class="t-ar">اربط الأداة بحسابك في CementOps</span></b>
+          <small><span class="t-en">Sign in on the CementOps page on the right with your usual account and MFA. This device is then linked, and IT can revoke it from the devices page.</span><span class="t-ar">سجّل دخولك في صفحة CementOps يميناً بحسابك المعتاد وتحقّقك الثنائي. فيُربط هذا الجهاز، وتستطيع تقنية المعلومات إلغاءه من صفحة الأجهزة.</span> <span class="rqid">A6</span></small></div>
+        <div class="card card--warn"><b><span class="t-en">You will never be asked for your Oracle password here</span><span class="t-ar">لن تُطلب منك كلمة مرور أوراكل هنا</span></b>
+          <small><span class="t-en">Not here and not on any screen of this tool</span><span class="t-ar">لا هنا ولا في أي شاشة من الأداة</span> <span class="rqid">A1</span></small></div>
+        <div class="card"><b><span class="t-en">Shared device or kiosk?</span><span class="t-ar">جهاز مشترك أو كشك؟</span></b>
+          <small><span class="t-en">Use a one-time code from the CementOps app instead.</span><span class="t-ar">استعمل رمزاً لمرة واحدة من تطبيق CementOps بدلاً من ذلك.</span></small>
+          <button class="btn btn--ghost btn--block" id="openPair"><span class="t-en">Use a one-time code</span><span class="t-ar">استعمال رمز لمرة واحدة</span></button></div>
+        <button class="btn btn--ghost btn--block rv" data-go="presignin"><span class="t-en">Review: continue as linked</span><span class="t-ar">للمراجعة: المتابعة بعد الربط</span></button>
+      </div>
+
+      <!-- SCREEN INDEX -->
+      <div data-view="index" hidden>
+        <span class="h"><span class="t-en">SCREEN INDEX</span><span class="t-ar">فهرس الشاشات</span></span>
+        <div class="card"><b><span class="t-en">Every frame in the design review is reachable here</span><span class="t-ar">كل إطار في مراجعة التصميم يُفتح من هنا</span></b>
+          <small><span class="t-en">18 frames. Authoring frames switch the persona to Designer.</span><span class="t-ar">18 إطاراً. وإطارات التأليف تبدّل الدور إلى المصمّم.</span></small></div>
+        <div class="wrapx"><table class="tbl"><thead><tr><th>#</th><th><span class="t-en">Screen</span><span class="t-ar">الشاشة</span></th><th></th></tr></thead>
+          <tbody>
+            <tr><td><span class="t-en">A</span><span class="t-ar">أ</span></td><td><span class="t-en">Shell — menu expanded</span><span class="t-ar">الهيكل — القائمة مفتوحة</span></td><td><button class="btn btn--ghost btn--sm" data-idx="nav:full"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td><span class="t-en">B</span><span class="t-ar">ب</span></td><td><span class="t-en">Shell — menu collapsed</span><span class="t-ar">الهيكل — القائمة مطويّة</span></td><td><button class="btn btn--ghost btn--sm" data-idx="nav:mini"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>1</td><td><span class="t-en">Pairing</span><span class="t-ar">الاقتران</span></td><td><button class="btn btn--ghost btn--sm" data-idx="go:pairing"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>2</td><td><span class="t-en">Before sign-in</span><span class="t-ar">قبل تسجيل الدخول</span></td><td><button class="btn btn--ghost btn--sm" data-idx="go:presignin"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>3</td><td><span class="t-en">Ready — report catalogue</span><span class="t-ar">جاهز وقائمة التقارير</span></td><td><button class="btn btn--ghost btn--sm" data-idx="go:reports"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>4</td><td><span class="t-en">Report parameters</span><span class="t-ar">معاملات التقرير</span></td><td><button class="btn btn--ghost btn--sm" data-idx="demo:dlgp"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>5</td><td><span class="t-en">Confirm before run</span><span class="t-ar">التأكيد قبل التشغيل</span></td><td><button class="btn btn--ghost btn--sm" data-idx="demo:dlgc"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>6</td><td><span class="t-en">Running — live steps</span><span class="t-ar">أثناء التشغيل</span></td><td><button class="btn btn--ghost btn--sm" data-idx="demo:running"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>7</td><td><span class="t-en">Result</span><span class="t-ar">النتيجة</span></td><td><button class="btn btn--ghost btn--sm" data-idx="demo:dlgr"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>8</td><td><span class="t-en">Refusals — in context</span><span class="t-ar">حالات الرفض — في سياقها</span></td><td><button class="btn btn--ghost btn--sm" data-idx="go:refusals"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>9</td><td><span class="t-en">Arabic interface</span><span class="t-ar">الواجهة بالعربية</span></td><td><button class="btn btn--ghost btn--sm" data-idx="lang:toggle"><span class="t-en">Switch</span><span class="t-ar">تبديل</span></button></td></tr>
+            <tr><td>10</td><td><span class="t-en">Script designer</span><span class="t-ar">المصمّم</span></td><td><button class="btn btn--ghost btn--sm" data-idx="designer:edit"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>11</td><td><span class="t-en">Debugger — paused at a breakpoint</span><span class="t-ar">المنقّح — متوقّف عند نقطة توقّف</span></td><td><button class="btn btn--ghost btn--sm" data-idx="designer:paused"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>12</td><td><span class="t-en">Studio — script definition</span><span class="t-ar">الاستوديو — تعريف النص</span></td><td><button class="btn btn--ghost btn--sm" data-idx="studio:sdef"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>13</td><td><span class="t-en">Studio — test gate</span><span class="t-ar">الاستوديو — بوابة الاختبار</span></td><td><button class="btn btn--ghost btn--sm" data-idx="studio:stest"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>14</td><td><span class="t-en">Studio — approve and publish</span><span class="t-ar">الاستوديو — الاعتماد والنشر</span></td><td><button class="btn btn--ghost btn--sm" data-idx="studio:spub"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>15</td><td><span class="t-en">Jobs board</span><span class="t-ar">لوحة المهام</span></td><td><button class="btn btn--ghost btn--sm" data-idx="go:jobs"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+            <tr><td>16</td><td><span class="t-en">Studio — load definition</span><span class="t-ar">الاستوديو — تعريف التحميل</span></td><td><button class="btn btn--ghost btn--sm" data-idx="studio:sload"><span class="t-en">Open</span><span class="t-ar">فتح</span></button></td></tr>
+          </tbody></table></div>
+        <div class="card"><small><span class="t-en">Two frames are modes rather than screens: the collapsed menu and the Arabic interface. Their buttons flip the control that produces them.</span><span class="t-ar">إطاران منهما وضعٌ لا شاشة: القائمة المطويّة والواجهة العربية. وزرّاهما يبدّلان الضابط الذي ينتجهما.</span></small></div>
+      </div>
+
+      <!-- STATE FLOW -->
+      <div data-view="flow" hidden>
+        <span class="h"><span class="t-en">STATE FLOW</span><span class="t-ar">مخطّط الحالات</span></span>
+        <div class="card"><b><span class="t-en">Three state machines, not one</span><span class="t-ar">ثلاث آلات حالة لا واحدة</span></b>
+          <small><span class="t-en">The session decides whether anything may run, the job decides what a report is doing, and the script decides what may be run at all.</span><span class="t-ar">الجلسة تقرّر هل يجوز أن يعمل شيء، والمهمة تقرّر أين وصل التقرير، والنص يقرّر ما الذي يجوز تشغيله أصلاً.</span></small></div>
+
+        <span class="h" style="margin-block-start:.4rem"><span class="t-en">1 · SESSION AND ENGINE</span><span class="t-ar">١ · الجلسة والمحرّك</span></span>
+        <div class="fd"><svg viewBox="0 0 900 236" role="img" aria-label="Session and engine states: nothing runs before the user signs in to Oracle himself."><rect class="s-st" x="14" y="40" width="150" height="46" rx="6"/><text class="s-t" x="24" y="59">Not paired</text><text class="s-s" x="24" y="73">first run</text><rect class="s-n" x="240" y="40" width="170" height="46" rx="6"/><text class="s-t" x="250" y="59">Paired, signed out</text><text class="s-s" x="250" y="73">engine inert · no page access</text><rect class="s-ok" x="486" y="40" width="150" height="46" rx="6"/><text class="s-t" x="496" y="59">Signed in</text><text class="s-s" x="496" y="73">engine armed</text><rect class="s-warn" x="712" y="40" width="174" height="46" rx="6"/><text class="s-t" x="722" y="59">Session ended</text><text class="s-s" x="722" y="73">job parks — waiting for you</text><rect class="s-bad" x="330" y="152" width="178" height="46" rx="6"/><text class="s-t" x="340" y="171">Identity mismatch</text><text class="s-s" x="340" y="185">stops, does not repair</text><rect class="s-bad" x="556" y="152" width="178" height="46" rx="6"/><text class="s-t" x="566" y="171">Stopped centrally</text><text class="s-s" x="566" y="185">kill switch</text><line class="s-ar" x1="164" y1="63" x2="232.0" y2="63.0"/><polygon class="s-hd" points="232.0,67.2 232.0,58.8 240,63"/><text class="s-l" x="202" y="55" text-anchor="middle">pair</text><line class="s-arg" x1="410" y1="63" x2="478.0" y2="63.0"/><polygon class="s-hdg" points="478.0,67.2 478.0,58.8 486,63"/><text class="s-lg" x="448" y="55" text-anchor="middle">you sign in</text><line class="s-ar" x1="636" y1="63" x2="704.0" y2="63.0"/><polygon class="s-hd" points="704.0,67.2 704.0,58.8 712,63"/><text class="s-l" x="674" y="55" text-anchor="middle">idle / logoff</text><polyline class="s-ard" points="799,40 799,16 325,16 325,34"/><polygon class="s-hdd" points="320.8,34 329.2,34 325,40"/><text class="s-l" x="562" y="12" text-anchor="middle">sign in again — the job resumes</text><line class="s-arb" x1="540" y1="86" x2="446.7" y2="147.6"/><polygon class="s-hdb" points="444.4,144.1 449.0,151.1 440,152"/><text class="s-lb" x="452" y="118" text-anchor="start">identity mismatch</text><line class="s-arb" x1="580" y1="86" x2="634.6" y2="146.1"/><polygon class="s-hdb" points="631.5,148.9 637.7,143.3 640,152"/><text class="s-lb" x="636" y="118" text-anchor="start">kill switch</text><text class="s-l" x="450" y="222" text-anchor="middle">No credential is ever stored — the armed state exists only because the person signed in</text></svg></div>
+        <p class="fdcap"><span class="t-en">Nothing is armed until the person signs in to Oracle himself. Every red path stops and does not repair.</span><span class="t-ar">لا يتسلّح المحرّك حتى يسجّل الشخص دخوله إلى أوراكل بنفسه. وكل مسار أحمر يتوقّف ولا يعالج.</span></p>
+
+        <span class="h" style="margin-block-start:.5rem"><span class="t-en">2 · REPORT JOB</span><span class="t-ar">٢ · مهمة التقرير</span></span>
+        <div class="fd"><svg viewBox="0 0 900 292" role="img" aria-label="Report job phases: submit, poll, and only Completed-Normal proceeds to fetch and load."><rect class="s-st" x="14" y="46" width="100" height="44" rx="6"/><text class="s-t" x="24" y="65">Queued</text><rect class="s-n" x="158" y="46" width="130" height="44" rx="6"/><text class="s-t" x="168" y="65">Submitted</text><text class="s-s" x="168" y="79">request id</text><rect class="s-live" x="332" y="46" width="120" height="44" rx="6"/><text class="s-t" x="342" y="65">Polling</text><text class="s-s" x="342" y="79">phase / status</text><rect class="s-ok" x="496" y="46" width="160" height="44" rx="6"/><text class="s-t" x="506" y="65">Completed</text><text class="s-s" x="506" y="79">/ Normal</text><rect class="s-n" x="496" y="140" width="100" height="44" rx="6"/><text class="s-t" x="506" y="159">Fetch</text><text class="s-s" x="506" y="173">to the folder</text><rect class="s-n" x="640" y="140" width="100" height="44" rx="6"/><text class="s-t" x="650" y="159">Load</text><text class="s-s" x="650" y="173">to the store</text><rect class="s-ok" x="784" y="140" width="100" height="44" rx="6"/><text class="s-t" x="794" y="159">Done</text><text class="s-s" x="794" y="173">rows verified</text><rect class="s-bad" x="300" y="236" width="170" height="44" rx="6"/><text class="s-t" x="310" y="255">Completed / Error</text><text class="s-s" x="310" y="269">no download</text><rect class="s-warn" x="500" y="236" width="150" height="44" rx="6"/><text class="s-t" x="510" y="255">Abandoned</text><text class="s-s" x="510" y="269">24h ceiling</text><rect class="s-warn" x="684" y="236" width="200" height="44" rx="6"/><text class="s-t" x="694" y="255">Waiting for you</text><text class="s-s" x="694" y="269">session ended · sign in to resume</text><line class="s-ar" x1="114" y1="68" x2="150.0" y2="68.0"/><polygon class="s-hd" points="150.0,72.2 150.0,63.8 158,68"/><text class="s-l" x="136" y="60" text-anchor="middle">submit</text><line class="s-ar" x1="288" y1="68" x2="324.0" y2="68.0"/><polygon class="s-hd" points="324.0,72.2 324.0,63.8 332,68"/><text class="s-l" x="310" y="60" text-anchor="middle">id</text><line class="s-arg" x1="452" y1="68" x2="488.0" y2="68.0"/><polygon class="s-hdg" points="488.0,72.2 488.0,63.8 496,68"/><text class="s-lg" x="474" y="60" text-anchor="middle">ready</text><polyline class="s-ar" points="452,52 452,24 332,24 332,44"/><polygon class="s-hd" points="327.8,44 336.2,44 332,50"/><text class="s-l" x="392" y="20" text-anchor="middle">poll again — 2 → 10 → 30 min</text><line class="s-arg" x1="546" y1="90" x2="546.0" y2="132.0"/><polygon class="s-hdg" points="541.8,132.0 550.2,132.0 546,140"/><line class="s-ar" x1="596" y1="162" x2="632.0" y2="162.0"/><polygon class="s-hd" points="632.0,166.2 632.0,157.8 640,162"/><line class="s-ar" x1="740" y1="162" x2="776.0" y2="162.0"/><polygon class="s-hd" points="776.0,166.2 776.0,157.8 784,162"/><line class="s-ar" x1="392" y1="90" x2="392" y2="206"/><line class="s-ar" x1="392" y1="206" x2="784" y2="206"/><line class="s-arb" x1="392" y1="206" x2="392" y2="228"/><polygon class="s-hdb" points="387.8,228 396.2,228 392,236"/><line class="s-ar" x1="575" y1="206" x2="575" y2="228"/><polygon class="s-hd" points="570.8,228 579.2,228 575,236"/><line class="s-ar" x1="784" y1="206" x2="784" y2="228"/><polygon class="s-hd" points="779.8,228 788.2,228 784,236"/><text class="s-lb" x="392" y="224" text-anchor="middle">Error / Terminated</text><text class="s-l" x="575" y="224" text-anchor="middle">no answer</text><text class="s-l" x="784" y="224" text-anchor="middle">session ended</text><text class="s-l" x="384" y="152" text-anchor="end">all other outcomes</text></svg></div>
+        <p class="fdcap"><span class="t-en">Only Completed / Normal continues to fetch and load. Completed / Error is a finished report that failed, and it is never downloaded.</span><span class="t-ar">لا يتقدّم إلى التنزيل والتحميل إلا Completed / Normal. و Completed / Error تقريرٌ اكتمل وفشل، ولا يُنزَّل أبداً.</span></p>
+
+        <span class="h" style="margin-block-start:.5rem"><span class="t-en">3 · SCRIPT LIFECYCLE</span><span class="t-ar">٣ · دورة حياة النص</span></span>
+        <div class="fd"><svg viewBox="0 0 900 208" role="img" aria-label="Script lifecycle from draft to published, with the gates that block each step."><rect class="s-st" x="14" y="40" width="96" height="42" rx="6"/><text class="s-t" x="24" y="59">Draft</text><rect class="s-n" x="146" y="40" width="110" height="42" rx="6"/><text class="s-t" x="156" y="59">Authored</text><text class="s-s" x="156" y="73">in the tool</text><rect class="s-n" x="292" y="40" width="100" height="42" rx="6"/><text class="s-t" x="302" y="59">In test</text><rect class="s-n" x="428" y="40" width="100" height="42" rx="6"/><text class="s-t" x="438" y="59">Passed</text><rect class="s-warn" x="564" y="40" width="140" height="42" rx="6"/><text class="s-t" x="574" y="59">Pending</text><text class="s-s" x="574" y="73">approval</text><rect class="s-ok" x="740" y="40" width="144" height="42" rx="6"/><text class="s-t" x="750" y="59">Published</text><rect class="s-n" x="430" y="140" width="150" height="42" rx="6"/><text class="s-t" x="440" y="159">Superseded</text><text class="s-s" x="440" y="173">new version</text><rect class="s-bad" x="616" y="140" width="150" height="42" rx="6"/><text class="s-t" x="626" y="159">Suspended</text><text class="s-s" x="626" y="173">signature drift</text><rect class="s-st" x="800" y="140" width="84" height="42" rx="6"/><text class="s-t" x="810" y="159">Retired</text><line class="s-ar" x1="110" y1="61" x2="138.0" y2="61.0"/><polygon class="s-hd" points="138.0,65.2 138.0,56.8 146,61"/><line class="s-ar" x1="256" y1="61" x2="284.0" y2="61.0"/><polygon class="s-hd" points="284.0,65.2 284.0,56.8 292,61"/><text class="s-lg" x="274.0" y="53" text-anchor="middle">L3</text><line class="s-ar" x1="392" y1="61" x2="420.0" y2="61.0"/><polygon class="s-hd" points="420.0,65.2 420.0,56.8 428,61"/><text class="s-lg" x="410.0" y="53" text-anchor="middle">L5</text><line class="s-ar" x1="528" y1="61" x2="556.0" y2="61.0"/><polygon class="s-hd" points="556.0,65.2 556.0,56.8 564,61"/><text class="s-lg" x="546.0" y="53" text-anchor="middle">L6</text><line class="s-ar" x1="704" y1="61" x2="732.0" y2="61.0"/><polygon class="s-hd" points="732.0,65.2 732.0,56.8 740,61"/><text class="s-lg" x="722.0" y="53" text-anchor="middle">L7 L8</text><line class="s-arb" x1="790" y1="82" x2="696.9" y2="136.0"/><polygon class="s-hdb" points="694.8,132.4 699.0,139.6 690,140"/><text class="s-lb" x="700" y="118" text-anchor="start">L9 auto</text><line class="s-ard" x1="770" y1="82" x2="547.8" y2="138.0"/><polygon class="s-hdd" points="546.7,134.0 548.8,142.1 540,140"/><line class="s-ard" x1="830" y1="82" x2="838.6" y2="132.1"/><polygon class="s-hdd" points="834.5,132.8 842.8,131.4 840,140"/><text class="s-l" x="450" y="198" text-anchor="start">A gate that is not met blocks the step — by the machine, not by discipline</text></svg></div>
+        <p class="fdcap"><span class="t-en">The gates are requirement ids: assertions present, passed on test, approver is not the author, production signature matches, change request attached. L9 suspends a published script automatically when Oracle moves the page.</span><span class="t-ar">البوابات معرّفات متطلبات: التحقّقات موجودة، واجتاز الاختبار، والمعتمِد غير المسجِّل، وبصمة الإنتاج مطابقة، وطلب التغيير مرفق. و L9 تُعلّق نصاً منشوراً آلياً حين يغيّر أوراكل الصفحة.</span></p>
+      </div>
+    </aside>
+
+    <div class="split" id="split" role="separator" aria-orientation="vertical" aria-controls="ws" tabindex="0"
+      aria-valuemin="300" aria-valuemax="760" aria-valuenow="340" aria-label="Resize the workspace"></div>
+
+    <!-- ─ المتصفّح ─ -->
+    <section class="br" id="br" data-env="prod" aria-label="Browser">
+      <div class="br__url">
+        <span class="chip" id="brChip"></span>
+        <span class="url"><span class="lock" aria-label="Secure connection">&#128274;</span><span id="urlText"></span></span>
+      </div>
+      <div class="br__view">
+        <div class="br__page" lang="en">
+
+          <div data-page="navigate">
+            <div class="ora__bar"><span><span class="oenv">Oracle E-Business Suite</span> &mdash; Home</span><span data-who="ora"></span></div>
+            <div class="ora__crumb">Home</div>
+            <div class="ora__t">Navigator</div>
+            <div class="ora__nav">
+              <div><b>EAM Maintenance User</b><span>Work Requests</span><span>Work Orders</span><span>Asset Search</span></div>
+              <div><b>Requests</b><span>Submit a New Request</span><span>View Requests</span></div>
+            </div>
+            <div class="ora__note">drawn simplified on purpose — the page belongs to Oracle</div>
+          </div>
+
+          <div data-page="requests" hidden>
+            <div class="ora__bar"><span><span class="oenv">Oracle EBS</span> &mdash; Maintenance</span><span data-who="ora"></span></div>
+            <div class="ora__crumb">Home &gt; Requests</div>
+            <div class="ora__t">Submit a New Request</div>
+            <div class="ora__grid">
+              <label>Request Name</label><span class="ora__in" id="f1"></span>
+              <label>Plant</label><span class="ora__in" id="f2"></span>
+              <label>From Date</label><span class="ora__in" id="f3"></span>
+              <label>To Date</label><span class="ora__in" id="f4"></span>
+            </div>
+            <div class="ora__row"><span class="ora__btn" id="fSubmit">Submit</span><span class="ora__note">gold = written by the script</span></div>
+          </div>
+
+          <div data-page="reqlist" hidden>
+            <div class="ora__bar"><span><span class="oenv">Oracle EBS</span> &mdash; Requests</span><span data-who="ora"></span></div>
+            <div class="ora__crumb">Home &gt; Requests &gt; View</div>
+            <div class="ora__t">Find Requests</div>
+            <div class="wrapx" style="max-width:640px"><table class="tbl tbl--ltr"><thead><tr><th>Request ID</th><th>Name</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+              <tr><td>8841207</td><td>EAM Downtime Analysis</td><td>Completed</td><td>Normal</td></tr>
+              <tr><td>8841190</td><td>EAM Open Work Orders</td><td>Running</td><td>Normal</td></tr>
+              <tr><td>8841150</td><td>EAM Downtime Detail</td><td>Completed</td><td>Normal</td></tr>
+              <tr><td>8841102</td><td>Cost Summary</td><td>Inactive</td><td>Scheduled</td></tr>
+              <tr><td>8840551</td><td>Stock Movement</td><td>Completed</td><td>Error</td></tr>
+            </tbody></table></div>
+            <div class="ora__row"><span class="ora__btn">View Output</span><span class="ora__btn">View Log</span>
+              <span class="ora__note">phase and status are two fields, read from the customer&#39;s own lookups</span></div>
+          </div>
+
+          <div data-page="output" hidden>
+            <div class="ora__bar"><span><span class="oenv">Oracle EBS</span> &mdash; Request Output</span><span data-who="ora"></span></div>
+            <div class="ora__crumb">Home &gt; Requests &gt; 8841150 &gt; Output</div>
+            <div class="ora__t">EAM Downtime Detail</div>
+            <div class="wrapx" style="max-width:640px"><table class="tbl tbl--ltr"><thead><tr><th>Plant</th><th>Equipment</th><th>Start</th><th>Minutes</th><th>Reason</th></tr></thead><tbody>
+              <tr><td>CP-01</td><td>RM-MILL-2</td><td>2026-09-15 02:10</td><td>85</td><td>Feeder jam</td></tr>
+              <tr><td>CP-01</td><td>KILN-1</td><td>2026-09-16 19:40</td><td>240</td><td>Refractory</td></tr>
+              <tr><td>CP-01</td><td>PACK-3</td><td>2026-09-18 06:05</td><td>45</td><td>Bag jam</td></tr>
+            </tbody></table></div>
+            <div class="ora__note">1 &ndash; 3 of 1,284</div>
+          </div>
+
+          <div data-page="workreq" hidden>
+            <div class="ora__bar"><span><span class="oenv">Oracle EBS</span> &mdash; eAM Self-Service</span><span data-who="ora"></span></div>
+            <div class="ora__crumb">Home &gt; Work Requests &gt; Create</div>
+            <div class="ora__t">Create Work Request</div>
+            <div class="ora__grid">
+              <label>Asset Number</label><span class="ora__in"></span>
+              <label>Description</label><span class="ora__in"></span>
+              <label>Priority</label><span class="ora__in"></span>
+              <label>Request Type</label><span class="ora__in"></span>
+            </div>
+            <div class="ora__row"><span class="ora__btn">Submit</span><span class="ora__note">Execute in the Queue fills this page after your confirmation</span></div>
+          </div>
+
+          <div data-page="login" hidden>
+            <div class="ora__bar"><span>Oracle E-Business Suite</span><span>Sign In</span></div>
+            <div style="height:.4rem"></div>
+            <div class="ora__grid"><label>User Name</label><span class="ora__in"></span>
+              <label>Password</label><span class="ora__in pwd"></span></div>
+            <div class="ora__row"><span class="ora__btn">Log In</span><span class="ora__note">the user types here &mdash; never the tool</span></div>
+          </div>
+
+          <div data-page="cologin" hidden>
+            <div class="ora__bar ora__bar--co"><span>CementOps &mdash; Sign in</span><span>cementops.local</span></div>
+            <div class="ora__t">Sign in to CementOps</div>
+            <div class="ora__grid"><label>User name</label><span class="ora__in"></span>
+              <label>Password</label><span class="ora__in pwd"></span>
+              <label>Authenticator code</label><span class="ora__in" style="max-width:140px"></span></div>
+            <div class="ora__row"><span class="ora__btn">Sign in</span><span class="ora__note">your usual CementOps sign-in and MFA &mdash; then this device is linked</span></div>
+          </div>
+
+          <div data-page="cohelp" hidden>
+            <div class="ora__bar ora__bar--co"><span>CementOps &rsaquo; Help &rsaquo; ERP Agent</span><span>cementops.local</span></div>
+            <div class="ora__t">ERP Agent &mdash; user guide</div>
+            <div style="display:grid; gap:.6rem; max-width:620px">
+              <div class="card"><b>What the tool does</b><small>It runs approved scripts inside your own Oracle session, with your rights. It never holds your Oracle password.</small></div>
+              <div class="card"><b>What you do</b><small>Sign in to Oracle yourself, choose a report, check the confirmation, press Run. Do not touch the page while it runs &mdash; any click stops it.</small></div>
+              <div class="card"><b>When it refuses</b><small>It stops and does not repair. The message says what happened and what to do next.</small></div>
+            </div>
+          </div>
+
+          <div data-page="studio" hidden>
+            <div class="ora__bar ora__bar--co"><span>CementOps &rsaquo; Integration &rsaquo; Script Studio</span><span data-who="name-en"></span></div>
+            <div style="display:flex; gap:.6rem; align-items:baseline; flex-wrap:wrap">
+              <div class="ora__t" id="studioTitle"></div><span class="chip" id="studioChip"></span>
+            </div>
+            <div class="stabs" role="tablist" aria-label="Script Studio">
+              <button role="tab" data-stab="sdef">Definition</button><button role="tab" data-stab="stest">Test gate</button>
+              <button role="tab" data-stab="spub">Approve &amp; publish</button><button role="tab" data-stab="sload">Load definition</button>
+            </div>
+            <div id="studioBody" style="display:grid; gap:.7rem; max-width:720px"></div>
+          </div>
+
+        </div>
+        <div class="guard" id="guard" hidden><span><span class="t-en">Automation in control — any click in this page stops the run</span><span class="t-ar">الأتمتة تعمل — أي نقرة على الصفحة توقف التشغيل</span></span></div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="bar">
+    <span>v1.0.0</span>
+    <span id="sSession"></span>
+    <span id="sPoll"></span>
+    <span id="sKill"></span>
+    <span><span class="t-en">Monitoring: connected</span><span class="t-ar">المراقبة: متّصلة</span></span>
+    <span class="bar__end">
+      <span class="seg rv" role="group" aria-label="Persona"><span><span class="t-en">Persona</span><span class="t-ar">الدور</span></span>
+        <span class="seg__b"><button id="pUser" aria-pressed="true"><span class="t-en">User</span><span class="t-ar">مستخدم</span></button><button id="pDesigner" aria-pressed="false"><span class="t-en">Designer</span><span class="t-ar">مصمّم</span></button></span></span>
+      <button class="rvbtn" id="rvBtn" aria-pressed="false"></button>
+    </span>
+  </footer>
+</div>
+
+<!-- ─ حوار المعاملات ─ -->
+<div class="scrim" id="dlgParams" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="pTitle" tabindex="-1">
+    <div class="dlg__h" id="pTitle"></div>
+    <div class="dlg__b">
+      <div class="field"><label for="pPlant"><span class="t-en">Plant</span><span class="t-ar">المصنع</span></label><input id="pPlant" value="CP-01 — Plant 1 · Line 2" readonly>
+        <span class="note"><span class="t-en">Fixed by your scope — not chosen here</span><span class="t-ar">يأتي من نطاقك — لا يُختار هنا</span></span></div>
+      <div class="dates" id="pDates">
+        <div class="dates__row">
+          <div class="field"><label for="pFrom"><span class="t-en">From</span><span class="t-ar">من</span></label><input type="date" id="pFrom" value="2026-09-14" data-autofocus></div>
+          <div class="field"><label for="pTo"><span class="t-en">To</span><span class="t-ar">إلى</span></label><input type="date" id="pTo" value="2026-09-20"></div>
+        </div>
+        <p class="dlg__err" id="pErr" role="alert" hidden></p>
+        <div class="card card--warn"><b><span class="t-en">Maximum range: 31 days</span><span class="t-ar">أقصى مدى: 31 يوماً</span></b>
+          <small><span class="t-en">Checked again on the server; it cannot be widened from this machine</span><span class="t-ar">يُتحقَّق منه مجدداً على الخادم ولا يمكن توسيعه من هذا الجهاز</span> <span class="rqid">E1</span> <span class="rqid">C6</span></small></div>
+      </div>
+    </div>
+    <div class="dlg__f"><button class="btn" id="toConfirm"><span class="t-en">Continue</span><span class="t-ar">متابعة</span></button>
+      <button class="btn btn--ghost" data-close><span class="t-en">Cancel</span><span class="t-ar">إلغاء</span></button></div>
+  </div>
+</div>
+
+<!-- ─ حوار التأكيد: القيم الفعلية وأين تُكتب ─ -->
+<div class="scrim" id="dlgConfirm" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="cTitle" tabindex="-1">
+    <div class="dlg__h" id="cTitle"><span class="t-en">Confirm — exactly what will happen</span><span class="t-ar">تأكيد — ما الذي سيحدث بالضبط</span></div>
+    <div class="dlg__b">
+      <p class="note" id="cFor"></p>
+      <ol class="plan" id="cPlan"></ol>
+      <div class="card" id="cSum"></div>
+      <dl class="kv" id="cKv"></dl>
+    </div>
+    <div class="dlg__f"><button class="btn" id="doRun"><span class="t-en">Run now</span><span class="t-ar">تشغيل الآن</span></button>
+      <button class="btn btn--ghost" data-close><span class="t-en">Cancel</span><span class="t-ar">إلغاء</span></button></div>
+  </div>
+</div>
+
+<!-- ─ حوار النتيجة ─ -->
+<div class="scrim" id="dlgResult" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="rTitle" tabindex="-1">
+    <div class="dlg__h" id="rTitle"><span class="t-en">Request submitted</span><span class="t-ar">تمّ إرسال الطلب</span></div>
+    <div class="dlg__b" id="rBody"></div>
+    <div class="dlg__f"><button class="btn" id="rJobs" data-autofocus><span class="t-en">Track in Jobs</span><span class="t-ar">متابعة في المهام</span></button>
+      <button class="btn btn--ghost" data-toast="oracle"><span class="t-en">Open in Oracle</span><span class="t-ar">فتحه في أوراكل</span></button>
+      <button class="btn btn--ghost" data-close><span class="t-en">Close</span><span class="t-ar">إغلاق</span></button></div>
+  </div>
+</div>
+
+<!-- ─ حوار الرمز: بديل للأجهزة المشتركة والأكشاك ─ -->
+<div class="scrim" id="dlgPair" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="qTitle" tabindex="-1">
+    <div class="dlg__h" id="qTitle"><span class="t-en">Link with a one-time code</span><span class="t-ar">الربط برمز لمرة واحدة</span></div>
+    <div class="dlg__b">
+      <p class="note"><span class="t-en">For shared devices and kiosks. On your own PC, sign in to CementOps on the page instead.</span><span class="t-ar">للأجهزة المشتركة والأكشاك. وعلى جهازك الشخصي سجّل الدخول إلى CementOps في الصفحة بدلاً من ذلك.</span> <span class="rqid">A6</span></p>
+      <div style="display:flex; gap:.9rem; align-items:center">
+        <div style="width:96px;height:96px;flex:none;border:1px solid var(--line-strong);border-radius:6px;
+          background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px),
+                     repeating-linear-gradient(0deg,var(--ink) 0 6px,transparent 6px 12px);
+          background-blend-mode:screen;opacity:.85" aria-hidden="true"></div>
+        <div style="display:grid; gap:.4rem; flex:1">
+          <div class="card"><b><span class="t-en">One-time code</span><span class="t-ar">رمز لمرة واحدة</span></b>
+            <small><span class="t-en">Valid 5 minutes · bound to you and this device</span><span class="t-ar">صالح 5 دقائق · مربوط بك وبهذا الجهاز</span> <span class="rqid">A7</span></small></div>
+          <div style="display:flex; gap:.25rem" aria-hidden="true">
+            <span class="ora__in" style="width:1.8rem"></span><span class="ora__in" style="width:1.8rem"></span>
+            <span class="ora__in" style="width:1.8rem"></span><span class="ora__in" style="width:1.8rem"></span>
+            <span class="ora__in" style="width:1.8rem"></span><span class="ora__in" style="width:1.8rem"></span>
+          </div>
+        </div>
+      </div>
+      <div class="card card--warn"><b><span class="t-en">You will never be asked for your Oracle password here</span><span class="t-ar">لن تُطلب منك كلمة مرور أوراكل هنا</span></b>
+        <small><span class="t-en">You sign in yourself, on the real Oracle page</span><span class="t-ar">أنت تسجّل دخولك بنفسك في صفحة أوراكل الحقيقية</span></small></div>
+    </div>
+    <div class="dlg__f"><button class="btn" id="pairLink"><span class="t-en">Link</span><span class="t-ar">ربط</span></button>
+      <button class="btn btn--ghost" data-close><span class="t-en">Cancel</span><span class="t-ar">إلغاء</span></button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var body = document.body;
+  function $(id) { return document.getElementById(id); }
+  var app = $('app'), ws = $('ws'), br = $('br'), split = $('split');
+  var views = [].slice.call(ws.querySelectorAll('[data-view]'));
+  var navs = [].slice.call(document.querySelectorAll('.nav__i'));
+  var pages = [].slice.call(document.querySelectorAll('[data-page]'));
+  var fields = ['f1', 'f2', 'f3', 'f4'].map($);
+
+  /* ─ أدوات ─ */
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function t(en, ar) { return '<span class="t-en">' + en + '</span><span class="t-ar">' + ar + '</span>'; }
+  function tp(p) { return t(p[0], p[1]); }
+  function isAr() { return body.getAttribute('data-lang') === 'ar'; }
+  function L(en, ar) { return isAr() ? ar : en; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function clock(sec) { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (sec ? ':' + pad(d.getSeconds()) : ''); }
+  function each(sel, fn) { [].forEach.call(document.querySelectorAll(sel), fn); }
+
+  /* ─ بيانات المحاكاة ─ */
+  var ORA = 'https://erp.plant.local', TEST = 'https://erp-test.plant.local', CO = 'https://cementops.local';
+  var REQ = '/OA_HTML/OA.jsp?page=/oracle/apps/fnd/requests/', NAVI = '/OA_HTML/OA.jsp?page=/oracle/apps/fnd/framework/navigate';
+  var PERSONA = {
+    user: {name:['A. Alzahrani', 'م. عبدالله الزهراني'], unit:['Plant 1 · Line 2', 'مصنع 1 · خط 2'], ora:'AALZAHRANI'},
+    designer: {name:['K. Almutairi', 'م. خالد المطيري'], unit:['Applications team', 'فريق التطبيقات'], ora:'KALMUTAIRI'}
+  };
+  var MODE = {
+    A: ['Output stays in Oracle', 'يبقى الناتج في أوراكل'],
+    B: ['Rows on your phone — no file', 'صفوف على جوالك بلا ملف'],
+    C: ['Loads to your local store', 'يُحمَّل إلى مخزنك المحلي']
+  };
+  var PHASES = {
+    A: [['Submit', 'إرسال'], ['Poll', 'استطلاع'], ['Notify', 'إشعار']],
+    B: [['Submit', 'إرسال'], ['Poll', 'استطلاع'], ['Rows to phone', 'إلى الجوال']],
+    C: [['Submit', 'إرسال'], ['Poll', 'استطلاع'], ['Fetch', 'تنزيل'], ['Load', 'تحميل']]
+  };
+  var REPORTS = {
+    dw: {en:'Weekly downtime report', ar:'تقرير التوقفات الأسبوعي', code:'RPT-DOWNTIME-W', v:3, req:'EAM Downtime Analysis', mode:'A', dates:true, cap:20, used:1, last:{at:'04:12', en:'phone notified', ar:'أُشعر الجوال'}},
+    wo: {en:'Open work orders', ar:'أوامر العمل المفتوحة', code:'RPT-OPEN-WO', v:2, req:'EAM Open Work Orders', mode:'B', dates:false, cap:10, used:1, last:{at:'03:50', en:'running', ar:'قيد التشغيل'}},
+    dx: {en:'Downtime detail extract', ar:'مستخرج تفاصيل التوقفات', code:'RPT-DOWNTIME-X', v:2, req:'EAM Downtime Detail', mode:'C', dates:true, cap:5, used:1, last:{at:'03:30', en:'ready to fetch', ar:'جاهز للتنزيل'}},
+    cs: {en:'Cost summary', ar:'ملخّص التكاليف', mode:'A'},
+    sp: {en:'Spare parts usage', ar:'استهلاك قطع الغيار', mode:'B'},
+    sm: {en:'Stock movement', ar:'حركة المخزون', mode:'C'},
+    ag: {en:'Aging report', ar:'تقرير الأعمار', mode:'A'}
+  };
+  var CATALOGUE = ['dw', 'wo', 'dx'];
+  var JOBS = [
+    {id:'8841207', r:'dw', at:['today 04:12', 'اليوم 04:12'], chip:'Completed / Normal', tone:'ok', done:3, act:'oracle', note:['Your phone was notified — the output stays in Oracle', 'أُشعر جوالك — والناتج باقٍ في أوراكل']},
+    {id:'8841190', r:'wo', at:['today 03:50', 'اليوم 03:50'], chip:'Running / Normal', tone:'live', done:1, cur:'run', act:'cancel', note:['Next poll in 10 min', 'الاستطلاع القادم بعد 10 دقائق']},
+    {id:'8841150', r:'dx', at:['today 03:30', 'اليوم 03:30'], chip:'Completed / Normal', tone:'ok', done:2, cur:'wait', needs:true, act:'fetch', note:['Ready — fetch and load when you choose', 'جاهز — نزّله وحمّله متى شئت']},
+    {id:'8841102', r:'cs', at:['today 03:10', 'اليوم 03:10'], chip:'Inactive / Scheduled', tone:'warn', done:1, cur:'run', act:'cancel', note:['Next poll in 30 min', 'الاستطلاع القادم بعد 30 دقيقة']},
+    {id:'8841011', r:'sp', at:['today 01:40', 'اليوم 01:40'], chip:'Running / Normal', tone:'live', done:1, cur:'wait', needs:true, act:'signin', note:['Waiting for you — your Oracle session ended. Sign in to resume.', 'بانتظارك — انتهت جلسة أوراكل. سجّل دخولك ليستأنف.']},
+    {id:'8840551', r:'sm', at:['yesterday 22:10', 'أمس 22:10'], chip:'Completed / Error', tone:'bad', done:1, cur:'bad', act:'log', note:['Finished and failed — not downloaded', 'اكتمل وفشل — لم يُنزَّل']},
+    {id:'8837744', r:'ag', at:['2 days ago', 'قبل يومين'], chip:'Abandoned — 24 h ceiling', tone:'', done:1, cur:'bad', act:'resubmit', note:['No answer within 24 hours — polling stopped', 'لا جواب خلال 24 ساعة — توقّف الاستطلاع']}
+  ];
+  var STORE = [
+    {code:'RPT-DOWNTIME-X', table:'TBL_DOWNTIME_X', last:['yesterday 04:31', 'أمس 04:31'], rows:'1,262'},
+    {code:'RPT-STOCK-MOV', table:'TBL_STOCK_MOV', last:['— failed', '— فشل'], rows:'0'}
+  ];
+  var LOG = [
+    {t:['04:12', '04:12'], code:'RPT-DOWNTIME-W', v:3, tone:'ok', out:['submitted · phone notified', 'أُرسل · أُشعر الجوال'], doc:'8841207'},
+    {t:['03:50', '03:50'], code:'RPT-OPEN-WO', v:2, tone:'live', out:['submitted · running', 'أُرسل · قيد التشغيل'], doc:'8841190'},
+    {t:['03:30', '03:30'], code:'RPT-DOWNTIME-X', v:2, tone:'ok', out:['submitted · ready to fetch', 'أُرسل · جاهز للتنزيل'], doc:'8841150'},
+    {t:['03:10', '03:10'], code:'RPT-COST-SUM', v:1, tone:'warn', out:['submitted · scheduled', 'أُرسل · مجدول'], doc:'8841102'},
+    {t:['01:40', '01:40'], code:'RPT-SPARES', v:1, tone:'warn', out:['session ended · waiting for you', 'انتهت الجلسة · بانتظارك'], doc:'8841011'},
+    {t:['yesterday', 'أمس'], code:'RPT-STOCK-MOV', v:5, tone:'bad', out:['Completed / Error', 'Completed / Error'], doc:'8840551'},
+    {t:['yesterday', 'أمس'], code:'RPT-DOWNTIME-X', v:2, tone:'ok', out:['loaded 1,262 rows', 'حُمّل 1,262 صفاً'], doc:'8840790'},
+    {t:['yesterday', 'أمس'], code:'RPT-DOWNTIME-W', v:3, tone:'warn', out:['halted — signature', 'توقّف — البصمة'], doc:'—'}
+  ];
+
+  /* لكل شاشة صفحتها في المتصفّح وعنوانها؛ فلا يتعارض الشريط مع ما تحته */
+  var VIEWS = {
+    home: {page:'navigate', url:ORA + NAVI},
+    reports: {page:'requests', url:ORA + REQ},
+    jobs: {page:'reqlist', url:ORA + REQ + 'Requests'},
+    results: {page:'output', url:ORA + REQ + 'Output'},
+    queue: {page:'workreq', url:ORA + '/OA_HTML/OA.jsp?page=/oracle/apps/eam/workrequest/'},
+    designer: {page:'requests', url:TEST + REQ, ws:'wide', auth:true},
+    studio: {page:'studio', auth:true, nav:'designer'},
+    log: {page:'reqlist', url:ORA + REQ + 'Requests'},
+    integrity: {page:'navigate', url:ORA + NAVI},
+    settings: {page:'navigate', url:ORA + NAVI},
+    help: {page:'cohelp', url:CO + '/Help/ErpAgent'},
+    flow: {ws:'full', keep:true, review:true},
+    index: {ws:'wide', keep:true, review:true},
+    pairing: {page:'cologin', url:CO + '/Account/SignIn?returnUrl=%2FDevices%2FPair', session:'unpaired', review:true},
+    presignin: {page:'login', url:ORA + '/OA_HTML/AppsLogin', session:'signedout', review:true},
+    refusals: {page:'requests', url:ORA + REQ, review:true}
+  };
+
+  var current = 'home', session = 'signedin', curEnv = 'prod', killOn = false, run = null, pick = null;
+  var sessionStart = Date.now() - 134 * 60000, CEILING = 8 * 60, pollSec = 480;
+
+  /* ─ اللغة ─ */
+  function setLang(v) {
+    body.setAttribute('data-lang', v);
+    document.documentElement.lang = v;
+    $('lEn').setAttribute('aria-pressed', String(v === 'en'));
+    $('lAr').setAttribute('aria-pressed', String(v === 'ar'));
+    save('lang', v);
+    relabel();
+  }
+
+  /* القائمة المطويّة بلا نصوص: الاسم يصير تلميحاً واسماً للقارئ الآلي */
+  function relabel() {
+    var mini = body.getAttribute('data-nav') === 'mini';
+    each('.nav__i', function (b) {
+      var lab = b.querySelector('.nav__t .t-' + (isAr() ? 'ar' : 'en'));
+      if (mini && lab) { b.title = lab.textContent; b.setAttribute('aria-label', lab.textContent); }
+      else { b.removeAttribute('title'); b.removeAttribute('aria-label'); }
+    });
+    var tg = $('navTgl');
+    if (mini) { tg.title = L('Expand the menu (Ctrl+B)', 'توسيع القائمة (Ctrl+B)'); tg.setAttribute('aria-label', tg.title); }
+    else { tg.removeAttribute('title'); tg.removeAttribute('aria-label'); }
+    split.setAttribute('aria-label', L('Resize the workspace', 'تغيير عرض بيئة العمل'));
+  }
+
+  function flipNav() {
+    body.setAttribute('data-nav', body.getAttribute('data-nav') === 'mini' ? 'full' : 'mini');
+    save('nav', body.getAttribute('data-nav'));
+    relabel(); clampWs();
+  }
+
+  /* ─ وضع المراجعة والدور ─ */
+  function setReview(on) {
+    body.setAttribute('data-review', on ? 'on' : 'off');
+    $('rvBtn').setAttribute('aria-pressed', String(on));
+    $('rvBtn').innerHTML = t('Prototype · review tools: ' + (on ? 'on' : 'off'), 'نموذج تصميم · أدوات المراجعة: ' + (on ? 'ظاهرة' : 'مخفيّة'));
+    save('review', on ? 'on' : 'off');
+    if (!on && VIEWS[current].review) go('home');
+  }
+
+  function setPersona(p) {
+    body.setAttribute('data-persona', p);
+    $('pUser').setAttribute('aria-pressed', String(p === 'user'));
+    $('pDesigner').setAttribute('aria-pressed', String(p === 'designer'));
+    var who = PERSONA[p];
+    each('[data-who]', function (el) {
+      var k = el.getAttribute('data-who');
+      if (k === 'ora') el.textContent = who.ora;
+      else if (k === 'name-en') el.textContent = who.name[0];
+      else el.innerHTML = tp(who[k]);
+    });
+    $('setDesigner').innerHTML = p === 'designer'
+      ? '<div class="rpt__h"><b>' + t('Designer mode', 'وضع المصمّم') + '</b><span class="chip chip--ok">' + t('Granted', 'ممنوح') + '</span></div>' +
+        '<small>' + t('Granted to K. Almutairi by IT. Scripts run against TEST; on production the designer can inspect only.', 'منحته تقنية المعلومات لـ م. خالد المطيري. النصوص تعمل على بيئة الاختبار، وعلى الإنتاج يُسمح بالفحص فقط.') + ' <span class="rqid">L13</span></small>'
+      : '<div class="rpt__h"><b>' + t('Designer mode', 'وضع المصمّم') + '</b><span class="chip">' + t('Not granted', 'غير ممنوح') + '</span></div>' +
+        '<small>' + t('IT grants it per person (Integration.Scripts.Design). Without it the authoring tools are not shown at all.', 'تمنحه تقنية المعلومات لشخص بعينه (Integration.Scripts.Design). ومن دونه لا تظهر أدوات التأليف إطلاقاً.') + ' <span class="rqid">L1</span></small>';
+    save('persona', p);
+    if (p === 'user' && VIEWS[current].auth) go('home');
+    renderTitle();
+  }
+
+  /* ─ عرض بيئة العمل وفاصلها القابل للسحب ─ */
+  var DEF = {normal:340, wide:560}, MIN = 300;
+  function wsMode() { return body.getAttribute('data-ws'); }
+  function maxW() {
+    var room = document.querySelector('.body').clientWidth - document.querySelector('.nav').offsetWidth - 420;
+    return Math.max(MIN, Math.min(760, room));
+  }
+  function setW(w, keep) {
+    if (wsMode() === 'full') return;
+    w = Math.round(Math.max(MIN, Math.min(maxW(), w)));
+    ws.style.width = w + 'px';
+    split.setAttribute('aria-valuenow', w);
+    split.setAttribute('aria-valuemax', Math.round(maxW()));
+    if (keep) save('ws-' + wsMode(), w);
+  }
+  function setWs(mode) {
+    body.setAttribute('data-ws', mode);
+    if (mode === 'full') { ws.style.width = ''; return; }
+    setW(parseInt(load('ws-' + mode), 10) || DEF[mode]);
+  }
+  function clampWs() { if (wsMode() !== 'full') setW(ws.getBoundingClientRect().width); }
+  split.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    var left = ws.getBoundingClientRect().left;
+    split.setPointerCapture(e.pointerId); split.classList.add('drag');
+    function mv(ev) { setW(ev.clientX - left); }
+    function up() {
+      split.classList.remove('drag');
+      split.removeEventListener('pointermove', mv); split.removeEventListener('pointerup', up);
+      setW(ws.getBoundingClientRect().width, true);
+    }
+    split.addEventListener('pointermove', mv); split.addEventListener('pointerup', up);
+  });
+  split.addEventListener('keydown', function (e) {
+    var w = ws.getBoundingClientRect().width;
+    if (e.key === 'ArrowRight') setW(w + 16, true);
+    else if (e.key === 'ArrowLeft') setW(w - 16, true);
+    else if (e.key === 'Home') setW(DEF[wsMode()] || 340, true);
+    else return;
+    e.preventDefault();
+  });
+  split.addEventListener('dblclick', function () { setW(DEF[wsMode()] || 340, true); });
+  window.addEventListener('resize', clampWs);
+
+  /* ─ التنقّل ─ */
+  function go(name, opt) {
+    opt = opt || {};
+    var v = VIEWS[name];
+    if (!v) return;
+    var busy = run && run.state === 'running';
+    if (busy && (v.auth || v.session)) { toast(L('Stop the running report first', 'أوقف التقرير الجاري أولاً')); return; }
+    if (v.auth && body.getAttribute('data-persona') !== 'designer') { name = 'home'; v = VIEWS.home; }
+    if (current === 'designer' && name !== 'designer') dReset();
+    current = name;
+    views.forEach(function (x) { x.hidden = x.getAttribute('data-view') !== name; });
+    var hl = opt.nav || v.nav || name;
+    navs.forEach(function (b) {
+      var on = (b.getAttribute('data-go') || b.getAttribute('data-demo')) === hl;
+      b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    setWs(v.ws || 'normal');
+    session = v.session || 'signedin';
+    /* أثناء التشغيل يبقى المتصفّح على صفحته: الانتقال فيه يعني إيقاف التشغيل (D9) */
+    if (!busy && !v.keep) {
+      if (v.page === 'studio') showStudio(opt.tab || 'sdef');
+      else showPage(v.page, v.url);
+    }
+    if (name === 'designer') renderDbg();
+    renderTitle(); renderStatus();
+    ws.scrollTop = 0;
+  }
+
+  function showPage(page, url) {
+    pages.forEach(function (pg) { pg.hidden = pg.getAttribute('data-page') !== page; });
+    $('urlText').textContent = url;
+    curEnv = url.indexOf(TEST) === 0 ? 'test' : url.indexOf(ORA) === 0 ? 'prod' : 'co';
+    br.setAttribute('data-env', curEnv);
+    var chip = $('brChip');
+    chip.className = 'chip' + (curEnv === 'test' ? ' chip--warn' : '');
+    chip.innerHTML = curEnv === 'co' ? t('CementOps page', 'صفحة CementOps')
+      : curEnv === 'test' ? t('Oracle TEST — real page', 'أوراكل TEST — الصفحة الحقيقية')
+      : t('Oracle — real page', 'أوراكل — الصفحة الحقيقية');
+    clearFields();
+    renderTitle();
+  }
+
+  function clearFields() {
+    fields.forEach(function (f) { f.textContent = ''; f.classList.remove('fill', 'tgt', 'err'); });
+    $('fSubmit').classList.remove('tgt');
+  }
+  function clearTargets() {
+    fields.forEach(function (f) { f.classList.remove('tgt'); });
+    $('fSubmit').classList.remove('tgt');
+  }
+  function fill(i, v) { fields[i].textContent = v; fields[i].classList.add('fill'); }
+
+  /* ─ شريط العنوان وشريط الحالة ─ */
+  function renderTitle() {
+    var who = PERSONA[body.getAttribute('data-persona')];
+    var dot = $('tDot'), ora = $('tOra');
+    if (session === 'unpaired') {
+      $('tWho').innerHTML = '· ' + t('Not linked yet', 'لم تُربط بعد');
+      dot.className = 'dot dot--bad'; ora.innerHTML = t('Oracle: —', 'أوراكل: —');
+    } else {
+      $('tWho').innerHTML = '· ' + t('Paired: ' + who.name[0], 'مقترن: ' + who.name[1]);
+      if (session === 'signedout') { dot.className = 'dot dot--warn'; ora.innerHTML = t('Waiting for your Oracle sign-in', 'بانتظار دخولك إلى أوراكل'); }
+      else if (run && run.imposter) { dot.className = 'dot dot--bad'; ora.textContent = 'Oracle: ' + run.imposter; }
+      else { dot.className = 'dot dot--ok'; ora.textContent = 'Oracle: ' + who.ora; }
+    }
+    var env = $('tEnv');
+    env.hidden = curEnv === 'co';
+    env.className = 'env env--' + curEnv;
+    env.textContent = curEnv === 'test' ? 'TEST' : 'PROD';
+    var busy = run && run.state === 'running';
+    $('tRun').hidden = !busy;
+    if (busy) $('tRun').innerHTML = t('Running · step ' + run.i + ' of ' + run.steps.length, 'قيد التشغيل · الخطوة ' + run.i + ' من ' + run.steps.length);
+  }
+
+  function hm(min) { var h = Math.floor(min / 60), m = min % 60; return [h + ' h ' + pad(m) + ' min', h + ' س ' + pad(m) + ' د']; }
+  function openJobs() { return JOBS.filter(isOpen).length; }
+  function renderStatus() {
+    var s = $('sSession');
+    if (session === 'unpaired') s.innerHTML = t('Not linked to CementOps', 'غير مربوطة بـ CementOps');
+    else if (session === 'signedout') s.innerHTML = t('Oracle: not signed in', 'أوراكل: لم تسجّل الدخول');
+    else {
+      var used = Math.floor((Date.now() - sessionStart) / 60000), a = hm(used), b = hm(Math.max(0, CEILING - used));
+      s.innerHTML = t('Oracle session ' + a[0] + ' · limit in ' + b[0], 'جلسة أوراكل ' + a[1] + ' · الحدّ بعد ' + b[1]);
+    }
+    var min = Math.ceil(pollSec / 60);
+    $('sPoll').innerHTML = session !== 'signedin' ? t('No polling', 'لا استطلاع')
+      : openJobs() ? t('Next poll in ' + min + ' min', 'الاستطلاع القادم بعد ' + min + ' د')
+      : t('No polling — no open job', 'لا استطلاع — لا مهمة قائمة');
+    $('sKill').innerHTML = killOn ? '<span class="warnx">' + t('Kill switch: ON — IT, 14:02', 'مفتاح الإيقاف: مُفعَّل — تقنية المعلومات 14:02') + '</span>'
+      : t('Kill switch: off', 'مفتاح الإيقاف: غير مُفعَّل');
+  }
+  setInterval(function () { pollSec -= 30; if (pollSec <= 0) pollSec = 600; renderStatus(); }, 30000);
+
+  /* ─ الكتالوج والمهام والرئيسية ─ */
+  function left(r) { return r.cap - r.used; }
+  function renderCatalogue() {
+    var busy = run && run.state === 'running';
+    $('catalogue').innerHTML = CATALOGUE.map(function (k) {
+      var r = REPORTS[k], mine = busy && run.key === k, off = busy || killOn || left(r) <= 0;
+      return '<div class="card"><div class="rpt__h"><b>' + t(r.en, r.ar) + '</b><span class="chip chip--mode">' + t('Mode ' + r.mode, 'النمط ' + r.mode) + '</span></div>' +
+        '<small>' + tp(MODE[r.mode]) + '</small>' +
+        '<div class="rpt__f"><span>' + t(left(r) + ' of ' + r.cap + ' runs left today', 'المتبقّي اليوم ' + left(r) + ' من ' + r.cap) + '</span>' +
+        '<span>' + t('Last: ' + r.last.at + ' · ' + r.last.en, 'آخر تشغيل: ' + r.last.at + ' · ' + r.last.ar) + '</span></div>' +
+        '<button class="btn btn--block" data-run="' + k + '"' + (off ? ' disabled' : '') + '>' + (mine ? t('Running…', 'قيد التشغيل…') : t('Run', 'تشغيل')) + '</button></div>';
+    }).join('');
+  }
+
+  function isOpen(j) { return j.done < PHASES[REPORTS[j.r].mode].length && j.cur !== 'bad'; }
+  var JACT = {
+    oracle: ['btn--ghost', 'Open in Oracle', 'فتحه في أوراكل'],
+    cancel: ['btn--ghost', 'Cancel', 'إلغاء'],
+    fetch: ['', 'Fetch now', 'تنزيل الآن'],
+    signin: ['', 'Sign in to resume', 'سجّل الدخول للاستئناف'],
+    log: ['btn--ghost', 'View log', 'عرض السجلّ'],
+    resubmit: ['btn--ghost', 'Resubmit', 'إعادة الإرسال']
+  };
+  function renderJobs() {
+    $('jobList').innerHTML = JOBS.map(function (j, n) {
+      var r = REPORTS[j.r], a = JACT[j.act];
+      var steps = PHASES[r.mode].map(function (p, i) {
+        var c = i < j.done ? 'ok' : (i === j.done && j.cur ? j.cur : '');
+        return '<li class="' + c + '">' + tp(p) + '</li>';
+      }).join('');
+      return '<article class="job' + (j.needs ? ' job--needs' : '') + (j.tone === 'bad' ? ' job--bad' : '') + '">' +
+        '<div class="job__h"><b>' + t(r.en, r.ar) + '</b><span class="chip' + (j.tone ? ' chip--' + j.tone : '') + '">' + j.chip + '</span></div>' +
+        '<div class="job__meta"><span class="mono">' + j.id + '</span> · ' + tp(j.at) + ' · ' + t('Mode ' + r.mode, 'النمط ' + r.mode) + '</div>' +
+        '<ol class="stepper">' + steps + '</ol>' +
+        '<div class="job__f"><span>' + tp(j.note) + '</span>' +
+        (a ? '<button class="btn btn--sm ' + a[0] + '" data-job="' + n + '" data-jact="' + j.act + '">' + t(a[1], a[2]) + '</button>' : '') + '</div></article>';
+    }).join('');
+    var open = openJobs();
+    $('jobCount').textContent = open;
+    $('jobCount').hidden = !open;
+  }
+
+  function renderHome() {
+    var needs = JOBS.filter(function (j) { return j.needs; }), n = needs.length;
+    $('homeNeeds').innerHTML = n
+      ? '<div class="card card--warn"><b>' + t(n === 1 ? '1 job needs you' : n + ' jobs need you', n === 1 ? 'مهمة واحدة بانتظارك' : n === 2 ? 'مهمتان بانتظارك' : n + ' مهام بانتظارك') + '</b>' +
+        '<ul class="needs">' + needs.map(function (j) { var r = REPORTS[j.r]; return '<li><b>' + t(r.en, r.ar) + '</b> — ' + tp(j.note) + '</li>'; }).join('') + '</ul>' +
+        '<button class="btn btn--ghost btn--block" data-go="jobs">' + t('Open jobs', 'فتح المهام') + '</button></div>'
+      : '<div class="card"><b>' + t('Nothing needs you right now', 'لا شيء بانتظارك الآن') + '</b><small>' + t(openJobs() + ' jobs are running on their own', 'مهام تعمل وحدها: ' + openJobs()) + '</small></div>';
+    $('homeLimits').innerHTML = CATALOGUE.map(function (k) {
+      var r = REPORTS[k];
+      return '<dt>' + t(r.en, r.ar) + '</dt><dd>' + left(r) + ' / ' + r.cap + '</dd>';
+    }).join('');
+  }
+
+  function renderStore() {
+    $('storeRows').innerHTML = STORE.map(function (s) {
+      return '<tr><td>' + s.code + '</td><td>' + s.table + '</td><td>' + tp(s.last) + '</td><td>' + s.rows + '</td></tr>';
+    }).join('');
+  }
+  function renderLog() {
+    $('logRows').innerHTML = LOG.map(function (l) {
+      return '<tr><td>' + tp(l.t) + '</td><td>' + l.code + '</td><td>' + l.v + '</td><td><span class="chip chip--' + l.tone + '">' + tp(l.out) + '</span></td><td>' + l.doc + '</td></tr>';
+    }).join('');
+  }
+  function renderAll() { renderCatalogue(); renderJobs(); renderHome(); renderStore(); renderLog(); renderRun(); renderStatus(); renderTitle(); }
+
+  /* ─ إجراءات لوحة المهام ─ */
+  function jobAct(n, act) {
+    var j = JOBS[n];
+    if (act === 'fetch') {
+      j.act = null; j.needs = false; j.cur = 'run'; j.note = ['Fetching to the policy folder…', 'جارٍ التنزيل إلى مجلّد السياسة…'];
+      renderAll();
+      setTimeout(function () {
+        j.done = 3; j.note = ['Loading into TBL_DOWNTIME_X…', 'جارٍ التحميل إلى TBL_DOWNTIME_X…']; renderAll();
+        setTimeout(function () {
+          j.done = 4; j.cur = null; j.chip = 'Loaded 1,284 rows';
+          j.note = ['Rows match the report’s own total · file deleted', 'الصفوف تطابق إجمالي التقرير · مُسح الملف'];
+          STORE[0].last = ['today ' + clock(), 'اليوم ' + clock()]; STORE[0].rows = '1,284';
+          LOG.unshift({t:[clock(), clock()], code:'RPT-DOWNTIME-X', v:2, tone:'ok', out:['loaded 1,284 rows', 'حُمّل 1,284 صفاً'], doc:j.id});
+          renderAll();
+          toast(L('Loaded 1,284 rows into TBL_DOWNTIME_X — equal to the report total', 'حُمّل 1,284 صفاً إلى TBL_DOWNTIME_X — مساوٍ لإجمالي التقرير'));
+        }, 900);
+      }, 900);
+    } else if (act === 'cancel') {
+      j.chip = 'Cancelled'; j.tone = ''; j.cur = 'bad'; j.act = null; j.note = ['Cancelled by you — polling stopped', 'ألغيته أنت — توقّف الاستطلاع'];
+      renderAll();
+    } else if (act === 'signin') {
+      toast(L('Sign in to Oracle yourself in the page — the job resumes on its own', 'سجّل دخولك إلى أوراكل بنفسك في الصفحة — وتستأنف المهمة وحدها'));
+    } else if (act === 'log') {
+      toast(L('The request log opens in Oracle (View Log) — it is attached to the job', 'سجلّ الطلب يُفتح في أوراكل (View Log) — وهو مرفق بالمهمة'));
+    } else toast();
+  }
+
+  /* ─ الحوارات: تركيز داخلها، وخلفية خاملة، وعودة التركيز عند الإغلاق ─ */
+  var openId = null, opener = null;
+  function openDlg(id) {
+    if (openId) $(openId).hidden = true; else opener = document.activeElement;
+    openId = id; $(id).hidden = false; app.inert = true;
+    var f = [].filter.call($(id).querySelectorAll('[data-autofocus]'), function (x) { return x.offsetParent !== null; })[0];
+    (f || $(id).querySelector('.dlg')).focus();
+  }
+  function closeDlg() {
+    if (!openId) return;
+    $(openId).hidden = true; openId = null; app.inert = false;
+    if (opener && document.contains(opener) && opener.offsetParent !== null) opener.focus();
+    opener = null;
+  }
+  each('.scrim', function (s) { s.addEventListener('click', function (e) { if (e.target === s) closeDlg(); }); });
+
+  /* ─ المعاملات والتأكيد ─ */
+  function openParams(key) {
+    if (run && run.state === 'running') return toast(L('A run is in progress', 'يوجد تشغيل جارٍ'));
+    var r = REPORTS[key];
+    pick = {key:key};
+    $('pTitle').innerHTML = t(r.en, r.ar);
+    $('pDates').hidden = !r.dates;
+    validate();
+    openDlg('dlgParams');
+  }
+  function validate() {
+    var r = REPORTS[pick.key], err = '';
+    if (r.dates) {
+      var a = $('pFrom').value, b = $('pTo').value;
+      if (!a || !b) err = t('Choose both dates', 'اختر التاريخين');
+      else {
+        var days = (Date.parse(b) - Date.parse(a)) / 864e5 + 1;
+        if (days < 1) err = t('“To” is before “From”', '«إلى» قبل «من»');
+        else if (days > 31) err = t('The range is ' + days + ' days — the maximum is 31', 'المدى ' + days + ' يوماً — والحدّ الأقصى 31');
+      }
+    }
+    $('pErr').innerHTML = err; $('pErr').hidden = !err;
+    $('toConfirm').disabled = !!err;
+    return !err;
+  }
+  $('pFrom').addEventListener('input', validate);
+  $('pTo').addEventListener('input', validate);
+
+  function stepsFor(r, p) {
+    function write(label, val, f) { return {label:label, v:val, f:f, en:'Write <span class="mono">' + label + '</span>', ar:'كتابة <span class="mono">' + label + '</span>'}; }
+    var s = [{first:true, en:'Check the page and its signature', ar:'التحقّق من الصفحة وبصمتها'}, write('Request Name', r.req, 0), write('Plant', p.plant, 1)];
+    if (r.dates) { s.push(write('From Date', p.from, 2)); s.push(write('To Date', p.to, 3)); }
+    s.push({submit:true, en:'Press <span class="mono">Submit</span>', ar:'الضغط على <span class="mono">Submit</span>'});
+    s.push({read:true, en:'Read the request number', ar:'قراءة رقم الطلب'});
+    return s;
+  }
+  function planLine(s) {
+    if (s.first) return '<li>' + t('Check the page is <span class="mono">Submit a New Request</span> and its signature matches', 'التأكّد أن الصفحة <span class="mono">Submit a New Request</span> وأن بصمتها مطابقة') + '</li>';
+    if (s.f != null) return '<li>' + t('Type <b>' + s.v + '</b> into <span class="mono">' + s.label + '</span>', 'كتابة <b>' + s.v + '</b> في <span class="mono">' + s.label + '</span>') + '</li>';
+    if (s.submit) return '<li>' + t(s.en, s.ar) + '</li>';
+    return '<li>' + t('Read the request number from the confirmation', 'قراءة رقم الطلب من شاشة التأكيد') + '</li>';
+  }
+  function params() { return {plant:'CP-01', from:$('pFrom').value, to:$('pTo').value}; }
+  function openConfirm() {
+    var r = REPORTS[pick.key];
+    pick.p = params();
+    var steps = stepsFor(r, pick.p), w = steps.filter(function (s) { return s.f != null; }).length;
+    $('cFor').innerHTML = '<b>' + t(r.en, r.ar) + '</b> · ' + tp(MODE[r.mode]);
+    $('cPlan').innerHTML = steps.map(planLine).join('');
+    $('cSum').innerHTML = '<b>' + t(steps.length + ' steps · ' + w + ' fields written · no other field is touched',
+        steps.length + ' خطوات · ' + (w === 2 ? 'حقلان يُكتبان' : w + ' حقول تُكتب') + ' · ولا يُلمس أي حقل آخر') + '</b>' +
+      '<small>' + t('Runs under your Oracle account and is logged under your name', 'يُنفَّذ بحسابك في أوراكل ويُسجَّل باسمك') + ' <span class="rqid">D8</span> <span class="rqid">F1</span></small>';
+    $('cKv').innerHTML = '<dt>' + t('Runs as', 'باسم') + '</dt><dd><span class="mono">' + PERSONA[body.getAttribute('data-persona')].ora + '</span></dd>' +
+      '<dt>' + t('Left today', 'المتبقّي اليوم') + '</dt><dd>' + t(left(r) + ' of ' + r.cap + ' for this report', left(r) + ' من ' + r.cap + ' لهذا التقرير') + '</dd>';
+    openDlg('dlgConfirm');
+  }
+  $('toConfirm').addEventListener('click', function () { if (validate()) openConfirm(); });
+  $('doRun').addEventListener('click', function () { closeDlg(); startRun(pick.key, pick.p); });
+
+  /* ─ محرّك التشغيل المحاكى — عرض فقط، لا أتمتة ─ */
+  function startRun(key, p, hold, navName) {
+    go('reports', {nav:navName});
+    var r = REPORTS[key];
+    run = {key:key, r:r, p:p, steps:stepsFor(r, p), st:[], i:0, state:'running', timer:null, hold:!!hold, msg:null};
+    if (hold) { tick(); tick(); tick(); tick(); }
+    else run.timer = setInterval(tick, 750);
+    renderRun(); renderCatalogue();
+  }
+  /* الخطوة الجارية يُحاط هدفها بإطار، ولا يُكتب الحقل إلا حين تكتمل */
+  function tick() {
+    var s = run.steps, i = run.i;
+    if (i > 0) { run.st[i - 1] = 'ok'; clearTargets(); if (s[i - 1].f != null) fill(s[i - 1].f, s[i - 1].v); }
+    if (i < s.length) {
+      run.st[i] = 'run';
+      if (s[i].f != null) fields[s[i].f].classList.add('tgt');
+      if (s[i].submit) $('fSubmit').classList.add('tgt');
+      run.i++;
+      renderRun();
+    } else finishRun();
+  }
+  function finishRun() {
+    clearInterval(run.timer);
+    var key = run.key, r = run.r, id = String(8841210 + Math.floor(Math.random() * 80)), at = clock();
+    r.used++; r.last = {at:at, en:'submitted', ar:'أُرسل'};
+    JOBS.unshift({id:id, r:key, at:['today ' + at, 'اليوم ' + at], chip:'Pending / Normal', tone:'live', done:1, cur:'run', act:'cancel', note:['First poll in 2 min', 'أول استطلاع بعد دقيقتين']});
+    LOG.unshift({t:[at, at], code:r.code, v:r.v, tone:'ok', out:['submitted', 'أُرسل'], doc:id});
+    run = null;
+    renderAll();
+    openResult(key, id);
+  }
+  function openResult(key, id) {
+    var r = REPORTS[key];
+    var next = {
+      A: ['Your phone gets an id when the report is ready. The output stays in Oracle.', 'يصل جوالك معرّف حين يجهز التقرير. والناتج يبقى في أوراكل.'],
+      B: ['The rows appear on your phone when the report completes — no file on any device.', 'تظهر الصفوف على جوالك حين يكتمل التقرير — بلا ملف على أي جهاز.'],
+      C: ['When it completes, press Fetch now in Jobs. It loads into TBL_DOWNTIME_X and the file is deleted.', 'حين يكتمل اضغط «تنزيل الآن» في المهام، فيُحمَّل إلى TBL_DOWNTIME_X ويُمسح الملف.']
+    }[r.mode];
+    $('rBody').innerHTML =
+      '<div class="card card--ok"><b>' + t('Oracle request number: ', 'رقم الطلب في أوراكل: ') + '<span class="mono">' + id + '</span></b>' +
+      '<small>' + t('Read from the confirmation page — a run with no number counts as a failure', 'قُرئ من شاشة التأكيد — تشغيل بلا رقم يُعدّ فشلاً') + ' <span class="rqid">F4</span></small></div>' +
+      '<dl class="kv"><dt>' + t('Report', 'التقرير') + '</dt><dd>' + t(r.en, r.ar) + ' · ' + t('Mode ' + r.mode, 'النمط ' + r.mode) + '</dd>' +
+      '<dt>' + t('Next', 'التالي') + '</dt><dd>' + tp(next) + '</dd>' +
+      '<dt>' + t('Audit', 'التدقيق') + '</dt><dd>' + t('One row here + one SIEM event', 'صفّ هنا + حدث في المراقبة') + ' <span class="rqid">F1</span> <span class="rqid">F8</span></dd></dl>';
+    openDlg('dlgResult');
+  }
+  $('rJobs').addEventListener('click', function () { closeDlg(); go('jobs'); });
+
+  function stopRun(reason) {
+    if (!run || run.state !== 'running') return;
+    clearInterval(run.timer); run.timer = null;
+    var at = Math.max(run.i, 1), n = run.steps.length, sent = run.st.some(function (c, i) { return c === 'ok' && run.steps[i].submit; });
+    run.st[at - 1] = 'bad';
+    run.state = 'stopped';
+    var why = {user:['Stopped by you', 'أوقفته أنت'], input:['Stopped — you clicked the page', 'توقّف — نقرتَ على الصفحة'], hidden:['Stopped — the window was hidden', 'توقّف — أُخفيت النافذة']}[reason];
+    run.msg = {title:[why[0] + ' at step ' + at + ' of ' + n, why[1] + ' عند الخطوة ' + at + ' من ' + n],
+      detail: sent ? ['The request had already been submitted — find it in Jobs.', 'كان الطلب قد أُرسل — تجده في المهام.']
+        : ['Nothing was submitted to Oracle. Fields already written stay on the page as they are.', 'لم يُرسَل شيء إلى أوراكل. والحقول المكتوبة تبقى على الصفحة كما هي.'],
+      req:'D7 · D9'};
+    clearTargets();
+    renderRun(); renderCatalogue();
+    toast(L('Run stopped — nothing further was written', 'توقّف التشغيل — لم يُكتب شيء بعده'));
+  }
+
+  var REFUSALS = {
+    page: {at:0, req:'D5 · D7', title:['The page has changed', 'تغيّرت الصفحة'],
+      detail:['The page signature does not match the one this script was recorded against. Not a single character was written. The applications team has been notified.', 'بصمة الصفحة لا تطابق ما سُجِّل عليه النص. لم يُكتب أي حرف. وأُبلغ فريق التطبيقات.']},
+    user: {req:'B8', title:['Oracle user changed', 'المستخدم في أوراكل تغيّر'], act:['Sign in with your own account', 'سجّل الدخول بحسابك', 'presignin']},
+    kill: {req:'J3', kill:true, title:['Automation stopped centrally', 'الأتمتة موقوفة مركزياً'],
+      detail:['Stopped by IT at 14:02 — emergency Oracle maintenance. Every run is refused until IT lifts it.', 'أوقفتها تقنية المعلومات 14:02 — صيانة طارئة لأوراكل. وكل تشغيل يُرفض حتى ترفعه.']},
+    limit: {req:'J2', title:['Daily limit reached', 'بلغت الحدّ اليومي'],
+      detail:['This report allows 20 runs a day and none are left. It resets tomorrow at 00:00.', 'يسمح هذا التقرير بـ 20 تشغيلاً يومياً ولم يبقَ منها شيء. يُعاد غداً 00:00.']},
+    auth: {req:'A2', title:['This is a sign-in page', 'هذه صفحة دخول'], act:['Go to the sign-in page', 'الذهاب إلى صفحة الدخول', 'presignin'],
+      detail:['The tool never acts on sign-in, MFA or password-change pages. Sign in yourself, then run again.', 'الأداة لا تعمل على صفحات الدخول والتحقّق الثنائي وتغيير كلمة المرور. سجّل دخولك بنفسك ثم أعد التشغيل.']},
+    sig: {req:'C3', title:['Script signature is not valid', 'توقيع النص غير صالح'], act:['Call the IT service desk', 'اتصل بمكتب الخدمة', 'desk'],
+      detail:['This copy of the script is unsigned or was altered after approval.', 'هذه النسخة من النص غير موقّعة أو عُدّلت بعد اعتمادها.']},
+    origin: {req:'C5', title:['Not the page this script is for', 'ليست الصفحة المقصودة'],
+      detail:['This script runs only on https://erp.plant.local/OA_HTML/* and the open page is outside that origin.', 'هذا النص لا يعمل إلا على https://erp.plant.local/OA_HTML/* والصفحة المفتوحة خارج هذا الأصل.']},
+    update: {req:'N10', title:['Update required', 'يلزم التحديث'], act:['How to update', 'كيف أحدّث', 'update'],
+      detail:['Version 1.0.0 is below the lowest version the platform accepts (1.0.2). Nothing runs until the update is installed.', 'الإصدار 1.0.0 أدنى من أقلّ إصدار تقبله المنصة (1.0.2). لا يعمل شيء حتى يُثبَّت التحديث.']}
+  };
+  function refuse(kind) {
+    if (run && run.state === 'running') return toast(L('Stop the running report first', 'أوقف التقرير الجاري أولاً'));
+    var k = REFUSALS[kind], who = PERSONA[body.getAttribute('data-persona')];
+    go('reports', {nav:'refusals'});
+    run = {key:'dw', r:REPORTS.dw, p:params(), st:[], i:0, state:'refused', kind:kind};
+    run.steps = stepsFor(run.r, run.p);
+    var detail = kind === 'user'
+      ? ['Signed in now: MALOTAIBI; paired: ' + who.ora + '. Nothing was run.', 'المسجَّل الآن MALOTAIBI والمقترن ' + who.ora + '. لم يُنفَّذ شيء.'] : k.detail;
+    if (k.at === 0) { run.st[0] = 'bad'; run.i = 1; }
+    if (kind === 'user') { run.imposter = 'MALOTAIBI'; each('.br__page [data-who="ora"]', function (el) { el.textContent = run.imposter; }); }
+    run.msg = {title: k.at === 0 ? [k.title[0] + ' — stopped at step 1, nothing written', k.title[1] + ' — توقّف عند الخطوة 1 ولم يُكتب شيء']
+        : [k.title[0] + ' — refused before the first step', k.title[1] + ' — رُفض قبل الخطوة الأولى'],
+      detail:detail, req:k.req, act:k.act};
+    if (k.kill) killOn = true;
+    renderRun(); renderCatalogue(); renderStatus();
+  }
+  function dismissRun() {
+    if (run && REFUSALS[run.kind] && REFUSALS[run.kind].kill) killOn = false;
+    var fix = run && run.imposter;
+    run = null;
+    if (fix) setPersona(body.getAttribute('data-persona'));
+    renderRun(); renderCatalogue(); renderStatus();
+  }
+
+  function renderRun() {
+    var bar = $('runbar');
+    renderTitle();
+    if (!run) { bar.hidden = true; $('guard').hidden = true; return; }
+    var running = run.state === 'running', n = run.steps.length;
+    bar.hidden = false;
+    bar.setAttribute('data-state', run.state);
+    $('runTitle').innerHTML = (running ? t('Running · ', 'قيد التشغيل · ') : '') + t(run.r.en, run.r.ar);
+    $('runCount').className = 'chip ' + (running ? 'chip--live' : run.state === 'stopped' ? 'chip--warn' : 'chip--bad');
+    $('runCount').innerHTML = running ? t('Step ' + run.i + ' of ' + n, 'الخطوة ' + run.i + ' من ' + n)
+      : run.state === 'stopped' ? t('Stopped', 'متوقّف') : t('Refused', 'مرفوض');
+    $('runProg').style.width = (running || run.state === 'stopped' ? run.i / n * 100 : 100) + '%';
+    $('runSteps').innerHTML = run.steps.map(function (s, i) { return '<li class="' + (run.st[i] || 'wait') + '">' + t(s.en, s.ar) + '</li>'; }).join('');
+    $('runHint').hidden = !running;
+    $('runHint').innerHTML = t('Do not touch the page — any click, or hiding the window, stops the run.', 'لا تلمس الصفحة — أي نقرة أو إخفاء للنافذة يوقف التشغيل.') + ' <span class="rqid">D9</span>';
+    var m = $('runMsg');
+    m.hidden = !run.msg;
+    if (run.msg) m.innerHTML = '<b>' + tp(run.msg.title) + '</b><span>' + tp(run.msg.detail) + ' <span class="rqid">' + run.msg.req + '</span></span>';
+    $('stopRun').hidden = !running;
+    $('runResume').hidden = !(running && run.hold);
+    $('runClose').hidden = running;
+    var act = run.msg && run.msg.act;
+    $('runAct').hidden = !act;
+    if (act) { $('runAct').innerHTML = t(act[0], act[1]); $('runAct').setAttribute('data-do', act[2]); }
+    $('guard').hidden = !running;
+  }
+  $('stopRun').addEventListener('click', function () { stopRun('user'); });
+  $('runResume').addEventListener('click', function () { run.hold = false; run.timer = setInterval(tick, 750); renderRun(); });
+  $('runClose').addEventListener('click', dismissRun);
+  $('runAct').addEventListener('click', function () {
+    var d = this.getAttribute('data-do');
+    if (d === 'presignin') { dismissRun(); go('presignin'); }
+    else if (d === 'desk') toast(L('IT service desk — extension 4120', 'مكتب خدمة تقنية المعلومات — تحويلة 4120'));
+    else if (d === 'update') toast(L('The update arrives through Software Center (Intune) — install it there', 'التحديث يصل عبر Software Center (Intune) — ثبّته من هناك'));
+  });
+  $('guard').addEventListener('click', function () { stopRun('input'); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stopRun('hidden'); });
+
+  /* ─ المصمّم والمنقّح: حالة واحدة بأربع صور — جاهز، يعمل، متوقّف، متعثّر ─ */
+  var CODE = [
+    {c:'// RPT-DOWNTIME-W · weekly downtime'},
+    {c:'// params: plant, from, to'},
+    {act:'WaitFor', tgt:'Submit a New Request', ms:320, h:'<span class="k">WaitFor</span>(<span class="s">"Submit a New Request"</span>, <span class="e">Fields.Page</span>)'},
+    {act:'Assert', tgt:'Request Name', ms:12, h:'<span class="k">Assert</span>(<span class="k">Exists</span>(<span class="s">"Request Name"</span>), <span class="s">"wrong page"</span>)'},
+    {act:'Set', tgt:'Request Name', f:0, v:'EAM Downtime Analysis', ms:90, h:'<span class="k">Set</span>(<span class="s">"Request Name"</span>, <span class="s">"EAM Downtime Analysis"</span>)'},
+    {act:'Set', tgt:'Plant · Option', f:1, v:'CP-01', ms:140, h:'<span class="k">Set</span>(<span class="s">"Plant"</span>, <span class="v">plant</span>, <span class="e">Fields.Option</span>)'},
+    {act:'Set', tgt:'From Date', f:2, v:'2026-09-14', err:['bad date format', 'تنسيق تاريخ خاطئ'], ms:1204, h:'<span class="k">Set</span>(<span class="s">"From Date"</span>, <span class="v">from</span>) <span class="c">// Right by default</span>'},
+    {act:'Set', tgt:'To Date', f:3, v:'2026-09-20', ms:85, h:'<span class="k">Set</span>(<span class="s">"To Date"</span>, <span class="v">to</span>)'},
+    {act:'Click', tgt:'Submit', btn:true, ms:210, h:'<span class="k">Click</span>(<span class="s">"Submit"</span>, <span class="e">Fields.Button</span>)'},
+    {act:'Get', tgt:'Request', ms:40, h:'<span class="v">id</span> = <span class="k">Get</span>(<span class="s">"Request"</span>, <span class="e">Fields.Text</span>)'}
+  ];
+  var dbg = {state:'idle', pc:0, dry:false, resumed:false, pauseReq:false, timer:null, bps:{7:true, 9:true}, rows:[]};
+  function nextExec(n) { for (var k = n + 1; k <= CODE.length; k++) { if (CODE[k - 1].act) return k; } return 0; }
+  function dFresh(dry) { clearInterval(dbg.timer); clearFields(); dbg.rows = []; dbg.dry = dry; dbg.pc = nextExec(0); dbg.resumed = false; dbg.pauseReq = false; }
+  function dGo() { dbg.state = 'running'; clearTargets(); clearInterval(dbg.timer); dbg.timer = setInterval(dTick, 450); renderDbg(); }
+  function dTick() {
+    var n = dbg.pc;
+    if (!n) { clearInterval(dbg.timer); dbg.state = 'idle'; return renderDbg(); }
+    if (dbg.pauseReq || (!dbg.dry && dbg.bps[n] && !dbg.resumed)) { dbg.pauseReq = false; return dPause(n); }
+    dbg.resumed = false;
+    dExec(n);
+    if (dbg.state !== 'halted') dbg.pc = nextExec(n);
+    renderDbg();
+  }
+  function dExec(n) {
+    var c = CODE[n - 1];
+    dbg.rows.push({time:clock(true), line:n, act:c.act, tgt:c.tgt, err:c.err, ms:c.ms});
+    if (c.f != null) { if (c.err) fields[c.f].classList.add('err'); else fill(c.f, c.v); }
+    if (c.err) { clearInterval(dbg.timer); dbg.state = 'halted'; dbg.pc = n; dbg.rows.push({time:clock(true), halt:true}); }
+  }
+  function dPause(n) {
+    clearInterval(dbg.timer); dbg.state = 'paused'; dbg.pc = n; clearTargets();
+    var c = CODE[n - 1];
+    if (c.f != null) fields[c.f].classList.add('tgt');
+    if (c.btn) $('fSubmit').classList.add('tgt');
+    renderDbg();
+  }
+  function dStepIn() {
+    if (dbg.state !== 'paused') return;
+    clearTargets();
+    var n = dbg.pc;
+    dExec(n);
+    if (dbg.state === 'halted') return renderDbg();
+    var nx = nextExec(n);
+    if (!nx) { dbg.state = 'idle'; return renderDbg(); }
+    dPause(nx);
+  }
+  function dReset() { clearInterval(dbg.timer); dbg.state = 'idle'; dbg.pc = 0; clearFields(); if (current === 'designer') renderDbg(); }
+  function dJumpToPause() {
+    dbg.bps[7] = true;
+    dFresh(false);
+    while (dbg.pc && !dbg.bps[dbg.pc]) { dExec(dbg.pc); dbg.pc = nextExec(dbg.pc); }
+    dPause(dbg.pc);
+  }
+
+  function renderDbg() {
+    var s = dbg.state, n = dbg.pc, c = n ? CODE[n - 1] : null, card = $('dCard');
+    card.className = 'card' + (s === 'running' || s === 'paused' ? ' card--live' : s === 'halted' ? ' card--bad' : '');
+    if (s === 'idle') card.innerHTML = '<b>' + t('Ready — runs against TEST only', 'جاهز — يعمل على بيئة الاختبار فقط') + '</b><small>' +
+      t('A breakpoint stops before its line runs, and the target is outlined on the page. On production the designer can inspect but never Set or Click.', 'نقطة التوقّف تسبق تنفيذ سطرها، ويُحاط هدفه بإطار على الصفحة. وعلى الإنتاج يُسمح بالفحص فقط، بلا Set ولا Click.') +
+      ' <span class="rqid">L17</span> <span class="rqid">L13</span></small>';
+    else if (s === 'running') card.innerHTML = '<b>' + t((dbg.dry ? 'Dry run' : 'Running') + ' on TEST — line ' + n, (dbg.dry ? 'تشغيل جافّ' : 'يعمل') + ' على الاختبار — السطر ' + n) + '</b><small>' +
+      (dbg.dry ? t('Stops before Click — no document is created', 'يتوقّف قبل Click — لا يُنشأ مستند') + ' <span class="rqid">L4</span>' : t('Pause stops before the next line', 'الإيقاف المؤقّت يسبق السطر التالي')) + '</small>';
+    else if (s === 'paused') card.innerHTML = '<b>' + t('Paused at line ' + n + ' · ' + c.act, 'متوقّف عند السطر ' + n + ' · ' + c.act) + '</b><small>' +
+      t('Its target is outlined on the page — check it is the field you mean before stepping in.', 'هدفه مُحاط بإطار على الصفحة — تأكّد أنه الحقل المقصود قبل التنفيذ.') + ' <span class="rqid">L17</span></small>';
+    else card.innerHTML = '<b>' + t('Halted at line ' + n + ' — ' + c.err[0], 'توقّف عند السطر ' + n + ' — ' + c.err[1]) + '</b><small>' +
+      t('Lines after it were not executed and the page is left as it is. Oracle expects DD-MON-YYYY here, e.g. 14-SEP-2026.', 'لم تُنفَّذ الأسطر بعده وتُركت الصفحة كما هي. أوراكل يتوقّع هنا DD-MON-YYYY مثل 14-SEP-2026.') + ' <span class="rqid">D7</span></small>';
+    $('dRun').textContent = s === 'paused' ? 'Continue' : 'Run';
+    $('dRun').disabled = s === 'running';
+    $('dPause').disabled = s !== 'running';
+    $('dStep').disabled = s !== 'paused';
+    $('dStop').disabled = s === 'idle';
+    $('dStop').textContent = s === 'halted' ? 'Reset' : 'Stop';
+    $('dDry').disabled = s === 'running' || s === 'paused';
+    $('dUpload').disabled = s === 'running';
+    $('dVars').hidden = s === 'idle';
+    $('dBps').innerHTML = Object.keys(dbg.bps).map(function (k) { return '<span class="chip chip--bad">' + t('line ' + k, 'السطر ' + k) + '</span>'; }).join('') ||
+      '<span class="note">' + t('None — click the gutter to add one', 'لا شيء — انقر الهامش لإضافة نقطة') + '</span>';
+    $('code').innerHTML = CODE.map(function (c, i) {
+      var ln = i + 1, cls = 'ln' + (ln === n && (s === 'paused' || s === 'running') ? ' cur' : '') + (ln === n && s === 'halted' ? ' err' : '');
+      var gut = c.act ? '<button class="bp" data-bp="' + ln + '" aria-pressed="' + !!dbg.bps[ln] + '" aria-label="Breakpoint, line ' + ln + '">' + (dbg.bps[ln] ? '●' : '') + '</button>' : '<span class="bp"></span>';
+      return '<div class="' + cls + '"><span class="n">' + ln + '</span>' + gut + (c.act ? '<span>' + c.h + '</span>' : '<span class="c">' + c.c + '</span>') + '</div>';
+    }).join('');
+    var only = $('errOnly').checked, rows = dbg.rows.filter(function (r) { return !only || r.err || r.halt; });
+    $('dLog').innerHTML = rows.length ? rows.map(function (r) {
+      if (r.halt) return '<tr><td>' + r.time + '</td><td>&mdash;</td><td>&mdash;</td><td>Halted — rest not executed</td><td><span class="chip chip--warn">halted</span></td><td>&mdash;</td></tr>';
+      return '<tr' + (r.err ? ' style="background:var(--danger-bg)"' : '') + '><td>' + r.time + '</td><td>' + r.line + '</td><td>' + r.act + '</td><td>' + r.tgt + '</td><td><span class="chip ' + (r.err ? 'chip--bad">' + r.err[0] : 'chip--ok">ok') + '</span></td><td>' + r.ms + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">' + t(only ? 'No errors' : 'No run yet — press Run or Dry run', only ? 'لا أخطاء' : 'لا تشغيل بعد — اضغط Run أو Dry run') + '</td></tr>';
+  }
+  $('dRun').addEventListener('click', function () { if (dbg.state === 'paused') dbg.resumed = true; else dFresh(false); dGo(); });
+  $('dDry').addEventListener('click', function () { dFresh(true); dGo(); });
+  $('dPause').addEventListener('click', function () { dbg.pauseReq = true; });
+  $('dStep').addEventListener('click', dStepIn);
+  $('dStop').addEventListener('click', dReset);
+  $('dSave').addEventListener('click', function () { toast(L('Saved on this machine — not uploaded yet', 'حُفظ على هذا الجهاز — لم يُرفع بعد')); });
+  $('dUpload').addEventListener('click', function () {
+    go('studio', {tab:'sdef'});
+    toast(L('Uploaded RPT-DOWNTIME-W v3 as a draft', 'رُفع RPT-DOWNTIME-W v3 مسودّةً'));
+  });
+  $('errOnly').addEventListener('change', renderDbg);
+
+  /* ─ استوديو النصوص: صفحة المنصة بتبويباتها ─ */
+  var STUDIO = {
+    sdef: {code:'RPT-DOWNTIME-W', path:'', title:'RPT-DOWNTIME-W · v3', chip:['chip--warn', 'Draft · Mode A'], html:
+      '<div class="grid2"><dl class="kv"><dt>Name</dt><dd>Weekly downtime report</dd><dt>Owner</dt><dd>K. Almutairi — Applications</dd>' +
+      '<dt>Privilege</dt><dd><span class="mono">EAM_MAINT_USER</span> / <span class="mono">FND_REQUEST_SUBMIT</span></dd>' +
+      '<dt>Origin</dt><dd><span class="mono">https://erp.plant.local/OA_HTML/*</span></dd><dt>Signature</dt><dd><span class="mono">7f19c2…</span> captured on TEST</dd></dl>' +
+      '<dl class="kv"><dt>Mode</dt><dd>A — trigger and notify</dd><dt>Class</dt><dd>Internal · no personal data</dd><dt>Max range</dt><dd>31 days</dd>' +
+      '<dt>Row cap</dt><dd>5,000 — halts, never truncates</dd><dt>Daily cap</dt><dd>20 runs per user</dd></dl></div>' +
+      '<div class="wrapx"><table class="tbl tbl--ltr"><thead><tr><th>#</th><th>Action</th><th>Field / anchor</th><th>Value</th></tr></thead><tbody>' +
+      '<tr><td>1</td><td>Assert</td><td>page signature</td><td>match</td></tr>' +
+      '<tr><td>2</td><td>Assert</td><td>record identity</td><td>new request screen</td></tr>' +
+      '<tr><td>3</td><td>Set</td><td>Request Name · label-for</td><td>EAM Downtime Analysis</td></tr>' +
+      '<tr><td>4</td><td>Set</td><td>Plant · aria-label</td><td>{plant} from user scope</td></tr>' +
+      '<tr><td>5</td><td>Set</td><td>From / To Date</td><td>{from} · {to}</td></tr>' +
+      '<tr><td>6</td><td>Click</td><td>Submit</td><td>&mdash;</td></tr>' +
+      '<tr><td>7</td><td>Get</td><td>request number</td><td>stored in the audit</td></tr></tbody></table></div>' +
+      '<p class="note">Steps are read only here — they were authored in the tool, on the page itself.</p>'},
+    stest: {code:'RPT-DOWNTIME-W', path:'/Test', title:'RPT-DOWNTIME-W · v3', chip:['chip--warn', 'In test'], html:
+      '<div class="grid2"><div class="stack"><div class="card"><b>Dry run</b><small>Executes every step and stops before Submit — proves the path without creating a document</small></div>' +
+      '<div class="card card--ok"><b>Full run — passed</b><small>Created TEST-5510934 on 2026-09-21 04:12</small></div></div>' +
+      '<div class="stack"><ul class="steps"><li class="ok">Record-identity assertion present</li><li class="ok">Page signature captured</li>' +
+      '<li class="ok">Passed a full run on test</li><li class="ok">Parameters described by a schema</li>' +
+      '<li class="ok">No Set outside the report parameters</li>' +
+      '<li class="bad">Approver other than the author — not chosen</li>' +
+      '<li class="bad">Change request number — not entered</li></ul>' +
+      '<button class="btn btn--block" disabled>Submit for approval — two conditions open</button></div></div>'},
+    spub: {code:'RPT-DOWNTIME-W', path:'/Publish', title:'RPT-DOWNTIME-W · v3', chip:['chip--warn', 'Pending approval'], html:
+      '<div class="grid2"><div class="stack"><dl class="kv"><dt>Authored by</dt><dd>K. Almutairi — 2026-09-21 03:40</dd>' +
+      '<dt>Approver</dt><dd>F. Alharbi — Applications Manager</dd><dt>Change</dt><dd><span class="mono">CHG-2026-0914</span></dd></dl>' +
+      '<div class="card card--ok"><b>Production signature matches</b><small>Checked before publish — a mismatch would block it</small></div>' +
+      '<div class="card"><b>Diff against v2</b><small>One step added · one assertion tightened</small></div>' +
+      '<button class="btn btn--block" disabled>Sign and publish</button>' +
+      '<p class="note">You authored v3, so you cannot sign it. F. Alharbi signs and publishes.</p></div>' +
+      '<div class="stack"><ul class="steps"><li class="ok">draft → authored</li><li class="ok">in test → passed</li><li class="run">pending approval</li><li class="wait">approved → published</li></ul>' +
+      '<div class="card card--warn"><b>Emergencies stop, they never release</b><small>A script may be suspended instantly without approval; it may never be published that way</small></div></div></div>' +
+      '<div class="wrapx"><table class="tbl tbl--ltr"><thead><tr><th>Script</th><th>v</th><th>State</th><th>Prod signature</th><th>Owner</th></tr></thead><tbody>' +
+      '<tr><td>Weekly downtime report</td><td>3</td><td><span class="chip chip--warn">pending approval</span></td><td><span class="chip chip--ok">match</span></td><td>K. Almutairi</td></tr>' +
+      '<tr><td>Downtime detail extract</td><td>2</td><td><span class="chip chip--ok">published</span></td><td><span class="chip chip--ok">match</span></td><td>K. Almutairi</td></tr>' +
+      '<tr><td>Open work orders</td><td>2</td><td><span class="chip chip--ok">published</span></td><td><span class="chip chip--ok">match</span></td><td>K. Almutairi</td></tr>' +
+      '<tr><td>Stock movement</td><td>5</td><td><span class="chip chip--bad">auto-suspended</span></td><td><span class="chip chip--bad">drifted after patch</span></td><td>S. Alqahtani</td></tr>' +
+      '<tr><td>Maintenance cost report</td><td>1</td><td><span class="chip">retired</span></td><td>&mdash;</td><td>&mdash;</td></tr></tbody></table></div>'},
+    sload: {code:'RPT-DOWNTIME-X', path:'/Load', title:'RPT-DOWNTIME-X · v2', chip:['chip--ok', 'Published · Mode C'], html:
+      '<div class="card card--warn"><b>Mode C — data lands on the user’s machine</b><small>Only for a catalogue entry classified for it · folder set by policy · file deleted after load</small></div>' +
+      '<p class="note">Only Mode C entries have a load definition. RPT-DOWNTIME-W is Mode A, so nothing of it is loaded.</p>' +
+      '<div class="grid2"><dl class="kv"><dt>Format</dt><dd>CSV · comma · header row 1</dd><dt>Table</dt><dd>TBL_DOWNTIME_X</dd>' +
+      '<dt>Keys</dt><dd>PLANT_CODE + EVENT_ID</dd><dt>Duplicates</dt><dd>Update existing row</dd><dt>Row check</dt><dd>Loaded rows = report total</dd><dt>Retention</dt><dd>90 days</dd></dl>' +
+      '<div class="wrapx"><table class="tbl tbl--ltr"><thead><tr><th>CSV column</th><th>Table column</th><th>Type</th></tr></thead><tbody>' +
+      '<tr><td>Plant</td><td>PLANT_CODE</td><td>Text 20</td></tr><tr><td>Event Id</td><td>EVENT_ID</td><td>Long</td></tr>' +
+      '<tr><td>Equipment</td><td>EQUIP_CODE</td><td>Text 40</td></tr><tr><td>Start</td><td>START_AT</td><td>Date/Time</td></tr>' +
+      '<tr><td>Minutes</td><td>DURATION_MIN</td><td>Double</td></tr><tr><td>Reason</td><td>REASON</td><td>Text 120</td></tr></tbody></table></div></div>'}
+  };
+  function showStudio(tab) {
+    var s = STUDIO[tab];
+    showPage('studio', CO + '/Integration/ScriptStudio/' + s.code + s.path);
+    $('studioTitle').textContent = s.title;
+    $('studioChip').className = 'chip ' + s.chip[0];
+    $('studioChip').textContent = s.chip[1];
+    $('studioBody').innerHTML = s.html;
+    each('[data-stab]', function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-stab') === tab)); });
+  }
+
+  /* ─ حالات المراجعة وفهرس الشاشات ─ */
+  function demo(name) {
+    if (run && run.state === 'running') return toast(L('Stop the running report first', 'أوقف التقرير الجاري أولاً'));
+    if (name === 'running') return startRun('dw', params(), true, 'running');
+    go('reports', {nav:name});
+    if (name === 'dlgp') openParams('dw');
+    else if (name === 'dlgc') { pick = {key:'dw'}; openConfirm(); }
+    else if (name === 'dlgr') openResult('dw', '8841207');
+  }
+  function indexAct(a) {
+    var p = a.split(':'), k = p[0], v = p[1];
+    if (k === 'nav') { body.setAttribute('data-nav', v); save('nav', v); relabel(); clampWs(); return; }
+    if (k === 'lang') return setLang(isAr() ? 'en' : 'ar');
+    if (k === 'go') return go(v);
+    if (k === 'demo') return demo(v);
+    setPersona('designer');
+    if (k === 'studio') return go('studio', {tab:v});
+    go('designer');
+    if (v === 'paused') dJumpToPause();
+  }
+
+  /* ─ إشعار ─ */
+  var toastEl = null, toastT = null;
+  var TOASTS = {oracle:['Opens the request in Oracle — not simulated here', 'يفتح الطلب في أوراكل — غير محاكى هنا']};
+  function toast(msg) {
+    if (toastEl) toastEl.remove();
+    toastEl = document.createElement('div');
+    toastEl.className = 'toast';
+    toastEl.setAttribute('role', 'status');
+    toastEl.textContent = msg || L('Prototype — this button performs no action', 'نموذج تصميم — هذا الزرّ لا ينفّذ شيئاً');
+    document.body.appendChild(toastEl);
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { if (toastEl) { toastEl.remove(); toastEl = null; } }, 2600);
+  }
+
+  /* ─ الأحداث ─ */
+  document.addEventListener('click', function (e) {
+    var el;
+    if ((el = e.target.closest('[data-go]'))) return go(el.getAttribute('data-go'));
+    if ((el = e.target.closest('[data-demo]'))) return demo(el.getAttribute('data-demo'));
+    if ((el = e.target.closest('[data-run]'))) return openParams(el.getAttribute('data-run'));
+    if ((el = e.target.closest('[data-jact]'))) return jobAct(+el.getAttribute('data-job'), el.getAttribute('data-jact'));
+    if ((el = e.target.closest('[data-refuse]'))) return refuse(el.getAttribute('data-refuse'));
+    if ((el = e.target.closest('[data-idx]'))) return indexAct(el.getAttribute('data-idx'));
+    if ((el = e.target.closest('[data-stab]'))) return showStudio(el.getAttribute('data-stab'));
+    if ((el = e.target.closest('[data-bp]'))) { var ln = +el.getAttribute('data-bp'); if (dbg.bps[ln]) delete dbg.bps[ln]; else dbg.bps[ln] = true; return renderDbg(); }
+    if ((el = e.target.closest('[data-close]'))) return closeDlg();
+    if ((el = e.target.closest('[data-lang-set]'))) return setLang(el.getAttribute('data-lang-set'));
+    if ((el = e.target.closest('[data-toast]'))) { var k = el.getAttribute('data-toast'); return toast(TOASTS[k] ? L(TOASTS[k][0], TOASTS[k][1]) : ''); }
+  });
+  $('lEn').addEventListener('click', function () { setLang('en'); });
+  $('lAr').addEventListener('click', function () { setLang('ar'); });
+  $('navTgl').addEventListener('click', flipNav);
+  $('rvBtn').addEventListener('click', function () { setReview(body.getAttribute('data-review') !== 'on'); });
+  $('pUser').addEventListener('click', function () { setPersona('user'); });
+  $('pDesigner').addEventListener('click', function () { setPersona('designer'); });
+  $('openPair').addEventListener('click', function () { openDlg('dlgPair'); });
+  $('pairLink').addEventListener('click', function () {
+    closeDlg(); go('presignin');
+    toast(L('Linked to your CementOps account — now sign in to Oracle', 'رُبطت بحسابك في CementOps — سجّل دخولك إلى أوراكل الآن'));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (openId) {
+      if (e.key === 'Escape') { closeDlg(); return; }
+      if (e.key === 'Tab') {
+        var f = [].filter.call($(openId).querySelectorAll('button:not([disabled]), input'), function (x) { return x.offsetParent !== null; });
+        if (!f.length) return;
+        var a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && (document.activeElement === a || !$(openId).contains(document.activeElement))) { e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && (document.activeElement === z || !$(openId).contains(document.activeElement))) { e.preventDefault(); a.focus(); }
+      }
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); flipNav(); }
+  });
+
+  /* ─ البدء: الافتراضي هو ما يراه المستخدم العادي ─ */
+  if (load('nav') === 'mini') body.setAttribute('data-nav', 'mini');
+  setLang(load('lang') === 'ar' ? 'ar' : 'en');
+  setReview(load('review') === 'on');
+  setPersona(load('persona') === 'designer' ? 'designer' : 'user');
+  renderAll();
+  go('home');
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>من الميدان إلى أوراكل</title>
+<style>
+/* ==========================================================================
+   ورقة خيارات — تتبع لغة CementOps البصرية الموجودة (tokens.css): حبر/تركوازي/
+   ذهبي/كريمي وشريط كحلي. سمة واحدة بلا مبدّل سمات (U-02 / U-03).
+   ========================================================================== */
+:root{
+  --ink:#102A43; --ink-2:#243B53; --ink-3:#334E68;
+  --teal:#0F766E; --teal-600:#115E59; --teal-50:#E6F4F2;
+  --gold:#E9B949; --gold-700:#8A6914;
+  --cream:#F8F4EC; --cream-2:#F2ECE0; --paper:#FFFFFF;
+  --muted:#486581; --muted-2:#627D98;
+  --line:rgba(16,42,67,.10); --line-strong:rgba(16,42,67,.18);
+  --nav-bg:#0B1F33; --nav-fg:rgba(248,244,236,.88); --nav-fg-soft:rgba(248,244,236,.66);
+  --nav-accent:#5EEAD4;
+  --ok:#067647; --ok-bg:#ECFDF3; --ok-line:#ABEFC6;
+  --warn:#B54708; --warn-bg:#FFFAEB; --warn-line:#FEDF89;
+  --danger:#B42318; --danger-bg:#FEF3F2; --danger-line:#FDA29B;
+  --info:#175CD3; --info-bg:#EFF8FF; --info-line:#B2DDFF;
+  --radius:1rem; --radius-sm:.625rem; --radius-xs:.4rem;
+  --shadow:0 16px 40px rgba(16,42,67,.10);
+  --shadow-sm:0 6px 18px rgba(16,42,67,.07);
+  --shadow-xs:0 1px 2px rgba(16,42,67,.06);
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--cream); color:var(--ink);
+  font-family:var(--font); font-size:1rem; line-height:1.75;
+}
+h1,h2,h3{margin:0; text-wrap:balance; line-height:1.35; font-weight:700}
+p{margin:0}
+ul,ol{margin:0; padding-inline-start:1.25rem}
+li{margin-block:.25rem}
+a{color:var(--teal-600)}
+:focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-radius:var(--radius-xs)}
+
+/* المسارات والأكواد تبقى LTR داخل نص عربي */
+code,.path{
+  font-family:var(--font-mono); font-size:.8125em;
+  direction:ltr; unicode-bidi:isolate; display:inline-block;
+  background:var(--cream-2); border:1px solid var(--line);
+  border-radius:var(--radius-xs); padding:.05em .4em; color:var(--ink-2);
+}
+
+.wrap{max-width:1120px; margin-inline:auto; padding-inline:20px}
+
+/* ─ المسطرة العلوية ─────────────────────────────────────────────────────── */
+.masthead{background:var(--nav-bg); color:var(--nav-fg); padding-block:2.5rem 2.25rem}
+.masthead .eyebrow{
+  font-size:.8125rem; letter-spacing:.06em; color:var(--nav-accent);
+  font-weight:600; margin-block-end:.5rem;
+}
+.masthead h1{font-size:clamp(1.75rem,4.5vw,2.5rem); color:#F8F4EC}
+.masthead .lede{
+  margin-block-start:.75rem; max-width:62ch; color:var(--nav-fg-soft); font-size:1.0625rem;
+}
+.metabar{display:flex; flex-wrap:wrap; gap:.5rem; margin-block-start:1.5rem}
+.metabar span{
+  font-size:.8125rem; padding:.25rem .7rem; border-radius:999px;
+  border:1px solid rgba(248,244,236,.18); color:var(--nav-fg-soft);
+}
+.metabar span strong{color:#F8F4EC; font-weight:600}
+
+/* ─ الأقسام ─────────────────────────────────────────────────────────────── */
+main{padding-block:2.5rem 4rem}
+.section{margin-block-start:3.25rem}
+.section:first-child{margin-block-start:0}
+.section > h2{
+  font-size:1.375rem; padding-block-end:.6rem; margin-block-end:1.25rem;
+  border-block-end:2px solid var(--teal); display:inline-block;
+}
+.section > h2 .n{color:var(--teal); font-weight:600; margin-inline-end:.4rem}
+.prose{display:grid; gap:1rem; max-width:72ch}
+
+/* ─ نداء التأطير ────────────────────────────────────────────────────────── */
+.callout{
+  background:var(--teal-50); border:1px solid rgba(15,118,110,.22);
+  border-radius:var(--radius); padding:1.25rem 1.4rem; display:grid; gap:.6rem;
+}
+.callout h3{font-size:1.0625rem; color:var(--teal-600)}
+
+/* ─ دورة الحالة ─────────────────────────────────────────────────────────── */
+.flow{display:flex; align-items:stretch; gap:.75rem; flex-wrap:wrap; margin-block-start:1.25rem}
+.flow .stage{
+  flex:1 1 190px; background:var(--paper); border:1px solid var(--line);
+  border-radius:var(--radius-sm); padding:.85rem 1rem; box-shadow:var(--shadow-xs);
+}
+.flow .stage b{display:block; font-size:.9375rem}
+.flow .stage small{color:var(--muted); font-size:.8125rem; line-height:1.5; display:block}
+.flow .stage--queue{border-style:dashed; background:var(--cream-2)}
+.flow .arrow{align-self:center; color:var(--muted-2); font-size:1.25rem; line-height:1}
+.flow .branch{flex:1 1 210px; display:grid; gap:.5rem}
+.flow .stage--ok{border-color:var(--ok-line); background:var(--ok-bg)}
+.flow .stage--ok b{color:var(--ok)}
+.flow .stage--no{border-color:var(--danger-line); background:var(--danger-bg)}
+.flow .stage--no b{color:var(--danger)}
+
+/* ─ أين نقف ─────────────────────────────────────────────────────────────── */
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.25rem}
+.state-list h3{
+  font-size:1rem; display:flex; align-items:center; gap:.5rem; margin-block-end:.65rem;
+}
+.state-list h3::before{content:""; width:.55rem; height:.55rem; border-radius:50%}
+.state-list--have h3::before{background:var(--ok)}
+.state-list--gap h3::before{background:var(--warn)}
+.state-list ul{list-style:none; padding:0; display:grid; gap:.6rem}
+.state-list li{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:.7rem .9rem; font-size:.9375rem; line-height:1.6; box-shadow:var(--shadow-xs);
+}
+.state-list li em{display:block; font-style:normal; color:var(--muted); font-size:.8125rem; margin-block-start:.2rem}
+
+/* ─ بطاقات الخيارات ─────────────────────────────────────────────────────── */
+.options{display:grid; gap:1.25rem}
+.opt{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+  padding:1.4rem 1.5rem; box-shadow:var(--shadow-sm); display:grid; gap:.9rem;
+}
+.opt--rec{border-inline-start:4px solid var(--gold); box-shadow:var(--shadow)}
+.opt__head{display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap}
+.opt__n{
+  flex:none; width:2rem; height:2rem; display:grid; place-items:center;
+  background:var(--ink); color:var(--cream); border-radius:var(--radius-xs);
+  font-size:.9375rem; font-weight:600; font-variant-numeric:tabular-nums;
+}
+.opt--rec .opt__n{background:var(--gold); color:#3E2E00}
+.opt__title{font-size:1.125rem; flex:1 1 16rem}
+.tag{
+  font-size:.75rem; font-weight:600; padding:.15rem .6rem; border-radius:999px;
+  border:1px solid var(--line-strong); color:var(--muted); background:var(--cream-2);
+}
+.tag--rec{background:#FDF6E3; border-color:#EBD9A6; color:var(--gold-700)}
+.tag--phase{background:var(--info-bg); border-color:var(--info-line); color:var(--info)}
+.opt__how{font-size:.9375rem}
+.facts{display:grid; gap:.5rem; margin:0; padding:0}
+.facts div{
+  display:grid; grid-template-columns:minmax(7.5rem,auto) 1fr; gap:.15rem .85rem; font-size:.9375rem;
+}
+.facts dt{
+  color:var(--teal-600); font-weight:600; font-size:.8125rem; padding-block-start:.22rem;
+}
+.facts dd{margin:0; line-height:1.65}
+.facts .bad dt{color:var(--danger)}
+.facts .warn dt{color:var(--warn)}
+
+/* ─ الرسوم المعمارية (إنجليزية، LTR داخل صفحة عربية) ────────────────────── */
+.legend{
+  display:flex; flex-wrap:wrap; gap:.7rem 1.6rem; font-size:.8125rem;
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:.85rem 1.1rem; margin-block-end:1.25rem; color:var(--ink-2);
+}
+.legend span{display:inline-flex; align-items:center; gap:.5rem}
+.key{
+  width:1.2rem; height:.8rem; border-radius:3px; flex:none;
+  border:1.5px solid var(--ink-3); background:var(--paper);
+}
+.key--new{background:#FDF7E6; border-color:var(--gold-700)}
+.key--erp{background:#EDF1F5}
+.key--go{width:1.5rem; height:0; border:0; border-block-start:2.5px solid var(--teal); border-radius:0}
+.key--bad{width:1.5rem; height:0; border:0; border-block-start:2.5px solid var(--danger); border-radius:0}
+
+.dia{
+  margin:0; display:grid; gap:.8rem;
+  border-block-start:1px dashed var(--line-strong); padding-block-start:1.15rem;
+}
+.dia__wrap{
+  overflow-x:auto; background:var(--cream-2); border:1px solid var(--line);
+  border-radius:var(--radius-sm); padding:.85rem;
+}
+.dia svg{display:block; width:100%; min-width:660px; height:auto}
+.dia figcaption{font-size:.8125rem; color:var(--muted); line-height:1.65}
+svg text{font-family:var(--font)}
+.d-z{fill:rgba(16,42,67,.04); stroke:var(--muted-2); stroke-dasharray:4 4; stroke-width:1}
+.d-zl{font-size:10px; letter-spacing:.07em; font-weight:700; fill:var(--muted-2)}
+.d-n{fill:var(--paper); stroke:var(--ink-3); stroke-width:1.1}
+.d-new{fill:#FDF7E6; stroke:var(--gold-700); stroke-width:1.8}
+.d-erp{fill:#EDF1F5; stroke:var(--ink-3); stroke-width:1.1}
+.d-hum{fill:var(--teal-50); stroke:var(--teal-600); stroke-width:1.2}
+.d-risk{fill:var(--danger-bg); stroke:var(--danger); stroke-width:1.6}
+.d-nt{font-size:12.5px; font-weight:700; fill:var(--ink)}
+.d-ns{font-size:10.5px; fill:var(--muted)}
+.d-ar{stroke:var(--ink-3); stroke-width:1.4; fill:none}
+.d-go{stroke:var(--teal); stroke-width:2; fill:none}
+.d-bad{stroke:var(--danger); stroke-width:2; fill:none}
+.d-dash{stroke:var(--muted-2); stroke-width:1.3; fill:none; stroke-dasharray:5 4}
+.d-fw{stroke:var(--danger); stroke-width:1.4; fill:none; stroke-dasharray:3 3}
+.d-gate{fill:var(--danger-bg); stroke:var(--danger); stroke-width:1.4; stroke-dasharray:3 3}
+.d-hd{fill:var(--ink-3)} .d-hdgo{fill:var(--teal)} .d-hdbad{fill:var(--danger)} .d-hddash{fill:var(--muted-2)}
+.d-al{font-size:10.5px; fill:var(--muted)}
+.d-algo{font-size:10.5px; fill:var(--teal-600); font-weight:600}
+.d-albad{font-size:10.5px; fill:var(--danger); font-weight:600}
+
+.spec{display:grid; gap:.35rem; margin:0; font-size:.8125rem}
+.spec div{display:grid; grid-template-columns:8.5rem 1fr; gap:.15rem .9rem; align-items:start}
+.spec dt{
+  font-family:var(--font-mono); font-size:.6875rem; letter-spacing:.03em;
+  text-transform:uppercase; color:var(--teal-600); padding-block-start:.2rem;
+}
+.spec dd{margin:0; color:var(--ink-2); line-height:1.6}
+.spec .risk dt{color:var(--danger)}
+@media (max-width:560px){ .spec div{grid-template-columns:1fr} }
+
+/* ─ الجدول ──────────────────────────────────────────────────────────────── */
+.scroller{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--paper)}
+table{border-collapse:collapse; width:100%; min-width:720px; font-size:.875rem}
+caption{caption-side:bottom; text-align:start; color:var(--muted); font-size:.8125rem; padding:.75rem 1rem}
+th,td{padding:.7rem .9rem; text-align:start; border-block-end:1px solid var(--line); vertical-align:top}
+thead th{background:var(--cream-2); font-size:.8125rem; color:var(--ink-2); white-space:nowrap}
+tbody tr:last-child td{border-block-end:0}
+tbody th{font-weight:600; white-space:nowrap}
+td{font-variant-numeric:tabular-nums}
+tr.is-rec{background:#FDFAF1}
+tr.is-rec th{color:var(--gold-700)}
+/* ten columns scroll; the path name has to stay on screen while they do */
+.scroller th[scope="row"]{
+  position:sticky; inset-inline-start:0; z-index:1;
+  background:var(--paper); box-shadow:-1px 0 0 var(--line);
+}
+.scroller tr.is-rec th[scope="row"]{background:#FDFAF1}
+.scroller thead th:first-child{position:sticky; inset-inline-start:0; z-index:2; background:var(--cream-2)}
+.yes{color:var(--ok); font-weight:600}
+.no{color:var(--danger); font-weight:600}
+.mid{color:var(--warn); font-weight:600}
+
+/* ─ حزمة القبول ─────────────────────────────────────────────────────────── */
+.pack{counter-reset:pack; display:grid; gap:.65rem; list-style:none; padding:0; margin:0}
+.pack li{
+  counter-increment:pack; position:relative; background:var(--paper);
+  border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding-block:.8rem; padding-inline-start:2.6rem; padding-inline-end:1rem;
+  font-size:.9375rem; box-shadow:var(--shadow-xs);
+}
+.pack li::before{
+  content:counter(pack,arabic-indic); position:absolute;
+  inset-inline-start:.95rem; top:.8rem; font-size:.875rem;
+  color:var(--teal); font-weight:600;
+}
+.pack li b{color:var(--ink)}
+
+/* ─ التوصية والمراحل ────────────────────────────────────────────────────── */
+.phases{display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.phase{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+  padding:1.1rem 1.2rem; display:grid; gap:.45rem; box-shadow:var(--shadow-xs);
+}
+.phase .when{
+  font-size:.75rem; font-weight:600; letter-spacing:.04em; color:var(--teal);
+}
+.phase h3{font-size:1rem}
+.phase p{font-size:.9375rem; color:var(--ink-2)}
+.phase .gate{font-size:.8125rem; color:var(--muted); border-block-start:1px dashed var(--line-strong); padding-block-start:.5rem}
+
+/* ─ ورقة القرار ─────────────────────────────────────────────────────────── */
+.decision{
+  background:var(--ink); color:var(--cream); border-radius:var(--radius);
+  padding:1.75rem 1.6rem; display:grid; gap:1.75rem; box-shadow:var(--shadow);
+}
+.decision h2{font-size:1.25rem; color:#F8F4EC; border:0; padding:0; margin:0}
+.decision > p{color:rgba(248,244,236,.72); font-size:.9375rem; max-width:62ch}
+fieldset{border:0; margin:0; padding:0; display:grid; gap:.6rem}
+legend{
+  font-size:.875rem; font-weight:600; color:var(--nav-accent); padding:0;
+  margin-block-end:.4rem;
+}
+.choices{display:grid; gap:.5rem}
+.choice{
+  display:flex; gap:.7rem; align-items:flex-start; cursor:pointer;
+  background:rgba(248,244,236,.05); border:1px solid rgba(248,244,236,.14);
+  border-radius:var(--radius-sm); padding:.65rem .85rem; font-size:.9375rem;
+  transition:background 160ms cubic-bezier(.2,.7,.2,1), border-color 160ms cubic-bezier(.2,.7,.2,1);
+}
+.choice:hover{background:rgba(248,244,236,.09)}
+.choice input{margin-block:.45rem 0 0;margin-inline:0; accent-color:var(--nav-accent); flex:none}
+.choice:has(input:checked){background:rgba(20,184,166,.17); border-color:var(--nav-accent)}
+.choice small{display:block; color:rgba(248,244,236,.6); font-size:.8125rem; line-height:1.5}
+.summary{
+  background:rgba(248,244,236,.07); border:1px dashed rgba(248,244,236,.28);
+  border-radius:var(--radius-sm); padding:.9rem 1.1rem; font-size:.9375rem;
+}
+.summary b{color:var(--nav-accent)}
+#picked{color:#F8F4EC}
+
+/* ─ التذييل ─────────────────────────────────────────────────────────────── */
+footer{
+  margin-block-start:3.5rem; padding-block-start:1.25rem;
+  border-block-start:1px solid var(--line); color:var(--muted); font-size:.8125rem;
+}
+footer p{margin-block:.25rem}
+
+@media (max-width:640px){
+  .facts div{grid-template-columns:1fr}
+  .flow .arrow{display:none}
+  .masthead{padding-block:2rem 1.75rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+@media print{
+  body{background:#fff}
+  .masthead{background:#fff; color:#102A43; border-block-end:2px solid #102A43}
+  .masthead h1{color:#102A43} .masthead .lede{color:#334E68}
+  .metabar span{border-color:#ccc; color:#334E68}
+  .decision{background:#fff; color:#102A43; border:1px solid #102A43}
+  .decision h2,#picked{color:#102A43}
+  .opt,.phase,.pack li,.state-list li{box-shadow:none; break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">إضافة مقترحة على المنصة · ورقة خيارات للقرار</p>
+    <h1>من الميدان إلى أوراكل</h1>
+    <p class="lede">
+      كيف ينفّذ الموظف عملاً حقيقياً من موقع المعدّة على جواله — بلاغ صيانة، طلب شراء، سحب تقرير — بحيث
+      يقبله أوراكل ويقبله قسم الأمن السيبراني وتقنية المعلومات، ودون أن تصبح المنصة نظاماً ثانياً يُصدر
+      أرقاماً رسمية.
+    </p>
+    <div class="metabar">
+      <span><strong>التاريخ</strong> 2026-09-20</span>
+      <span><strong>الحالة</strong> ثمانية مسارات للكتابة وخمسة للتقارير — للاختيار</span>
+      <span><strong>الرسوم</strong> إنجليزية · مواصفة تقنية لكل مسار</span>
+      <span><strong>يحكمها</strong> U-01 · BR-12 · BR-20 · المواصفة §9</span>
+      <span><strong>قرار</strong> لم يُتَّخذ بعد</span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ══ التأطير ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2>التأطير الذي يجعل الميزة تمرّ من الجهتين</h2>
+
+    <div class="callout">
+      <h3>ما يطلبه الموظف ليس «إنشاء أمر عمل في المنصة»</h3>
+      <p>
+        بل <b>إطلاق مستند رسمي في أوراكل من الحقل</b>. والفرق ليس لفظياً: المنصة تُجهّز وتتحقّق وتُرسل،
+        وأوراكل وحده يقرّر ويمنح الرقم. هذه الجملة وحدها تقلب الحوار مع الـIT من «نظام ثانٍ يكتب في
+        الـERP» إلى «قناة ميدانية مُدقَّقة تُغذّي الـERP» — وهي في الوقت نفسه ما يمنع ازدواج سلاسل
+        الأرقام الذي يرفضه <code>U-01</code> و<code>BR-12</code>.
+      </p>
+    </div>
+
+    <div class="flow">
+      <div class="stage">
+        <b>مسودة على الجوال</b>
+        <small>مسح QR للمعدّة، العطل، الصور، الأولوية — تعمل خارج التغطية</small>
+      </div>
+      <div class="arrow" aria-hidden="true">←</div>
+      <div class="stage stage--queue">
+        <b>طابور أوراكل</b>
+        <small>برقم المنصة <span class="path">WR-</span> / <span class="path">JOB-</span> وهو رقمها الدائم لا رقم مؤقت</small>
+      </div>
+      <div class="arrow" aria-hidden="true">←</div>
+      <div class="branch">
+        <div class="stage stage--ok">
+          <b>مقبول</b>
+          <small>رقم أوراكل الرسمي يصل بالمزامنة ويُعرض للقراءة فقط</small>
+        </div>
+        <div class="stage stage--no">
+          <b>مرفوض</b>
+          <small>نصّ رفض أوراكل حرفياً، والطلب يبقى ولا يُحذف (BR-13 / BR-32)</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-block-start:1.25rem">
+      <p>
+        <b>لا يظهر رقم رسمي على أي شاشة قبل أن ينطق به أوراكل.</b> ثلاث حالات لا رابع لها، وكل ما تحته
+        من خيارات هو مجرد اختلاف في <em>كيف</em> تنتقل الرسالة بين الحالة الثانية والثالثة.
+      </p>
+      <p>
+        <b>والأهم معمارياً: النصفان منفصلان.</b> نصف «الجوال ← المنصة» يمكن شحنه الآن بصفر مخاطرة سيبرانية
+        وبلا موافقة أحد، ونصف «المنصة ← أوراكل» هو وحده الذي يحتاج لجنة تغيير وحساب تكامل. لا تربط
+        مصيرهما ببعض.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ أين نقف ═════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2>أين نقف اليوم — لا نبدأ من صفر</h2>
+    <div class="two">
+      <div class="state-list state-list--have">
+        <h3>مبنيّ ومُختبَر</h3>
+        <ul>
+          <li>
+            طابور عدم الاتصال كاملاً: <span class="path">POST /api/v1/sync/push</span> بمفتاح
+            <span class="path">Idempotency-Key</span>، إيصالات 30 يوماً، كشف انحراف الساعة، ورفض يُحفظ ولا يُحذف
+            <em>Areas/Api/Controllers/SyncApiController.cs</em>
+          </li>
+          <li>
+            <span class="path">maintenance.workRequest</span> مُعلن ضمن الأنواع الخمسين التي يقبلها الطابور
+            <em>Core/Integration/OutboxSyncRules.cs — لكن بلا مُعالِج بعد</em>
+          </li>
+          <li>
+            بوابة الكتابة وقاعدتها: <span class="path">IErpAdapter.PushAsync</span> معرّفة ومعطّلة، و<span class="path">AllowsWrite</span>
+            ترفض ما لم يُرفع المفتاح
+            <em>Core/Integration/IntegrationRules.cs · appsettings.json → "ErpWrite": false</em>
+          </li>
+          <li>
+            تحويل بلاغ ← مهمة تنفيذ <span class="path">JOB-yyyy-nnnnnn</span> يعمل بالكامل مع سلسلة أرقام المنصة
+            <em>Areas/Maintenance/Pages/WorkRequestsPageHandler.cs</em>
+          </li>
+          <li>
+            محرّك التقارير بكياناته: تعريف، جدولة، تشغيل، تسليم، وأرشيف مجمّد ببصمة SHA-256
+            <em>Core/Reports/ReportEntities.cs</em>
+          </li>
+        </ul>
+      </div>
+      <div class="state-list state-list--gap">
+        <h3>غير مبنيّ</h3>
+        <ul>
+          <li>
+            <b>برنامج الوكيل نفسه.</b> الحلّ <span class="path">ASP/CementOps.slnx</span> فيه ثلاثة مشاريع فقط —
+            Web وSpecTools وTests — ولا مشروع <span class="path">CementOps.SyncAgent</span>
+            <em>التفصيل في القسم التالي</em>
+          </li>
+          <li>
+            <b>أي محوّل أوراكل فعلي.</b> <span class="path">ISourceAdapter</span> واجهة بلا تنفيذ واحد، والمشغّل
+            يعامل ذلك كحقيقة يبلّغ عنها لا كعطل
+            <em>Infrastructure/Integration/SourceAdapters.cs</em>
+          </li>
+          <li>
+            زرّ <span class="path">sendToErp</span> موجود على شاشتي البلاغات وطلبات المواد ويردّ اليوم حرفياً
+            «الإرسال إلى ERP مرحلة لاحقة»
+            <em>WorkRequestsPageHandler.cs · MaterialRequestsPageHandler.cs</em>
+          </li>
+          <li>
+            جدول أوامر الكتابة الصادرة وصفحة متابعتها — <b>ولا توجد لها صفحة في المواصفة</b> ضمن صفحات
+            <span class="path">INT</span> الثلاثين
+            <em>إمّا توسعة INT-006، أو صفحة جديدة = تعديل مُعلن على ملف المواصفة</em>
+          </li>
+          <li>
+            مُعالِج واحد فقط مسجَّل في الطابور اليوم (بلاغ الخطر)، فبقية الأنواع تُردّ بـ
+            <span class="path">sync.entity_not_supported</span> بسببها المكتوب
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ما هو الوكيل ════════════════════════════════════════════════════ -->
+  <section class="section" id="agent">
+    <h2>ما هو «الوكيل» بالضبط — وهل هو موجود؟</h2>
+
+    <div class="prose" style="margin-block-end:1.5rem">
+      <p>
+        <b>نوعه:</b> برنامج C# مستقل من نوع <span class="path">.NET Worker Service</span> (قالب
+        <span class="path">Microsoft.NET.Sdk.Worker</span>)، يُبنى ملفاً تنفيذياً ويُثبَّت <b>خدمة ويندوز</b> أو
+        حاوية Docker على خادم صغير داخل شبكة المصنع بجوار أوراكل. ليس سكربتاً ولا أداة سطر أوامر ولا
+        جهازاً، و<b>لا يفتح أي منفذ</b> — كل اتصالاته صادرة. اسمه في المواصفة
+        <span class="path">CementOps.SyncAgent</span> (§1.1 الخيار أ)، ويشارك المشروع الرئيسي ملفات الـDTO
+        بالربط لا بالنسخ، ليبقى «مشروع أعمال واحد».
+      </p>
+      <p>
+        <b>وهل هو موجود اليوم؟ لا.</b> الحلّ <span class="path">ASP/CementOps.slnx</span> فيه ثلاثة مشاريع فقط:
+        <span class="path">CementOps.Web</span> و<span class="path">CementOps.SpecTools</span> و
+        <span class="path">CementOps.Tests</span>. والمبنيّ هو <b>نصف المنصة من التماس</b>، وهو الأكبر والأصعب:
+      </p>
+    </div>
+
+    <div class="two">
+      <div class="state-list state-list--have">
+        <h3>نصف المنصة — مبنيّ</h3>
+        <ul>
+          <li>
+            كيان <span class="path">SyncAgent</span>: الاسم، النسخة، المضيف، آخر نبضة، <b>مرجع</b> مفتاح الـAPI لا
+            المفتاح، وتاريخ انتهاء شهادة mTLS
+            <em>Core/Integration/IntegrationEntities.cs</em>
+          </li>
+          <li>
+            صفحة <span class="path">INT-002</span> تعرض الوكلاء بمهلة نبضة 15 دقيقة وتحذير شهادة قبل 30 يوماً
+          </li>
+          <li>
+            <span class="path">SyncRunner</span>: النافذة، التمرحل، العلامة المائية، إعادة المحاولة، والتنبيه بعد
+            ثلاث إخفاقات متتالية — مبنيّ ومُختبَر
+          </li>
+          <li>
+            مصادقة مفتاح API ونقاط قراءة للآلات جاهزة
+            <em>ApiKeyAuthentication · /api/v1/integration</em>
+          </li>
+        </ul>
+      </div>
+      <div class="state-list state-list--gap">
+        <h3>نصف المصنع — ناقص</h3>
+        <ul>
+          <li>
+            <b>لا شيء في الشجرة يكتب <span class="path">LastHeartbeatUtc</span></b> — لأنه لا يوجد وكيل يتصل. العمود
+            يُقرأ في خمسة مواضع ولا يُكتب في موضع واحد
+          </li>
+          <li>
+            <span class="path">SyncRunnerJob</span> يعمل اليوم <b>داخل تطبيق الويب</b> في <span class="path">JobHost</span>
+            (وهو <span class="path">BackgroundService</span>) — أي شكل الخيار ب من المواصفة — ولا ينتج شيئاً لأن
+            المحوّل بلا تنفيذ
+          </li>
+          <li>
+            <span class="path">"InProcessAgent": false</span> في <span class="path">appsettings.json</span> — فلا الشكل
+            الأول قائم ولا الثاني مُفعَّل
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.0625rem; margin-block:2rem .85rem">ثلاثة أشكال للنشر — تختار واحداً</h3>
+    <div class="scroller">
+      <table>
+        <caption>
+          الشكل الرفيع هو الوحيد الذي لا يُضاعف منطقاً مبنياً ومُختبَراً بالفعل داخل تطبيق الويب.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">الشكل</th>
+            <th scope="col">متى يُختار</th>
+            <th scope="col">ما الذي يتغيّر</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">وكيل منفصل — §1.1 (أ)</th>
+            <td>المنصة خارج شبكة المصنع: سحابة داخل المملكة</td>
+            <td>مشروع ثانٍ يُنشر ويُحدَّث ويُراقَب، وله دورة إصدار خاصة به</td>
+          </tr>
+          <tr>
+            <th scope="row">داخل التطبيق — §1.1 (ب)</th>
+            <td>كل شيء on-prem داخل الشبكة نفسها</td>
+            <td>لا مكوّن ثانٍ إطلاقاً: يُرفع <span class="path">Integration:InProcessAgent</span> ويُكتب المحوّل</td>
+          </tr>
+          <tr class="is-rec">
+            <th scope="row">وكيل رفيع — توصيتي</th>
+            <td>تريد الفصل الشبكي دون ازدواج المنطق</td>
+            <td>
+              الوكيل <b>ناقل فقط</b>: يحمل بيانات الاعتماد والوصول الشبكي، يجلب الصفوف الخام ويرفعها —
+              والقواعد كلها تبقى في <span class="path">SyncRunner</span> حيث هي مبنيّة ومُختبَرة اليوم
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="margin-block-start:1.5rem">
+      <h3>ما يطلبه الوكيل من الـIT عند العميل</h3>
+      <p>
+        خادم صغير أو حاوية (2 vCPU و4 GB تكفي) · حساب خدمة · شهادة عميل للـmTLS · منفذ صادر 443 إلى المنصة
+        وحدها · وصول إلى أوراكل <b>من ذلك الخادم فقط</b> · مكان للسجلات داخل المملكة. وهذه قائمة قصيرة
+        بما يكفي لتُقرأ في اجتماع واحد — وهي نفسها سواء اخترت المسار ١ أو ٢ أو ٣ أو ٥؛ المسار ٦ وحده
+        لا يحتاج وكيلاً إطلاقاً.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ القسم أ ═════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2><span class="n">أ.</span> ثمانية مسارات لإيصال الكتابة إلى أوراكل</h2>
+
+    <div class="legend" dir="ltr">
+      <span><i class="key"></i> Existing component</span>
+      <span><i class="key key--new"></i> New — what this option makes us build</span>
+      <span><i class="key key--erp"></i> Oracle / third party</span>
+      <span><i class="key key--go"></i> Who opens the connection</span>
+      <span><i class="key key--bad"></i> Connection the security review will contest</span>
+    </div>
+
+    <div class="options">
+
+      <article class="opt opt--rec">
+        <div class="opt__head">
+          <span class="opt__n">١</span>
+          <h3 class="opt__title">طابور كتابة في المنصة، والوكيل <em>يسحبه</em></h3>
+          <span class="tag tag--rec">توصيتي</span>
+        </div>
+        <p class="opt__how">
+          المنصة لا تتصل بأوراكل إطلاقاً. تكتب أمر كتابة في جدولها (النوع، الحمولة، مفتاح عدم التكرار،
+          الحالة). ووكيل المزامنة — <a href="#agent">برنامج <span class="path">.NET Worker Service</span> يُنشر داخل
+          شبكة المصنع، تفصيله في القسم السابق</a> — يسأل المنصة كل دقيقة عبر HTTPS صادر: «هل عندي
+          أوامر؟»، ينفّذها محلياً على أوراكل، ويعيد النتيجة: رقماً رسمياً أو سبب رفض.
+        </p>
+        <dl class="facts">
+          <div><dt>قبول الأمن</dt><dd>لا منفذ وارد إلى شبكة المصنع إطلاقاً — وهذه حرفياً لغة المواصفة نفسها في §9.2: <span class="path">outbound HTTPS only; no inbound ports</span>. لجنة الأمن تراجع اتجاه اتصال واحداً لا اثنين.</dd></div>
+          <div><dt>ملاءمة أوراكل</dt><dd>محايدة تماماً — الوكيل يتحدث EBS أو Fusion أو Maximo خلف <span class="path">IErpAdapter</span> دون أن تعرف المنصة أيّها.</dd></div>
+          <div><dt>ميزة إضافية</dt><dd>يعمل مع المنصة في سحابة داخل المملكة أو on-prem بلا فرق — فيحرّرك من ارتهان الميزة بقرار الاستضافة.</dd></div>
+          <div class="warn"><dt>الثمن</dt><dd>تأخير 30–60 ثانية قبل ظهور الرقم الرسمي؛ ومكوّن ثانٍ يُنشر ويُراقَب — وهو مطلوب أصلاً للقراءة.</dd></div>
+          <div><dt>الجهد</dt><dd>متوسط: الطابور + نقطة سحب + محوّل EBS أو Fusion واحد + صفحة متابعة.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 300" role="img" aria-label="Option 1: a .NET Worker Service inside the plant network polls the platform for write commands over outbound HTTPS and executes them on Oracle.">
+              <rect class="d-z" x="8" y="40" width="186" height="234" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="234" rx="8"/>
+              <rect class="d-z" x="620" y="40" width="272" height="234" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM — IN-KINGDOM CLOUD OR ON-PREM</text>
+              <text class="d-zl" x="630" y="32">PLANT NETWORK — NO INBOUND PORTS</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">sqlite3 offline outbox</text>
+              <text class="d-ns" x="32" y="140">flavor: plant</text>
+
+              <rect class="d-n" x="20" y="184" width="162" height="58" rx="6"/>
+              <text class="d-nt" x="32" y="206">Equipment QR</text>
+              <text class="d-ns" x="32" y="224">scan → prefilled request</text>
+              <text class="d-ns" x="32" y="238">works with no signal</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="76" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">ASP.NET Core 10 MVC · C#</text>
+              <text class="d-ns" x="298" y="125">write-queue + results endpoints</text>
+              <text class="d-ns" x="298" y="140">Linux container or IIS</text>
+
+              <rect class="d-n" x="286" y="184" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="206">PostgreSQL</text>
+              <text class="d-ns" x="298" y="224">ErpWriteCommand queue table</text>
+              <text class="d-ns" x="298" y="238">append-only audit</text>
+
+              <rect class="d-new" x="634" y="70" width="244" height="76" rx="6"/>
+              <text class="d-nt" x="646" y="92">CementOps.SyncAgent</text>
+              <text class="d-ns" x="646" y="110">.NET 10 Worker Service — C# exe</text>
+              <text class="d-ns" x="646" y="125">Windows Service or container</text>
+              <text class="d-ns" x="646" y="140">Polly retry · Serilog · no UI</text>
+
+              <rect class="d-erp" x="634" y="184" width="244" height="58" rx="6"/>
+              <text class="d-nt" x="646" y="206">Oracle EBS 12.2 / Fusion</text>
+              <text class="d-ns" x="646" y="224">ODP.NET (EBS) · REST (Fusion)</text>
+              <text class="d-ns" x="646" y="238">official WO / PR number issued here</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdgo" cx="634" cy="112" r="3.5"/>
+              <line class="d-go" x1="634" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="577" y="90" text-anchor="middle">outbound 443</text>
+              <text class="d-al" x="577" y="102" text-anchor="middle">+ API key</text>
+              <text class="d-algo" x="577" y="132" text-anchor="middle">poll every 60s</text>
+
+              <line class="d-ar" x1="400" y1="150" x2="400" y2="179"/>
+              <polygon class="d-hd" points="395.5,179 404.5,179 400,188"/>
+              <text class="d-al" x="410" y="170">enqueue / read</text>
+
+              <line class="d-ar" x1="756" y1="150" x2="756" y2="179"/>
+              <polygon class="d-hd" points="751.5,179 760.5,179 756,188"/>
+              <text class="d-al" x="766" y="170">executes the write</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            السهم التركوازي هو بيت القصيد: <b>الوكيل هو من يفتح الاتصال دائماً</b>، فلا يوجد في الرسم كله سهم
+            واحد يدخل إلى شبكة المصنع.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>Stand-alone C# executable — a .NET 10 Worker Service, installed as a Windows Service (or a Linux container). No UI, no desktop session.</dd></div>
+            <div><dt>Runs on</dt><dd>Small VM or container inside the plant network, 2 vCPU / 4 GB, service account.</dd></div>
+            <div><dt>Libraries</dt><dd>Oracle.ManagedDataAccess.Core (EBS) · HttpClient + System.Text.Json (Fusion) · Polly (retry) · Serilog.</dd></div>
+            <div><dt>To the ERP</dt><dd>ODP.NET call to a PL/SQL API, or HTTPS REST to Fusion — inside the plant LAN.</dd></div>
+            <div><dt>To us</dt><dd>HTTPS 443 outbound only · mTLS client certificate + API key · the agent always initiates.</dd></div>
+            <div><dt>We build</dt><dd>The agent project · ErpWriteCommand table + queue endpoints · one IErpAdapter · an INT queue page.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٢</span>
+          <h3 class="opt__title">جداول الواجهة المفتوحة وبرنامج أوراكل المتزامن</h3>
+          <span class="tag">الأقل مفاجآت</span>
+        </div>
+        <p class="opt__how">
+          الوكيل يُدرج الصفوف في جداول واجهة أوراكل — لطلبات الشراء <span class="path">PO_REQUISITIONS_INTERFACE_ALL</span>
+          ثم برنامج <span class="path">Import Requisitions</span>، ولبلاغات الصيانة واجهة eAM — وأوراكل نفسه يتحقّق
+          ويرقّم ويكتب الأخطاء في جدول الأخطاء.
+        </p>
+        <dl class="facts">
+          <div><dt>قبول أوراكل</dt><dd>هذا مسارهم المعتمد منذ عشرين سنة. التحقق كله منطق أوراكل لا منطقنا، فلا نتجاوز أي قاعدة عمل داخل الـERP.</dd></div>
+          <div><dt>قبول الأمن</dt><dd>الحساب يحتاج INSERT على جدولين وSELECT على جدول أخطاء. أضيق صلاحية ممكنة، وتُكتب في ورقة واحدة.</dd></div>
+          <div class="warn"><dt>الثمن</dt><dd>غير متزامن بطبيعته — الرقم يصل مع دورة البرنامج المتزامن وقد تكون كل 15 دقيقة؛ والأخطاء تأتي بلغة أوراكل الخام فتحتاج ترجمة للميدان.</dd></div>
+          <div class="bad"><dt>قيد</dt><dd>ممتاز لـEBS، وأضعف مع Fusion Cloud حيث البديل هو FBDI و<span class="path">ERP Integration Service</span>.</dd></div>
+          <div><dt>الجهد</dt><dd>منخفض إلى متوسط.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 360" role="img" aria-label="Option 2: the agent inserts rows into Oracle open-interface tables and Oracle's own concurrent program validates and numbers the document.">
+              <rect class="d-z" x="8" y="40" width="186" height="294" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="294" rx="8"/>
+              <rect class="d-z" x="612" y="40" width="280" height="294" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM</text>
+              <text class="d-zl" x="622" y="32">PLANT NETWORK — ORACLE'S OWN IMPORT PATH</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">sqlite3 offline outbox</text>
+              <text class="d-ns" x="32" y="140">flavor: plant</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="76" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">ASP.NET Core 10 MVC · C#</text>
+              <text class="d-ns" x="298" y="125">write-queue + results endpoints</text>
+              <text class="d-ns" x="298" y="140">field → interface column map</text>
+
+              <rect class="d-n" x="286" y="184" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="206">PostgreSQL</text>
+              <text class="d-ns" x="298" y="224">ErpWriteCommand queue table</text>
+
+              <rect class="d-new" x="626" y="70" width="212" height="70" rx="6"/>
+              <text class="d-nt" x="638" y="92">CementOps.SyncAgent</text>
+              <text class="d-ns" x="638" y="110">.NET 10 Worker — C# exe</text>
+              <text class="d-ns" x="638" y="125">ODP.NET + PL/SQL wrapper</text>
+
+              <rect class="d-erp" x="626" y="176" width="212" height="62" rx="6"/>
+              <text class="d-nt" x="638" y="198">Interface tables</text>
+              <text class="d-ns" x="638" y="216">PO_REQUISITIONS_INTERFACE_ALL</text>
+              <text class="d-ns" x="638" y="231">insert only — no logic here</text>
+
+              <rect class="d-erp" x="626" y="262" width="212" height="62" rx="6"/>
+              <text class="d-nt" x="638" y="284">Concurrent program</text>
+              <text class="d-ns" x="638" y="302">Import Requisitions (Oracle)</text>
+              <text class="d-ns" x="638" y="317">validates · numbers · errors</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdgo" cx="626" cy="112" r="3.5"/>
+              <line class="d-go" x1="626" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="573" y="90" text-anchor="middle">outbound 443</text>
+              <text class="d-al" x="573" y="102" text-anchor="middle">mTLS + API key</text>
+              <text class="d-algo" x="573" y="132" text-anchor="middle">read back</text>
+
+              <line class="d-ar" x1="400" y1="150" x2="400" y2="179"/>
+              <polygon class="d-hd" points="395.5,179 404.5,179 400,188"/>
+              <text class="d-al" x="410" y="170">enqueue / read</text>
+
+              <line class="d-ar" x1="747" y1="142" x2="747" y2="167"/>
+              <polygon class="d-hd" points="742.5,167 751.5,167 747,176"/>
+              <text class="d-al" x="757" y="160">ODP.NET INSERT</text>
+
+              <line class="d-ar" x1="747" y1="240" x2="747" y2="253"/>
+              <polygon class="d-hd" points="742.5,253 751.5,253 747,262"/>
+              <text class="d-al" x="757" y="254">every 15 min</text>
+
+              <polyline class="d-dash" points="838,293 858,293 858,105 847,105"/>
+              <polygon class="d-hddash" points="847,100.5 847,109.5 838,105"/>
+              <text class="d-al" x="858" y="62" text-anchor="middle">return</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            الخط المتقطّع على اليمين هو <b>العودة</b>: الرقم الرسمي وأخطاء أوراكل تُقرأ من جدول الأخطاء في
+            الدورة التالية، فلا شيء يعود في نفس اللحظة. ولاحظ أن التحقّق كلّه يقع داخل الصندوقين الرماديين —
+            أي داخل أوراكل، لا عندنا.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>The same C# Worker Service exe as option 1 — what changes is only what it does at the Oracle end: a plain INSERT, not an API call.</dd></div>
+            <div><dt>Libraries</dt><dd>Oracle.ManagedDataAccess.Core · Dapper (optional) · Polly · Serilog.</dd></div>
+            <div><dt>To the ERP</dt><dd>INSERT into the open-interface tables, then FND_REQUEST.SUBMIT_REQUEST — or Oracle's own scheduler picks the rows up.</dd></div>
+            <div><dt>They build</dt><dd>A small PL/SQL wrapper package owned by the customer's ERP team. This is <b>their</b> deliverable, and it belongs in the contract, not in our estimate.</dd></div>
+            <div><dt>We build</dt><dd>The agent · the field-to-interface-column mapping · the error-table reader that turns Oracle's message into a sentence the field can read.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٣</span>
+          <h3 class="opt__title">استدعاء REST مباشر — Fusion أو EBS عبر ISG</h3>
+          <span class="tag">الأسرع إحساساً</span>
+        </div>
+        <p class="opt__how">
+          المنصة (أو الوكيل) تستدعي واجهة أوراكل القياسية مباشرة: في Fusion موارد
+          <span class="path">maintenanceWorkOrders</span> و<span class="path">purchaseRequisitions</span>، وفي EBS واجهة
+          PL/SQL منشورة عبر <span class="path">Integrated SOA Gateway</span> — وهو المسار الأصلي داخل EBS ولا يحتاج SOA Suite.
+        </p>
+        <dl class="facts">
+          <div><dt>الميزة الحقيقية</dt><dd>الرقم الرسمي يعود في نفس الثانية، فيرى الفنّي رقم أوراكل على جواله قبل أن يترك المعدّة. تجربة استخدام لا يعوّضها شيء.</dd></div>
+          <div class="bad"><dt>الثمن الأمني</dt><dd>يحتاج مساراً شبكياً من المنصة إلى أوراكل. إن كانت المنصة في السحابة فهذا منفذ وارد أو VPN إلى قلب الشبكة — أثقل بند ستدافع عنه أمام لجنة الأمن.</dd></div>
+          <div><dt>علاج وسط</dt><dd>اجعل الاستدعاء من <b>الوكيل داخل الشبكة</b> لا من المنصة: تكسب التزامن وتبقي المنصة خارج الشبكة. عملياً هذا الخيار ١ بنقل فوري بدل الطابور.</dd></div>
+          <div class="warn"><dt>الجهد</dt><dd>متوسط، مع اعتماد كبير على إصدار أوراكل ونسخة الواجهات عند العميل.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 340" role="img" aria-label="Option 3: the platform calls Oracle REST directly, which requires an inbound path into the plant network; the dashed alternative moves the same call into the agent.">
+              <rect class="d-z" x="8" y="40" width="186" height="274" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="274" rx="8"/>
+              <rect class="d-z" x="620" y="40" width="272" height="274" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM</text>
+              <text class="d-zl" x="630" y="32">PLANT NETWORK</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">sqlite3 offline outbox</text>
+              <text class="d-ns" x="32" y="140">flavor: plant</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="80" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">ASP.NET Core 10 MVC · C#</text>
+              <text class="d-ns" x="298" y="125">IErpAdapter → HttpClient</text>
+              <text class="d-ns" x="298" y="140">OAuth2 client credentials</text>
+
+              <rect class="d-n" x="286" y="238" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="260">PostgreSQL</text>
+              <text class="d-ns" x="298" y="278">job row + audit — no queue needed</text>
+
+              <rect class="d-erp" x="634" y="70" width="244" height="76" rx="6"/>
+              <text class="d-nt" x="646" y="92">Oracle Fusion REST</text>
+              <text class="d-ns" x="646" y="110">/fscmRestApi/resources/11.13.18.05</text>
+              <text class="d-ns" x="646" y="125">maintenanceWorkOrders</text>
+              <text class="d-ns" x="646" y="140">OAuth2 · TLS 1.2+</text>
+
+              <rect class="d-erp" x="634" y="166" width="244" height="68" rx="6"/>
+              <text class="d-nt" x="646" y="188">EBS 12.2 + ISG</text>
+              <text class="d-ns" x="646" y="206">Integrated SOA Gateway — native</text>
+              <text class="d-ns" x="646" y="221">on the EBS app server — DBA enables</text>
+
+              <rect class="d-new" x="634" y="248" width="244" height="58" rx="6"/>
+              <text class="d-nt" x="646" y="270">or: CementOps.SyncAgent</text>
+              <text class="d-ns" x="646" y="288">the same call, made from inside</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdbad" cx="520" cy="112" r="3.5"/>
+              <line class="d-bad" x1="520" y1="112" x2="625" y2="112"/>
+              <polygon class="d-hdbad" points="625,107.5 625,116.5 634,112"/>
+              <rect class="d-gate" x="570" y="84" width="14" height="56" rx="2"/>
+              <text class="d-al" x="577" y="62" text-anchor="middle">HTTPS REST · OAuth2</text>
+              <text class="d-albad" x="577" y="158" text-anchor="middle">FIREWALL</text>
+              <text class="d-albad" x="577" y="170" text-anchor="middle">inbound rule</text>
+
+              <line class="d-ar" x1="400" y1="154" x2="400" y2="229"/>
+              <polygon class="d-hd" points="395.5,229 404.5,229 400,238"/>
+              <text class="d-al" x="410" y="196">job row + audit</text>
+
+              <circle class="d-hdgo" cx="634" cy="270" r="3.5"/>
+              <line class="d-go" x1="634" y1="270" x2="529" y2="270" stroke-dasharray="5 4"/>
+              <polygon class="d-hdgo" points="529,265.5 529,274.5 520,270"/>
+              <text class="d-algo" x="577" y="256" text-anchor="middle">no inbound rule</text>
+              <text class="d-al" x="577" y="288" text-anchor="middle">agent initiates</text>
+
+              <line class="d-dash" x1="756" y1="248" x2="756" y2="241"/>
+              <polygon class="d-hddash" points="751.5,241 760.5,241 756,232"/>
+              <text class="d-al" x="766" y="245">same REST call</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            السهم الأحمر هو بالضبط ما ستدافع عنه أمام لجنة الأمن: <b>اتصال يبدأ من خارج الشبكة إلى داخلها</b>.
+            والسهم التركوازي المتقطّع هو المخرج — نفس الاستدعاء يُنفَّذ من الوكيل داخل الشبكة، فتبقى السرعة
+            ويسقط المنفذ الوارد.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>In the plain form, <b>no new executable at all</b> — an IErpAdapter implementation inside CementOps.Web (C#, HttpClient). In the safe variant it is the same Worker Service exe as option 1.</dd></div>
+            <div><dt>Auth</dt><dd>OAuth2 client credentials (Fusion) or a service account over TLS (ISG); secrets resolved through the existing SecretRef at connect time, never from a config file.</dd></div>
+            <div><dt>They build</dt><dd>EBS only: <b>Integrated SOA Gateway</b> must be enabled on the EBS application server and the interface deployed from the Integration Repository as REST — a DBA task with its own change request. ISG ships with EBS and does not require SOA Suite.</dd></div>
+            <div><dt>Network</dt><dd>The plain form needs an inbound firewall rule or a site-to-site VPN into the plant network. The agent variant needs neither.</dd></div>
+            <div class="risk"><dt>Failure mode</dt><dd>An Oracle upgrade moves the REST resource version inside the URL. Pin the version and re-test on their patch cycle, or the field loses the button without warning.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٤</span>
+          <h3 class="opt__title">عبر ناقل التكامل المؤسسي — OIC أو SOA أو MuleSoft</h3>
+          <span class="tag">ملاءمة تنظيمية</span>
+        </div>
+        <p class="opt__how">
+          المنصة تضع رسالة على الناقل الذي يملكه فريق التكامل في الشركة، وهم ينفّذون الكتابة على أوراكل.
+        </p>
+        <dl class="facts">
+          <div><dt>متى يكون الأفضل</dt><dd>حين يوجد فريق تكامل فعلاً: لا نطلب حساب أوراكل ولا مساراً شبكياً، بل نقطة نهاية على نظام هم يدقّقونه ويملكون تغييره. المسؤولية تنتقل إليهم بوضوح مكتوب.</dd></div>
+          <div class="bad"><dt>الثمن</dt><dd>تعتمد على جدول فريق آخر، وكل تغيير حقل يصبح طلب تغيير عندهم — إيقاع أبطأ ممّا تعمل به اليوم.</dd></div>
+          <div class="warn"><dt>الجهد</dt><dd>منخفض عندنا، غير معلوم عندهم — وهذا هو الخطر الحقيقي في هذا الخيار.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 300" role="img" aria-label="Option 4: the platform posts a message to the customer's integration bus, which writes to Oracle and calls us back with the official number.">
+              <rect class="d-z" x="8" y="40" width="186" height="234" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="234" rx="8"/>
+              <rect class="d-z" x="620" y="40" width="272" height="234" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM — OURS</text>
+              <text class="d-zl" x="630" y="32">CUSTOMER-OWNED INTEGRATION + ORACLE</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">sqlite3 offline outbox</text>
+              <text class="d-ns" x="32" y="140">flavor: plant</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="76" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">ASP.NET Core 10 MVC · C#</text>
+              <text class="d-ns" x="298" y="125">IErpAdapter → HttpClient</text>
+              <text class="d-ns" x="298" y="140">no new executable</text>
+
+              <rect class="d-n" x="286" y="184" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="206">Callback controller</text>
+              <text class="d-ns" x="298" y="224">POST /integration/erp-result</text>
+              <text class="d-ns" x="298" y="238">writes the official number</text>
+
+              <rect class="d-erp" x="634" y="70" width="244" height="76" rx="6"/>
+              <text class="d-nt" x="646" y="92">Oracle Integration Cloud</text>
+              <text class="d-ns" x="646" y="110">low-code flow — their team</text>
+              <text class="d-ns" x="646" y="125">or SOA Suite / MuleSoft</text>
+              <text class="d-ns" x="646" y="140">their change process, their SLA</text>
+
+              <rect class="d-erp" x="700" y="184" width="178" height="58" rx="6"/>
+              <text class="d-nt" x="712" y="206">Oracle EBS / Fusion</text>
+              <text class="d-ns" x="712" y="224">their adapter writes here</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdgo" cx="520" cy="112" r="3.5"/>
+              <line class="d-go" x1="520" y1="112" x2="625" y2="112"/>
+              <polygon class="d-hdgo" points="625,107.5 625,116.5 634,112"/>
+              <text class="d-al" x="577" y="90" text-anchor="middle">HTTPS REST</text>
+              <text class="d-al" x="577" y="102" text-anchor="middle">OAuth2 + mTLS</text>
+
+              <line class="d-ar" x1="789" y1="150" x2="789" y2="179"/>
+              <polygon class="d-hd" points="784.5,179 793.5,179 789,188"/>
+              <text class="d-al" x="799" y="170">their adapter</text>
+
+              <polyline class="d-dash" points="648,150 648,213 529,213"/>
+              <polygon class="d-hddash" points="529,208.5 529,217.5 520,213"/>
+              <text class="d-al" x="577" y="203" text-anchor="middle">callback</text>
+              <text class="d-al" x="577" y="228" text-anchor="middle">official number</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            الصندوقان الرماديان كلاهما <b>ليس لنا</b>: نحن نرسل رسالة ونستقبل نداءً عائداً، ولا نلمس أوراكل
+            إطلاقاً. وهذا هو مكسب هذا الخيار وثمنه في الوقت نفسه.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>No new executable on our side: an IErpAdapter over HttpClient plus one callback controller inside CementOps.Web.</dd></div>
+            <div><dt>They build</dt><dd>The integration flow itself in OIC's low-code designer (or SOA / MuleSoft), the Oracle adapter configuration, and its error handling.</dd></div>
+            <div><dt>Contract</dt><dd>One agreed JSON message and one callback URL — versioned, because their flow and our payload change on different calendars.</dd></div>
+            <div><dt>Network</dt><dd>Outbound HTTPS from us to their endpoint; their flow reaches Oracle from inside. No inbound rule for us.</dd></div>
+            <div class="risk"><dt>Risk</dt><dd>Our delivery date becomes theirs. Put the message contract and a working test endpoint in the contract <b>before</b> the first sprint, not after it.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٥</span>
+          <h3 class="opt__title">ملف موقَّع يُودَع في منطقة مشتركة يلتقطه أوراكل</h3>
+          <span class="tag">خطة بديلة</span>
+        </div>
+        <p class="opt__how">
+          دفعة CSV أو FBDI مُوقَّعة تُودَع على SFTP كل ربع ساعة، وبرنامج أوراكل يستوردها ويعيد ملف نتيجة.
+        </p>
+        <dl class="facts">
+          <div><dt>حالته</dt><dd>حين يرفض الأمن أي واجهة برمجية في السنة الأولى — وهي حالة واقعية في مصانع الأسمنت، لا افتراض نظري.</dd></div>
+          <div class="warn"><dt>الثمن</dt><dd>أبطأ مسار، بلا رقم فوري، وتسوية الأخطاء يدوية.</dd></div>
+          <div><dt>قيمته الحقيقية</dt><dd>يُثبت القيمة ويشتري الثقة التي يُفتح بها الخيار ١ لاحقاً.</dd></div>
+          <div><dt>الجهد</dt><dd>منخفض جداً.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 360" role="img" aria-label="Option 5: the agent writes a signed CSV or FBDI batch to an SFTP landing zone and Oracle imports it on a schedule; the result comes back as a file.">
+              <rect class="d-z" x="8" y="40" width="186" height="294" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="294" rx="8"/>
+              <rect class="d-z" x="612" y="40" width="280" height="294" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM</text>
+              <text class="d-zl" x="622" y="32">PLANT NETWORK — FILES ONLY, NO CONNECTION</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">sqlite3 offline outbox</text>
+              <text class="d-ns" x="32" y="140">flavor: plant</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="76" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">ASP.NET Core 10 MVC · C#</text>
+              <text class="d-ns" x="298" y="125">builds the batch payload</text>
+              <text class="d-ns" x="298" y="140">one row per queued request</text>
+
+              <rect class="d-n" x="286" y="184" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="206">PostgreSQL</text>
+              <text class="d-ns" x="298" y="224">ErpWriteCommand queue table</text>
+
+              <rect class="d-new" x="626" y="70" width="212" height="70" rx="6"/>
+              <text class="d-nt" x="638" y="92">CementOps.SyncAgent</text>
+              <text class="d-ns" x="638" y="110">.NET 10 Worker — C# exe</text>
+              <text class="d-ns" x="638" y="125">SSH.NET · CsvHelper</text>
+
+              <rect class="d-erp" x="626" y="176" width="212" height="62" rx="6"/>
+              <text class="d-nt" x="638" y="198">SFTP landing zone</text>
+              <text class="d-ns" x="638" y="216">/inbound and /outbound</text>
+              <text class="d-ns" x="638" y="231">no database access at all</text>
+
+              <rect class="d-erp" x="626" y="262" width="212" height="62" rx="6"/>
+              <text class="d-nt" x="638" y="284">Oracle import</text>
+              <text class="d-ns" x="638" y="302">UCM importBulkData (Fusion)</text>
+              <text class="d-ns" x="638" y="317">or concurrent program (EBS)</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdgo" cx="626" cy="112" r="3.5"/>
+              <line class="d-go" x1="626" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="573" y="90" text-anchor="middle">outbound 443</text>
+              <text class="d-al" x="573" y="102" text-anchor="middle">mTLS + API key</text>
+              <text class="d-algo" x="573" y="132" text-anchor="middle">batch + result</text>
+
+              <line class="d-ar" x1="400" y1="150" x2="400" y2="179"/>
+              <polygon class="d-hd" points="395.5,179 404.5,179 400,188"/>
+              <text class="d-al" x="410" y="170">enqueue / read</text>
+
+              <line class="d-ar" x1="747" y1="142" x2="747" y2="167"/>
+              <polygon class="d-hd" points="742.5,167 751.5,167 747,176"/>
+              <text class="d-al" x="757" y="160">SFTP PUT</text>
+
+              <line class="d-ar" x1="747" y1="240" x2="747" y2="253"/>
+              <polygon class="d-hd" points="742.5,253 751.5,253 747,262"/>
+              <text class="d-al" x="757" y="254">on a schedule</text>
+
+              <polyline class="d-dash" points="838,293 858,293 858,105 847,105"/>
+              <polygon class="d-hddash" points="847,100.5 847,109.5 838,105"/>
+              <text class="d-al" x="858" y="62" text-anchor="middle">return</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            العودة هنا ملف أيضاً: أوراكل يكتب ملف نتيجة في مجلد الصادر، والوكيل يقرؤه في الدورة التالية
+            ويحوّل كل سطر خطأ إلى جملة يفهمها الميدان. <b>لا يوجد في هذا الرسم اتصال واحد بقاعدة بيانات
+            أوراكل</b> — وهذا سبب قبوله حيث يُرفض كل ما عداه.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>The same C# Worker Service exe — here the ERP end is a file, not a connection.</dd></div>
+            <div><dt>Libraries</dt><dd>SSH.NET (SFTP) · CsvHelper or ClosedXML · Polly · Serilog.</dd></div>
+            <div><dt>Payload</dt><dd>CSV for the EBS open interfaces, or an FBDI zip for Fusion through UCM importBulkData.</dd></div>
+            <div><dt>Security</dt><dd>SSH key pair, no password. The landing zone is a plant-side folder with no database access — which is exactly why a reviewer signs it.</dd></div>
+            <div class="risk"><dt>Latency</dt><dd>One batch every 15–60 minutes, and the number arrives on the pass after that. Never promise a technician an instant number on this path.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٦</span>
+          <h3 class="opt__title">صفر كتابة — حزمة جاهزة ورابط عميق إلى أوراكل</h3>
+          <span class="tag tag--phase">مرحلة صفر تحت كل الخيارات</span>
+        </div>
+        <p class="opt__how">
+          لا تكامل كتابة إطلاقاً. المنصة تُنتج طلباً مكتملاً ومُتحقَّقاً منه — المعدّة من مسح QR، العطل،
+          الصور، الأولوية، مركز التكلفة — ثم إمّا تفتح شاشة أوراكل مُعبّأة مسبقاً برابط عميق، أو تضعه في
+          صندوق مخطّط الصيانة الذي يضغط زراً واحداً داخل أوراكل.
+        </p>
+        <dl class="facts">
+          <div><dt>المكسب</dt><dd>يُنفَّذ في أيام، ويلغي كل نقاش أمني، ويحقّق نحو 70% من الفائدة الميدانية: الفنّي لم يعد يكتب على ورقة ويمشي إلى المكتب.</dd></div>
+          <div class="warn"><dt>الثمن</dt><dd>يبقى إنسان في الحلقة، فلا يصحّ وصفه بـ«الأوتوماتيكي» أمام الإدارة.</dd></div>
+          <div><dt>الاستعمال الصحيح</dt><dd>مرحلة صفر تحت كل الخيارات الأخرى، لا بديلاً دائماً عنها.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 300" role="img" aria-label="Option 6: no server-to-server connection exists; the planner's browser is the only thing that touches both the platform and Oracle.">
+              <rect class="d-z" x="8" y="40" width="186" height="234" rx="8"/>
+              <rect class="d-z" x="272" y="40" width="262" height="234" rx="8"/>
+              <rect class="d-z" x="620" y="40" width="272" height="234" rx="8"/>
+              <text class="d-zl" x="18" y="32">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="32">PLATFORM</text>
+              <text class="d-zl" x="630" y="32">PLANT NETWORK — PLANNER'S DESK</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="86" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">QR scan → prefilled</text>
+              <text class="d-ns" x="32" y="140">works with no signal</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="76" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">validates the request</text>
+              <text class="d-ns" x="298" y="125">builds a deep-link URL</text>
+              <text class="d-ns" x="298" y="140">no ERP credentials held</text>
+
+              <rect class="d-n" x="286" y="184" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="206">PostgreSQL</text>
+              <text class="d-ns" x="298" y="224">status: ready to submit</text>
+
+              <rect class="d-hum" x="634" y="70" width="244" height="76" rx="6"/>
+              <text class="d-nt" x="646" y="92">Maintenance planner</text>
+              <text class="d-ns" x="646" y="110">browser on the plant LAN</text>
+              <text class="d-ns" x="646" y="125">opens CementOps, clicks through</text>
+              <text class="d-ns" x="646" y="140">about twenty seconds</text>
+
+              <rect class="d-erp" x="634" y="184" width="244" height="58" rx="6"/>
+              <text class="d-nt" x="646" y="206">Oracle UI</text>
+              <text class="d-ns" x="646" y="224">prefilled form — planner submits</text>
+              <text class="d-ns" x="646" y="238">Oracle issues the number</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">sync/push</text>
+
+              <circle class="d-hdgo" cx="634" cy="112" r="3.5"/>
+              <line class="d-go" x1="634" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="577" y="90" text-anchor="middle">outbound HTTPS</text>
+              <text class="d-al" x="577" y="102" text-anchor="middle">browser session</text>
+              <text class="d-algo" x="577" y="132" text-anchor="middle">by a person</text>
+
+              <line class="d-ar" x1="400" y1="150" x2="400" y2="179"/>
+              <polygon class="d-hd" points="395.5,179 404.5,179 400,188"/>
+              <text class="d-al" x="410" y="170">ready to submit</text>
+
+              <line class="d-ar" x1="756" y1="150" x2="756" y2="179"/>
+              <polygon class="d-hd" points="751.5,179 760.5,179 756,188"/>
+              <text class="d-al" x="766" y="170">deep link, prefilled</text>
+
+              <line class="d-dash" x1="520" y1="222" x2="634" y2="222"/>
+              <line class="d-bad" x1="570" y1="215" x2="584" y2="229"/>
+              <line class="d-bad" x1="584" y1="215" x2="570" y2="229"/>
+              <text class="d-albad" x="577" y="246" text-anchor="middle">does not exist</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            العلامة الحمراء هي مضمون الخيار كلّه: <b>لا يوجد اتصال بين خادم وخادم</b>. متصفّح المخطّط هو
+            الشيء الوحيد الذي يلمس الطرفين، وهو يعمل بحساب المخطّط نفسه داخل أوراكل — فلا حساب تكامل ولا
+            قاعدة جدار نار ولا نقاش فصل مهام.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd><b>Nothing new runs anywhere.</b> A URL builder in C# and one screen. No service, no stored ERP credentials, no firewall change.</dd></div>
+            <div><dt>The link</dt><dd>Fusion accepts deep links into its pages with parameters; EBS accepts a function link. Where neither is available, the planner gets a copy-ready package on screen.</dd></div>
+            <div><dt>Who acts</dt><dd>A named planner, inside Oracle, under their own Oracle user — segregation of duties untouched and the audit trail is Oracle's own.</dd></div>
+            <div class="risk"><dt>Limit</dt><dd>It is not automation. Measure the saving in the technician's walk to the office, not in the planner's click.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٧</span>
+          <h3 class="opt__title">امتداد متصفّح بلوحة جانبية — الأتمتة تركب جلسة المستخدم نفسه</h3>
+          <span class="tag tag--phase">أفضل ما في عائلة الأتمتة</span>
+        </div>
+        <p class="opt__how">
+          امتداد على Chrome وEdge وOpera وFirefox بلوحة جانبية هي محرّك أتمتة عام: يحوّل أي صفحة إلى شجرة
+          عناصر، ويربط كل حقل بعنوانه، ثم ينفّذ نصوصاً مثل <span class="path">Set("User Name","Mohammed")</span>
+          و<span class="path">Get("Description","Input","Right")</span> و<span class="path">Click("Log In","Button")</span>.
+          النصوص تُعرَّف في قسم الـIT داخل المنصة، ويقترن الامتداد بالمستخدم بمسح QR أو برمز يصل جواله، ثم
+          <b>يسجّل المستخدم دخوله إلى أوراكل بنفسه</b> ويشغّل النص من جواله، وتعود النتيجة على اللوحة.
+        </p>
+        <dl class="facts">
+          <div><dt>المكسب الكبير</dt><dd><b>لا كلمة مرور مخزّنة في أي مكان.</b> المستخدم يدخل بتحقّقه الثنائي، والأتمتة تركب جلسته — فأوراكل يسجّل <b>الشخص الحقيقي</b>، ويبقى فصل المهام والترخيص وسجل التدقيق سليمة. وهذا ما يفرّقه عن أي أتمتة تعمل بحساب مخزّن، وهو فرق جوهري لا تحسين.</dd></div>
+          <div><dt>الوضع الأمني</dt><dd>اللوحة تفتح الاتصال <b>إلى الخارج</b> نحو المنصة (SignalR أو استطلاع)، فلا شيء يدخل إلى جهاز المستخدم — نفس شكل المسار ١.</dd></div>
+          <div><dt>تصحيح تقني واحد</dt><dd>«الشجرة البصرية» يجب أن تكون <b>شجرة الوصولية</b> التي يحسبها المتصفّح أصلاً (<span class="path">label for</span>، <span class="path">aria-label</span>، <span class="path">role</span>)، و«الذي على اليمين» احتياطي لا أساس. الهندسة المكانية تنكسر على جداول ADF.</dd></div>
+          <div><dt>قيد MV3</dt><dd>البيان الثالث يمنع الكود البعيد، فالنص <b>بيانات يفسّرها مفسّر مشحون داخل الامتداد</b>، ولا <span class="path">eval</span> أبداً. وهذا ليس عائقاً بل مكسب: كل خطوة تصبح قابلة للتدقيق.</dd></div>
+          <div class="warn"><dt>ليس امتداداً واحداً</dt><dd>Chrome وEdge وOpera بناء واحد. <b>Firefox بناء ثانٍ</b> — لا يملك <span class="path">sidePanel</span> بل <span class="path">sidebar_action</span> — ومتجر Opera مراجعة منفصلة.</dd></div>
+          <div class="bad"><dt>افحص هذا أولاً</dt><dd><b>شاشات EBS Forms ليست DOM إطلاقاً</b>، فلا يراها أي امتداد. إن كانت الشاشات المستهدفة Forms فالفكرة كلها لا تعمل. شاشات Self-Service (OAF) وFusion تعمل.</dd></div>
+          <div class="bad"><dt>الجهد</dt><dd><b>الأعلى بين المسارات الثمانية.</b> محلّل عناصر، مفسّر نصوص، مسجّل، بناءان للمتصفّحات، صفحة تحرير نصوص، اقتران. شهور لا أسابيع — وهذا <b>منتج</b> لا ميزة.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 350" role="img" aria-label="Option 7: a browser side panel interprets scripts inside the user's own signed-in Oracle session, triggered from the phone through the platform.">
+              <rect class="d-z" x="8" y="38" width="186" height="286" rx="8"/>
+              <rect class="d-z" x="272" y="38" width="262" height="286" rx="8"/>
+              <rect class="d-z" x="620" y="38" width="272" height="286" rx="8"/>
+              <text class="d-zl" x="18" y="30">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="30">PLATFORM</text>
+              <text class="d-zl" x="630" y="30">PLANT NETWORK — THE USER'S PC</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="100" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">scans QR or enters OTP</text>
+              <text class="d-ns" x="32" y="140">runs a named script</text>
+              <text class="d-ns" x="32" y="155">sees the result</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="86" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">script library — IT section</text>
+              <text class="d-ns" x="298" y="125">SignalR hub + pairing</text>
+              <text class="d-ns" x="298" y="140">OTP · device binding (exists)</text>
+
+              <rect class="d-n" x="286" y="196" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="218">PostgreSQL</text>
+              <text class="d-ns" x="298" y="236">scripts · runs · results</text>
+
+              <rect class="d-new" x="634" y="70" width="244" height="86" rx="6"/>
+              <text class="d-nt" x="646" y="92">Browser side panel</text>
+              <text class="d-ns" x="646" y="110">MV3 extension — Chrome/Edge/Opera</text>
+              <text class="d-ns" x="646" y="125">second build for Firefox</text>
+              <text class="d-ns" x="646" y="140">interprets script text — no eval</text>
+
+              <rect class="d-erp" x="634" y="182" width="244" height="62" rx="6"/>
+              <text class="d-nt" x="646" y="204">Oracle web UI</text>
+              <text class="d-ns" x="646" y="222">a11y tree: label → control</text>
+              <text class="d-ns" x="646" y="237">EBS Forms screens are invisible</text>
+
+              <rect class="d-hum" x="634" y="262" width="244" height="56" rx="6"/>
+              <text class="d-nt" x="646" y="284">The signed-in user</text>
+              <text class="d-ns" x="646" y="302">own login + MFA · present at the PC</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">run script</text>
+
+              <circle class="d-hdgo" cx="634" cy="112" r="3.5"/>
+              <line class="d-go" x1="634" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="577" y="90" text-anchor="middle">outbound only</text>
+              <text class="d-al" x="577" y="102" text-anchor="middle">SignalR / poll</text>
+              <text class="d-algo" x="577" y="132" text-anchor="middle">connects out</text>
+
+              <line class="d-ar" x1="400" y1="160" x2="400" y2="187"/>
+              <polygon class="d-hd" points="395.5,187 404.5,187 400,196"/>
+              <text class="d-al" x="410" y="180">scripts / results</text>
+
+              <line class="d-ar" x1="756" y1="160" x2="756" y2="173"/>
+              <polygon class="d-hd" points="751.5,173 760.5,173 756,182"/>
+              <text class="d-al" x="766" y="170">reads a11y tree</text>
+
+              <line class="d-go" x1="700" y1="262" x2="700" y2="253"/>
+              <polygon class="d-hdgo" points="695.5,253 704.5,253 700,244"/>
+              <text class="d-algo" x="710" y="258">signed in here</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            الفرق الذي يحسم هذه العائلة مرسوم هنا: <b>لا توجد كلمة مرور مخزّنة في أي صندوق</b>. المستخدم يسجّل
+            دخوله بنفسه بتحقّقه الثنائي، والأتمتة تركب جلسته — فأوراكل يرى الشخص الحقيقي لا روبوتاً ينتحله.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>An MV3 browser extension with a side panel. One Chromium build covers Chrome, Edge and Opera; Firefox needs a second build (<b>sidebar_action</b>, not sidePanel).</dd></div>
+            <div><dt>Script engine</dt><dd>The script text is <b>data</b>, parsed and run by an interpreter shipped inside the extension. MV3 forbids remote code, so never eval — which also makes every step auditable.</dd></div>
+            <div><dt>Element model</dt><dd>Not geometry: the accessibility tree the browser already computes (label for · aria-label · aria-labelledby · role). "To the right of" is the fallback, not the primary.</dd></div>
+            <div><dt>Pairing</dt><dd>QR or OTP against the platform's existing device binding, JWT audience and DeviceId claim — already built.</dd></div>
+            <div><dt>Scope</dt><dd>host_permissions limited to the ERP origin only. The manifest is the first thing a security reviewer reads; a wildcard there ends the conversation.</dd></div>
+            <div class="risk"><dt>Check first</dt><dd>Oracle EBS <b>Forms</b> screens are not DOM and no extension can see them. Confirm the target screens are Self-Service (OAF) or Fusion before a line is written.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٨</span>
+          <h3 class="opt__title">نفس الفكرة داخل برنامج C# يحمل متصفّح WebView2</h3>
+          <span class="tag">محرّك واحد، مضيف مختلف</span>
+        </div>
+        <p class="opt__how">
+          نفس المفسّر ونفس محلّل العناصر، لكن داخل برنامج سطح مكتب من C# يستضيف
+          <span class="path">WebView2</span> <b>ظاهراً</b> داخل نافذة WinForms: الصفحة صفحة أوراكل الحقيقية
+          بشريط عنوانها وقفلها، و<b>المستخدم يكتب اسمه وكلمة مروره بنفسه فيها</b> — والأداة لا تلمس اعتماداً قطّ.
+          الأداة نفسها تقترن بخادمنا بمسح QR أو برمز OTP، ثم تنفّذ نصوصاً معرَّفة على الخادم يشغّلها المستخدم
+          من جواله. ويعمل الفنّي دون اتصال طوال الوردية، فإذا وصل إلى الأداة أفرغت طابوره في أوراكل.
+        </p>
+        <dl class="facts">
+          <div><dt>لماذا أسهل علينا</dt><dd>محرّك واحد لا اثنان، ولا مراجعة متجر، ولا سياسة امتدادات، وتحكّم كامل في بيئة المتصفّح وإصداره.</dd></div>
+          <div><dt>لا اعتماد عندنا</dt><dd><b>الأداة لا تحمل اسم مستخدم ولا كلمة مرور ولا تخزّنهما.</b> المتصفّح ظاهر والصفحة حقيقية والمستخدم يكتب فيها كما يكتب في Edge. وهذا يسقط الاعتراض الأثقل الذي يُوجَّه عادةً لهذه العائلة.</dd></div>
+          <div><dt>الطابور دون اتصال</dt><dd>الجوال يجمع العمل طوال الوردية، والأداة تُفرغه حين يصل المستخدم إلى حاسوب. ومع مفتاح عدم التكرار الموجود أصلاً، إعادة المحاولة لا تُنشئ مستنداً مرتين.</dd></div>
+          <div class="warn"><dt>الاعتراض المتبقّي — واحد فقط</dt><dd>عمليّتنا هي التي ترسم الصفحة، فهي <b>تستطيع</b> قراءتها. لا يُجاب هذا بتطمين بل بضوابط تُبرهَن في مراجعة كود: لا حقن نصوص قبل تطابق عنوان ما بعد الدخول، ورفض قاطع للعمل على أي صفحة مصادقة، ولا التقاط للصفحة كاملة.</dd></div>
+          <div class="warn"><dt>وتفصيل عملي</dt><dd><span class="path">WebView2</span> له ملفّ تعريف خاص، فالدخول مرّة في اليوم لا مرّة في الساعة — ويسقط تماماً لو فُعّلت مصادقة ويندوز المدمجة.</dd></div>
+          <div class="bad"><dt>بديل مرفوض</dt><dd>الارتباط بمتصفّح المستخدم الحقيقي عبر منفذ تنقيح <span class="path">CDP</span>: تشغيل متصفّح مستخدم ومنفذ التنقيح مفتوح <b>ملاحظة أمنية بذاتها</b>، ولا تُقترح.</dd></div>
+          <div><dt>أين يفوز</dt><dd>محطّة أتمتة مخصّصة ومُقفلة في مكتب التخطيط — حين يكون <b>المضيف المتحكَّم فيه هو المقصود</b> لا العائق.</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 350" role="img" aria-label="Option 8: the same script interpreter hosted in a C# WinForms application with a visible WebView2 browser; the user signs into the real Oracle page himself and the tool holds no credential.">
+              <rect class="d-z" x="8" y="38" width="186" height="286" rx="8"/>
+              <rect class="d-z" x="272" y="38" width="262" height="286" rx="8"/>
+              <rect class="d-z" x="620" y="38" width="272" height="286" rx="8"/>
+              <text class="d-zl" x="18" y="30">FIELD — MOBILE</text>
+              <text class="d-zl" x="282" y="30">PLATFORM</text>
+              <text class="d-zl" x="630" y="30">PLANT NETWORK — MANAGED WORKSTATION</text>
+
+              <rect class="d-n" x="20" y="68" width="162" height="100" rx="6"/>
+              <text class="d-nt" x="32" y="92">Flutter app</text>
+              <text class="d-ns" x="32" y="110">cementops_mobile · Dart</text>
+              <text class="d-ns" x="32" y="125">scans QR or enters OTP</text>
+              <text class="d-ns" x="32" y="140">runs a named script</text>
+              <text class="d-ns" x="32" y="155">sees the result</text>
+
+              <rect class="d-n" x="286" y="70" width="234" height="86" rx="6"/>
+              <text class="d-nt" x="298" y="92">CementOps.Web</text>
+              <text class="d-ns" x="298" y="110">script library — IT section</text>
+              <text class="d-ns" x="298" y="125">SignalR hub + pairing</text>
+              <text class="d-ns" x="298" y="140">OTP · device binding (exists)</text>
+
+              <rect class="d-n" x="286" y="196" width="234" height="58" rx="6"/>
+              <text class="d-nt" x="298" y="218">PostgreSQL</text>
+              <text class="d-ns" x="298" y="236">scripts · runs · results</text>
+
+              <rect class="d-new" x="634" y="70" width="244" height="86" rx="6"/>
+              <text class="d-nt" x="646" y="92">CementOps.ErpConsole</text>
+              <text class="d-ns" x="646" y="110">.NET 10 WinForms exe — C#</text>
+              <text class="d-ns" x="646" y="125">visible WebView2 · real chrome</text>
+              <text class="d-ns" x="646" y="140">paired by QR/OTP · no ERP password</text>
+
+              <rect class="d-erp" x="634" y="182" width="244" height="62" rx="6"/>
+              <text class="d-nt" x="646" y="204">Oracle UI — the real page</text>
+              <text class="d-ns" x="646" y="222">the user types his own password</text>
+              <text class="d-ns" x="646" y="237">engine inert until he is signed in</text>
+
+              <rect class="d-risk" x="634" y="262" width="244" height="56" rx="6"/>
+              <text class="d-albad" x="646" y="284">our process renders the page</text>
+              <text class="d-albad" x="646" y="301">so it could read it — prove it does not</text>
+
+              <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+              <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+              <text class="d-al" x="234" y="90" text-anchor="middle">HTTPS · JWT</text>
+              <text class="d-al" x="234" y="102" text-anchor="middle">run script</text>
+
+              <circle class="d-hdgo" cx="634" cy="112" r="3.5"/>
+              <line class="d-go" x1="634" y1="112" x2="529" y2="112"/>
+              <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+              <text class="d-al" x="577" y="90" text-anchor="middle">outbound only</text>
+              <text class="d-al" x="577" y="102" text-anchor="middle">SignalR / poll</text>
+              <text class="d-algo" x="577" y="132" text-anchor="middle">connects out</text>
+
+              <line class="d-ar" x1="400" y1="160" x2="400" y2="187"/>
+              <polygon class="d-hd" points="395.5,187 404.5,187 400,196"/>
+              <text class="d-al" x="410" y="180">scripts / results</text>
+
+              <line class="d-ar" x1="756" y1="160" x2="756" y2="173"/>
+              <polygon class="d-hd" points="751.5,173 760.5,173 756,182"/>
+              <text class="d-al" x="766" y="170">drives the page</text>
+
+              <line class="d-bad" x1="756" y1="244" x2="756" y2="253"/>
+              <polygon class="d-hdbad" points="751.5,253 760.5,253 756,262"/>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            المتصفّح <b>ظاهر</b> والصفحة حقيقية والمستخدم يكتب كلمة مروره بنفسه — فلا تحمل الأداة اعتماداً قطّ.
+            ويبقى اعتراض واحد مرسوم بالأحمر: عمليّتنا هي التي ترسم الصفحة فتستطيع قراءتها. وهذا يُجاب بضوابط
+            تُبرهَن في مراجعة كود، لا بجملة في عرض تقديمي.
+          </figcaption>
+          <dl class="spec">
+            <div><dt>Tool type</dt><dd>Stand-alone C# desktop exe (.NET 10 WinForms) hosting a <b>visible</b> WebView2 — the real Oracle page with real browser chrome. Code-signed MSI through Intune or SCCM.</dd></div>
+            <div><dt>Credentials</dt><dd><b>The tool holds none.</b> The user types into the real page himself. The engine refuses to run on any authentication page and can never type into a password field.</dd></div>
+            <div><dt>Pairing</dt><dd>The exe signs in to <b>our</b> platform by QR or OTP, reusing the existing device binding — and is revocable from the devices page.</dd></div>
+            <div><dt>Offline</dt><dd>The phone queues work all shift; the tool drains that queue when the user reaches a PC. Each item carries an idempotency key, so a retry never doubles a document.</dd></div>
+            <div><dt>Shared with 7</dt><dd>The same script interpreter and the same element resolver. <b>Build the engine once and host it twice</b> — this is the reason to treat 8 and 9 as one decision.</dd></div>
+            <div><dt>Runtime</dt><dd>WebView2 Evergreen runtime — present on Windows 11, must be packaged for older estates.</dd></div>
+            <div class="risk"><dt>Residual objection</dt><dd>Our process renders the page, so it <b>could</b> read it. Answer with enforced controls a reviewer can check in the code — no script injection before a post-login URL match, no full-page capture — not with assurances.</dd></div>
+            <div class="risk"><dt>Rejected variant</dt><dd>Attaching to the user's real browser over the CDP debug port. Launching a user's browser with a debugging port open is a finding in its own right.</dd></div>
+          </dl>
+        </figure>
+      </article>
+
+      <div class="callout">
+        <h3>السؤال الذي يحسم المسارين ٧ و٨ قبل أي كود</h3>
+        <p>
+          الفنّي عند الفرن ومعه جواله، والأتمتة تعمل في متصفّح على <b>حاسوب سجّل فيه شخصٌ دخوله</b>. فمن هذا
+          الشخص؟
+        </p>
+        <ul>
+          <li><b>لو كان الفنّي نفسه:</b> هو ليس عند الحاسوب، وجلسة أوراكل تنتهي بالخمول (ثلاثون دقيقة عادةً) — فطلبه الساعة الثانية يجد الجلسة ميتة.</li>
+          <li><b>لو كان مخطّط الصيانة على جهاز مخصّص:</b> يعمل — لكن المستند الرسمي يصدر <b>باسم المخطّط لا باسم الفنّي</b>، وهذا بالضبط ما يعيدنا إلى المسار ٦ مؤتمَتاً.</li>
+          <li><b>لو كان الفنّي على حاسوب:</b> فهو لا يحتاج الجوال أصلاً.</li>
+        </ul>
+        <p>
+          <b>فالخلاصة:</b> ٧ و٨ ممتازان لأتمتة <b>عمل مكتبي متكرّر</b> — مخطّط أو أمين مستودع يُدخل أربعين حركة
+          يومياً — وهذه قيمة حقيقية وكبيرة. وليسا مساراً ميدانياً من الجوال <b>إلا بقبول أن يصدر المستند باسم
+          من يجلس أمام الشاشة</b>. هذا قرار عمل لا قرار تقني، ويُتّخذ قبل أن يُكتب سطر واحد.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ المقارنة ════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2>المقارنة في جدول واحد</h2>
+    <div class="scroller">
+      <table style="min-width:1240px">
+        <caption>
+          العمودان اللذان يحسمان النقاش مع الأمن والتدقيق هما <b>«اعتماد مخزّن عندنا»</b> و<b>«المستند باسم»</b> —
+          وليست السرعة. وأسماء الجداول والواجهات استرشادية وتُثبَّت مع فريق أوراكل عند العميل، وهو ما تنصّ عليه
+          المواصفة نفسها في §9.3.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">المسار</th>
+            <th scope="col">نوع الأداة</th>
+            <th scope="col">الآلية</th>
+            <th scope="col">زمن الرقم الرسمي</th>
+            <th scope="col">منفذ وارد</th>
+            <th scope="col">اعتماد مخزّن عندنا</th>
+            <th scope="col">المستند باسم</th>
+            <th scope="col">ملاءمة أوراكل</th>
+            <th scope="col">جهدنا</th>
+            <th scope="col">يبنيه فريق العميل</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="is-rec">
+            <th scope="row">١ · طابور وسحب الوكيل</th>
+            <td><span class="path">.NET Worker</span> exe</td>
+            <td>أمر كتابة في طابورنا، والوكيل يسحبه وينفّذه داخل الشبكة</td>
+            <td>30–60 ثانية</td>
+            <td class="yes">لا</td>
+            <td>حساب تكامل في خزنة</td>
+            <td>حساب التكامل · ومقدّم الطلب في الحمولة</td>
+            <td>EBS ممتاز · Fusion ممتاز</td>
+            <td>متوسط</td>
+            <td>حساب أوراكل وصلاحياته فقط</td>
+          </tr>
+          <tr>
+            <th scope="row">٢ · جداول الواجهة</th>
+            <td><span class="path">.NET Worker</span> + ODP.NET</td>
+            <td>INSERT في جداول الواجهة، وبرنامج أوراكل يتحقّق ويرقّم</td>
+            <td>5–15 دقيقة</td>
+            <td class="yes">لا</td>
+            <td>حساب تكامل في خزنة</td>
+            <td>حساب التكامل</td>
+            <td>EBS الأفضل · <span class="mid">Fusion محدود</span></td>
+            <td>منخفض</td>
+            <td class="mid">حزمة PL/SQL ومراجعة DBA</td>
+          </tr>
+          <tr>
+            <th scope="row">٣ · REST مباشر</th>
+            <td>بلا أداة — أو الوكيل</td>
+            <td>استدعاء واجهة أوراكل القياسية مباشرة</td>
+            <td>فوري</td>
+            <td class="no">نعم — إلا من الوكيل</td>
+            <td>OAuth2 في خزنة</td>
+            <td>حساب التكامل</td>
+            <td><span class="mid">EBS عبر ISG</span> · Fusion الأفضل</td>
+            <td>متوسط</td>
+            <td class="mid">تفعيل ISG ونشر الواجهات (لـEBS)</td>
+          </tr>
+          <tr>
+            <th scope="row">٤ · ناقل التكامل</th>
+            <td>بلا أداة عندنا</td>
+            <td>رسالة على ناقلهم، وهم يكتبون ويردّون بنداء عائد</td>
+            <td>حسب إيقاعهم</td>
+            <td class="yes">لا</td>
+            <td class="yes">لا شيء عندنا</td>
+            <td>حساب الناقل عندهم</td>
+            <td>ممتاز · ممتاز</td>
+            <td>منخفض</td>
+            <td class="no">تدفّق التكامل كاملاً</td>
+          </tr>
+          <tr>
+            <th scope="row">٥ · ملفات SFTP</th>
+            <td><span class="path">.NET Worker</span> + SSH.NET</td>
+            <td>دفعة CSV أو FBDI موقّعة، وأوراكل يستوردها بجدول</td>
+            <td>15–60 دقيقة</td>
+            <td class="yes">لا</td>
+            <td>مفتاح SSH</td>
+            <td>حساب الاستيراد</td>
+            <td>ممتاز · ممتاز</td>
+            <td>منخفض جداً</td>
+            <td>مجلّد وجدولة استيراد</td>
+          </tr>
+          <tr>
+            <th scope="row">٦ · رابط عميق</th>
+            <td class="yes">بلا أداة إطلاقاً</td>
+            <td>حزمة جاهزة يفتحها المخطّط في أوراكل بضغطة واحدة</td>
+            <td>بشري</td>
+            <td class="yes">لا</td>
+            <td class="yes">لا شيء</td>
+            <td class="yes">المخطّط — بحسابه هو</td>
+            <td>ممتاز · ممتاز</td>
+            <td>أيام</td>
+            <td class="yes">لا شيء</td>
+          </tr>
+          <tr>
+            <th scope="row">٧ · امتداد متصفّح</th>
+            <td>امتداد MV3 بلوحة جانبية</td>
+            <td>نص يُفسَّر داخل جلسة المستخدم على صفحة أوراكل</td>
+            <td>ثوانٍ — والمستخدم حاضر</td>
+            <td class="yes">لا</td>
+            <td class="yes">لا شيء</td>
+            <td class="yes">المستخدم نفسه — بحساب أوراكل وصلاحياته</td>
+            <td class="mid">هشّ · وForms مستحيل</td>
+            <td class="no">الأعلى</td>
+            <td>لا شيء من أوراكل · سياسة امتدادات من الـIT</td>
+          </tr>
+          <tr>
+            <th scope="row">٨ · WebView2 exe</th>
+            <td><span class="path">C# exe</span> + WebView2</td>
+            <td>نفس المحرّك داخل نافذتنا على محطّة مُقفلة</td>
+            <td>ثوانٍ — والمستخدم حاضر</td>
+            <td class="yes">لا</td>
+            <td class="yes">لا شيء</td>
+            <td class="yes">المستخدم نفسه — بحساب أوراكل وصلاحياته</td>
+            <td class="mid">هشّ · وForms مستحيل</td>
+            <td class="no">عالٍ</td>
+            <td>توزيع MSI · وقبول شاشة دخول داخل تطبيقنا</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ المستندات المعقّدة ══════════════════════════════════════════════ -->
+  <section class="section" id="complex">
+    <h2>المستندات المعقّدة — نعم بالـAPI، لكن ليست كلّها</h2>
+
+    <div class="prose" style="margin-block-end:1.5rem">
+      <p>
+        المسارات ١ و٢ و٣ و٥ كلّها تمرّ بواجهات أوراكل الرسمية، <b>والواجهة قادرة على إغلاق أمر عمل كامل</b> —
+        ساعات عمل بأسماء الموظفين، ومواد مصروفة، وتغيير حالة. في EBS ذلك معاملات موارد ومواد على العملية، وفي
+        Fusion مجموعات فرعية تحت <span class="path">maintenanceWorkOrders</span>. فالقدرة موجودة ومدعومة.
+      </p>
+      <p>
+        <b>لكن الصعوبة ليست في الإرسال، بل في امتلاك ما يُرسَل.</b> كل قيمة يجب أن تكون <b>مفتاحاً في أوراكل
+        لا اسماً</b>: «محمد علي» يجب أن يصير <span class="path">person_id</span>، و«لحام» رمز مورد، و«ثلاث ساعات»
+        وحدة قياس وحساب تحميل، والساعات تُحمَّل على <b>تسلسل عملية</b> داخل أمر عمل مُفرَج عنه في فترة مفتوحة.
+      </p>
+    </div>
+
+    <figure class="dia" dir="ltr">
+      <div class="dia__wrap">
+        <svg viewBox="0 0 900 320" role="img" aria-label="One work-order closure is three Oracle transactions, and the platform's own records are not yet keyed to Oracle.">
+          <rect class="d-z" x="8" y="40" width="300" height="242" rx="8"/>
+          <rect class="d-z" x="340" y="40" width="210" height="242" rx="8"/>
+          <rect class="d-z" x="584" y="40" width="308" height="242" rx="8"/>
+          <text class="d-zl" x="18" y="32">WHAT THE PLATFORM HOLDS</text>
+          <text class="d-zl" x="350" y="32">THE TRANSLATION</text>
+          <text class="d-zl" x="594" y="32">WHAT ORACLE NEEDS FOR ONE CLOSURE</text>
+
+          <rect class="d-n" x="22" y="105" width="272" height="128" rx="6"/>
+          <text class="d-nt" x="34" y="129">Execution job JOB-yyyy-nnnnnn</text>
+          <text class="d-ns" x="34" y="151">JobTimeLog — UserId, start, end</text>
+          <text class="d-ns" x="34" y="167">JobPartLine — ErpItemExternalId, qty</text>
+          <text class="d-ns" x="34" y="183">JobMeasurement — point, value</text>
+          <text class="d-ns" x="34" y="199">photos · findings · checklist</text>
+          <text class="d-algo" x="34" y="221">real data — but not ERP-keyed</text>
+
+          <rect class="d-risk" x="354" y="117" width="182" height="104" rx="6"/>
+          <text class="d-nt" x="366" y="141">ERP key mapping</text>
+          <text class="d-ns" x="366" y="163">UserId → person_id</text>
+          <text class="d-ns" x="366" y="178">operation seq · resource</text>
+          <text class="d-ns" x="366" y="193">UOM · charge account</text>
+          <text class="d-albad" x="366" y="211">does not exist yet</text>
+
+          <rect class="d-erp" x="598" y="72" width="250" height="54" rx="6"/>
+          <text class="d-nt" x="610" y="94">1 · Resource transaction</text>
+          <text class="d-ns" x="610" y="112">person · hours · operation</text>
+
+          <rect class="d-erp" x="598" y="142" width="250" height="54" rx="6"/>
+          <text class="d-nt" x="610" y="164">2 · Material issue</text>
+          <text class="d-ns" x="610" y="182">item · qty · subinventory</text>
+
+          <rect class="d-erp" x="598" y="212" width="250" height="54" rx="6"/>
+          <text class="d-nt" x="610" y="234">3 · Status change</text>
+          <text class="d-ns" x="610" y="252">complete / close</text>
+
+          <line class="d-ar" x1="294" y1="169" x2="345" y2="169"/>
+          <polygon class="d-hd" points="345,164.5 345,173.5 354,169"/>
+          <text class="d-al" x="324" y="157" text-anchor="middle">needs keys</text>
+
+          <line class="d-ar" x1="536" y1="169" x2="578" y2="169"/>
+          <text class="d-al" x="557" y="157" text-anchor="middle">posts</text>
+          <line class="d-ar" x1="578" y1="99" x2="578" y2="239"/>
+          <line class="d-ar" x1="578" y1="99" x2="589" y2="99"/>
+          <polygon class="d-hd" points="589,94.5 589,103.5 598,99"/>
+          <line class="d-ar" x1="578" y1="169" x2="589" y2="169"/>
+          <polygon class="d-hd" points="589,164.5 589,173.5 598,169"/>
+          <line class="d-ar" x1="578" y1="239" x2="589" y2="239"/>
+          <polygon class="d-hd" points="589,234.5 589,243.5 598,239"/>
+
+          <polyline class="d-bad" points="852,76 866,76 866,262 852,262"/>
+          <text class="d-albad" transform="rotate(-90 882 169)" x="882" y="169" text-anchor="middle">must be one transaction</text>
+        </svg>
+      </div>
+      <figcaption dir="rtl">
+        ما تحمله المنصة حقيقي وكامل — لكنه ليس مفاتيح أوراكل. الصندوق الأحمر في الوسط هو كل الشغل الذي لا يظهر
+        في أي عرض تقديمي. والقوس على اليمين هو السؤال الذي يقرّر: إمّا <b>حزمة واحدة تُنفَّذ كصفقة واحدة</b>،
+        أو ثلاثة نداءات وأمر عمل نصفه مغلق حين يفشل الثاني.
+      </figcaption>
+    </figure>
+
+    <h3 style="font-size:1.0625rem; margin-block:2rem 1rem">قِسْ هذا على الشجرة، لا على الانطباع</h3>
+    <div class="prose" style="margin-block-end:1.5rem">
+      <p>
+        <span class="path">JobPartLine</span> يحمل <span class="path">ErpItemExternalId</span> — فالمواد <b>جاهزة
+        الشكل للترحيل</b>. و<span class="path">JobTimeLog</span> يحمل <span class="path">UserId</span> الخاص بنا فقط،
+        بلا رقم موظّف في أوراكل ولا تسلسل عملية ولا رمز مورد ولا حساب تحميل — <b>فساعات العمل عندنا غير قابلة
+        للترحيل اليوم</b>، وجعلها كذلك <b>ترحيل قاعدة بيانات ومرآة بيانات أساسية</b>، لا سطر في محوّل. ولا يوجد
+        في الشجرة اليوم أي <span class="path">IOverlayProjector</span> منفَّذ، أي أن المرآة نفسها لم تبدأ.
+      </p>
+    </div>
+
+    <div class="two">
+      <div class="state-list state-list--have">
+        <h3>تُكتب بالـAPI — بسيطة وكثيرة ومنخفضة الخطر</h3>
+        <ul>
+          <li>بلاغ صيانة جديد <em>WR — حقول قليلة، وأوراكل يتحقّق</em></li>
+          <li>طلب شراء ببند واحد وصنف من الـERP <em>PR — الصنف مُعرَّف أصلاً</em></li>
+          <li>ساعات عمل على <b>عملية قائمة</b> <em>بعد إضافة مفاتيح أوراكل إلى JobTimeLog</em></li>
+          <li>صرف مادة من المخزون <em>JobPartLine جاهز لهذا</em></li>
+          <li>تغيير حالة عملية واحدة <em>لا حكم محاسبياً فيه</em></li>
+        </ul>
+      </div>
+      <div class="state-list state-list--gap">
+        <h3>تُجهَّز ويُنهيها إنسان — معقّدة وقليلة وذات حكم</h3>
+        <ul>
+          <li>إغلاق أمر عمل كامل بتوزيع تكلفة وعدّة أطقم</li>
+          <li>إعادة عمل، ضمان، رسملة، أو تحميل على مشروع</li>
+          <li>أي إغلاق يحتاج حكماً محاسبياً أو موافقة</li>
+          <li>أي شيء يمسّ فترة مقفلة في أوراكل</li>
+          <li>ما تُرجم خطأً مرّة واحدة — يُسحب من القائمة الأولى فوراً</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-block-start:1.5rem">
+      <h3>الشكل الذي ينجح فعلاً: الكتابة التدريجية</h3>
+      <p>
+        <b>الفنّي لا «يُغلق أمر عمل».</b> هو يُبلّغ وقتاً وملاحظة وصورة وقطعة. المنصة ترسل ما لا لبس فيه أولاً
+        بأول خلال الوردية — ساعة على عملية، صرف صنف — ويبقى <b>الإغلاق قراراً بشرياً</b> عند المخطّط الذي يرى
+        كل شيء مجموعاً أمامه. هكذا تعمل نشرات الصيانة الميدانية الناجحة، ولهذا لا تُعامَل «الكتابة إلى أوراكل»
+        كزرّ واحد.
+      </p>
+      <p>
+        <b>وترتيب البناء ليس اختيارياً:</b> اسحب البيانات الأساسية أولاً (موظفون، موارد، وحدات، حسابات، أصناف)،
+        ثم ارسم النموذج بقيم أوراكل الحقيقية، ثم اكتب الأفعال البسيطة، ثم المعقّدة. <b>الكتابة قبل السحب تعني
+        نموذجاً يعرض أسماءً لا يقبلها أوراكل</b> — ويكتشف الفنّي ذلك عند المعدّة.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ تقوية ٧ و٨ ══════════════════════════════════════════════════════ -->
+  <section class="section" id="harden">
+    <h2>كيف يصير المساران ٧ و٨ مقبولَين</h2>
+
+    <div class="prose" style="margin-block-end:1.5rem">
+      <p>
+        مراجع الأمن لا يرفض «الأتمتة»، بل يرفض <b>أداة عامة غير محدودة تعمل داخل جلسة مصرّح لها</b>. فالهدف من
+        كل ما يلي هو تحويلها من ذلك إلى <b>كتالوج نصوص موقّعة ومعتمَدة ومحدودة النطاق</b> — وهذا تغيير في
+        التصميم لا في العرض التقديمي.
+      </p>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block-end:.85rem">أ · اجعله أداة محدودة، لا محرّكاً عاماً</h3>
+    <ol class="pack">
+      <li><b>النصوص موقّعة على الخادم</b>، والامتداد يرفض نصاً غير موقّع أو مُعدَّلاً — المفتاح العام مثبّت وقت البناء.</li>
+      <li><b>دورة اعتماد:</b> مسودّة ← مراجعة الـIT ← معتمَد ← منشور. ولا يُشغَّل إلا المعتمَد، والاعتماد صفّ تدقيق باسم معتمِده.</li>
+      <li><b>نطاق أصل واحد:</b> <span class="path">host_permissions</span> يسمّي مضيف الـERP وحده. أي <span class="path">&lt;all_urls&gt;</span> ينهي الاجتماع.</li>
+      <li><b>لا مسجّل في نسخة الإنتاج.</b> المسجّل بناء منفصل للـIT — مسجّل في متصفّح كل موظّف شيء على شكل راصد لوحة مفاتيح.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">ب · اجعله مراقَباً ومرئياً بالتصميم</h3>
+    <ol class="pack">
+      <li><b>خطوة تأكيد:</b> اللوحة تعرض ما سيُكتب وأين، والمستخدم يضغط «تشغيل». لا تنفيذ صامت أبداً.</li>
+      <li><b>حدّ معدّل وسقف يومي لكل نص</b>، مفروضان على <b>الخادم</b> لا في الامتداد.</li>
+      <li><b>اللوحة ظاهرة أثناء التشغيل</b> بقائمة خطوات حيّة، وتتوقّف إذا أُخفيت الصفحة أو غادرها المستخدم.</li>
+      <li><b>مفتاح إيقاف عام:</b> يُفحص عند كل تشغيل، فيوقف الـIT كل الأتمتة بضغطة، واللوحة تقول السبب.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">ج · اجعل أثره أوضح من أثر إنسان يضغط</h3>
+    <ol class="pack">
+      <li><b>صفّ تدقيق لكل تشغيل:</b> رقم النص وإصداره، المستخدم، الجهاز، الوقت، كل حقل كُتب (مع حجب الحسّاس)، النتيجة، ورقم المستند العائد. والتدقيق عندنا غير قابل للتعديل على مستوى قاعدة البيانات أصلاً.</li>
+      <li><b>اربطه بأوراكل بعلامة:</b> اكتب <span class="path">CO:JOB-2026-000042</span> في حقل حرّ يحمله المستند، فيستطيع المدقّق أن يصل سجلّ أوراكل بصفّنا. <b>هذا يصنع أثر تدقيق حيث لا يوجد واحد</b> — وهو أقوى ردّ على الاعتراض الأول.</li>
+      <li><b>تحقّق بالقراءة العائدة:</b> بعد التنفيذ يقرأ النص الرقم والحقول من شاشة التأكيد ويخزّنها. تشغيل بلا رقم مؤكَّد <b>فشل لا نجاح</b>.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">د · صغّر نطاق الضرر</h3>
+    <ol class="pack">
+      <li><b>الجوال لا يرسل خطوات أبداً</b> — يرسل <span class="path">runScript(id, params)</span> فقط، والمعاملات تُتحقَّق على الخادم مقابل مخطّط.</li>
+      <li><b>مفردات مغلقة:</b> <span class="path">Set · Get · Click · WaitFor · Assert</span> فقط. لا <span class="path">eval</span>، ولا انتقال إلى عنوان حرّ، ولا ملفات، ولا حافظة، ولا شبكة من داخل النص.</li>
+      <li><b>رفض قاطع للحقول الحسّاسة:</b> المحرّك لا يكتب في <span class="path">input[type=password]</span> إطلاقاً. قاعدة بسطر واحد تُجيب أكبر مخاوفهم قبل أن تُطرح.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">هـ · الورق الذي يجعلهم يوقّعون</h3>
+    <ol class="pack">
+      <li><b>تثبيت بسياسة المؤسسة</b> عبر Intune أو GPO من <b>مصدر داخل المستأجر</b>، لا من متجر عام — فيسقط اعتراض «أي أحد يستطيع تثبيته» وتسقط تبعية مراجعة المتجر. وFirefox يحتاج توقيع Mozilla وحزمة منفصلة.</li>
+      <li><b>بيان نطاق مكتوب:</b> أي شاشات، أي مستندات، سقف قيمة، وتاريخ مراجعة.</li>
+      <li><b>اختبار اختراق للامتداد</b> ضمن الاختبار السنوي الذي تطلبه المواصفة أصلاً (NFR-13)، و<b>PDPL</b>: النص يقرأ العناصر التي يسمّيها فقط، لا الصفحة كلها — ويُفرَض ذلك لا يُوعَد به.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">و · قواعد صفحة المصادقة — وهي التي تُغلق أثقل اعتراض</h3>
+    <ol class="pack">
+      <li><b>رفض قاطع للعمل على صفحة مصادقة:</b> إن كان العنوان صفحة دخول أو تحقّق ثنائي أو تغيير كلمة مرور، أو كانت الصفحة تحوي <span class="path">input[type=password]</span>، فالمحرّك <b>لا ينفّذ خطوة واحدة</b> ويقول للمستخدم «سجّل دخولك بنفسك».</li>
+      <li><b>لا حقن قبل الدخول:</b> لا يُحقن نصّ المحتوى إطلاقاً قبل أن يطابق العنوان نمط ما بعد الدخول. فقبل تلك اللحظة <b>لا تملك الأداة وصولاً إلى الصفحة أصلاً</b> — وهذه جملة تُثبَت في مراجعة كود، لا تُقال في اجتماع.</li>
+      <li><b>حارس الجلسة:</b> تقرأ الأداة اسم المستخدم المسجَّل من الصفحة وتقارنه بالمستخدم المقترن بالمنصة. لو اختلفا <b>ترفض التشغيل</b> — وهذا ما يجعل نسبة المستند إلى صاحبها خاصيةً مفروضة لا عادةً حسنة.</li>
+      <li><b>لا التقاط للصفحة كاملة</b> ولا تسجيل لضغطات المفاتيح، ولا يُقرأ إلا العنصر الذي يسمّيه النص. وهذا نصّ يُكتب في بيان النطاق ويُفرَض في المحرّك.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">ز · الطابور دون اتصال — ضوابطه الخاصة</h3>
+    <ol class="pack">
+      <li><b>مفتاح عدم تكرار لكل عنصر</b> (موجود في المنصة أصلاً)، فوصول المستخدم إلى حاسوبين لا يُنشئ المستند مرتين.</li>
+      <li><b>الطابور يعلن فاعله:</b> كل عنصر يعرض باسم من سيُنفَّذ. وإن لم يكن المسجَّل هو مقدّم الطلب، فإمّا يُرفض أو يمرّ بعلم «نيابةً عن» معتمَد — ويظهر ذلك في التدقيق وفي علامة أوراكل معاً.</li>
+      <li><b>صلاحية زمنية:</b> عنصر مضى عليه أكثر من مدّة متّفق عليها لا يُرحَّل صامتاً بل يُعاد تأكيده — فبياناته قد تكون قديمة.</li>
+    </ol>
+
+    <h3 style="font-size:1rem; margin-block:1.5rem .85rem">ح · بوابة الصلاحية وتحقّق الصفحة — وهما ما يجعل الجملة التالية صحيحة</h3>
+    <div class="callout" style="margin-block-end:1rem">
+      <p>
+        <b>«الأداة لا تستطيع فعل شيء لا يستطيعه صاحب الجلسة بيده، ولا أن تتصرّف باسم غيره، ولا أن تعمل على
+        صفحة لم تتعرّف عليها يقيناً.»</b> ثلاث جمل، كلّ واحدة مفروضة بآلية: <b>صلاحية أوراكل نفسها</b>،
+        و<b>حارس الجلسة</b>، و<b>تحقّق الهدف</b>. وهذه هي الجملة التي تُوضع في رأس بيان النطاق.
+      </p>
+    </div>
+    <ol class="pack">
+      <li><b>كل نص يعلن الصلاحية التي يحتاجها</b> — مسؤولية ووظيفة في EBS، دور وامتياز في Fusion — وتُطابَق بما يملكه المسجَّل فعلاً. وإن لم تتطابق يُعرض النص <b>مُعطَّلاً بسبب مكتوب</b>، ولا يفشل في منتصف التنفيذ.</li>
+      <li><b>الاختبار بالقراءة لا بالتنفيذ:</b> يُتحقَّق بفتح الشاشة أو قراءة قائمة المسؤوليات — <b>لا بإنشاء مستند تجريبي وإلغائه</b>، فذلك يترك فجوات في التسلسل وصفوفاً في تدقيق أوراكل.</li>
+      <li><b>لا رفع صلاحية أبداً.</b> الأداة لا تبدّل مسؤولية ولا دوراً نيابةً عن المستخدم للوصول إلى وظيفة. هذا هو الحدّ بين «أتمتة عمل المستخدم» و«تصعيد امتياز»، ويُكتب صراحةً لا يُفترض.</li>
+      <li><b>إعادة الفحص عند كل تشغيل</b> لا عند الدخول فقط — الصلاحيات تتغيّر، و«نعم» صباحية ليست دليلاً عند الثانية ظهراً.</li>
+      <li><b>افحص ما يحتاجه النص فقط.</b> لا تُعدِّد كل ما يملكه المستخدم ولا تخزّنه، وإلا بنيتَ <b>خريطة صلاحيات كل موظّف في الـERP</b> — وهي بذاتها موضوع PDPL وضوابط NCA، وتخلق مشكلة أكبر من التي تحلّها.</li>
+      <li><b>سجّل نتيجة الفحص في صفّ التدقيق:</b> «نُفِّذ بحساب فلان، وكان يملك الصلاحية س في الساعة كذا» — بذلك يصير الشرط دليلاً لا ادّعاءً.</li>
+      <li><b>تحقّق من الهوية لا من الشكل:</b> العنوان يطابق نمطاً، وعنصر مرجعي معروف موجود — لا لقطة شاشة ولا إحداثيات.</li>
+      <li><b>تحقّق من «استقرّت» لا من «حُمِّلت»:</b> ADF يرسم جزئياً وحدث التحميل يسبق وصول البيانات. انتظر شرطاً محدّداً — الحقل موجود ومُفعَّل والبيانات المرجعية ظهرت — ثم فترة سكون قصيرة بلا تغيّر في الصفحة.</li>
+      <li><b>تحقّق من هوية السجل لا من نوع الصفحة:</b> قبل كتابة ساعات على أمر العمل 12345، تأكّد أن الشاشة تعرض <b>12345</b>. هذا أنفع تحقّق على الإطلاق، وهو <b>إلزامي في كل نص</b> لا اختياري.</li>
+      <li><b>بصمة نسخة الصفحة:</b> كل نص يحمل بصمة الصفحة التي سُجِّل عليها، فإذا رقّع أوراكل وتغيّرت المراسي <b>فشل النص على البصمة قبل أن يكتب حرفاً</b>. وهذا هو الجواب على «ينكسر مع كل ترقيع»: نعم ينكسر — لكنه <b>ينكسر بأمان وبصوت مسموع</b>، وهو خطر مختلف تماماً عن الكتابة في الحقل الخطأ.</li>
+      <li><b>انتظارات محدودة:</b> لكل <span class="path">WaitFor</span> مهلة ونهاية معلنة، ولا استطلاع بلا سقف.</li>
+      <li><b>الفشل يوقف ولا يعالج:</b> إذا سقط تحقّق في المنتصف تتوقّف الأداة، ولا تحاول «التعافي»، وتترك الصفحة كما هي، وتبلّغ بأي تحقّق سقط — بأسماء الحقول لا بلقطة للصفحة.</li>
+    </ol>
+
+    <div class="callout" style="margin-block-start:1.75rem">
+      <h3>ملاحظة على المسار ٨ بتصميمه المعلن</h3>
+      <p>
+        بما أن المتصفّح ظاهر والمستخدم يكتب اعتماده في صفحة أوراكل الحقيقية، <b>فالأداة لا تحمل اعتماداً قطّ</b>،
+        ويسقط أثقل اعتراض على هذه العائلة كلّها. يبقى الباقي إعداداً لا شرحاً: <b>فعّل مصادقة ويندوز المدمجة</b>
+        في بيئة <span class="path">WebView2</span> فلا يُكتب حقل كلمة مرور أصلاً، و<b>أظهر شريط العنوان والقفل</b>
+        داخل النافذة حتى لا يتعارض التطبيق مع ما دُرّب عليه الموظّف في التوعية بالتصيّد، و<b>ثبّت ملفّ التعريف</b>
+        فيصير الدخول مرّة في اليوم لا مرّة في الساعة.
+      </p>
+      <p>
+        <b>والسؤال الذي كان مفتوحاً صار مغلقاً:</b> لا يُسمح لأحد باستخدام الأداة إلا بحساب أوراكل وصلاحياته،
+        وتُختبَر الصلاحية بعد الدخول. فالمستند يصدر باسم صاحبه، <b>والأداة لا تتجاوز ما يسمح به أوراكل لذلك
+        الشخص أصلاً</b> — وهذه خاصيّة يفرضها أوراكل لا نحن، وهي أقوى ما يُقال في مراجعة أمنية.
+      </p>
+      <p>
+        ويبقى بندان يُحسمان <b>خارج الهندسة</b>. الأول: <b>تكلفة تراخيص المستخدم المسمّى</b> إن احتاج كل فنّي
+        حساباً — يُسأل عنها مسؤول تراخيص أوراكل عند العميل قبل تحديد النطاق، لا بعده. والثاني: <b>من لا حساب
+        له</b> يسلك المسار ٦ (حزمة يُنهيها مخطّط) أو المسار ١ (الوكيل يكتب بحساب التكامل ومقدّم الطلب مسجَّل
+        في الحمولة) — فالتصميم يتدرّج ولا ينهار. و<b>فصل المهام يبقى لأوراكل</b>: الأداة ترث حقوق المستخدم
+        ولا تغيّرها، فمن يجمع بين إنشاء الطلب واعتماده تجعل الأتمتة ذلك أسرع لا أسلم.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ القسم ب ═════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2><span class="n">ب.</span> خمسة مسارات لسحب تقرير من الجوال</h2>
+    <div class="prose" style="margin-block-end:1.25rem">
+      <p>
+        أفصل أولاً سؤالاً مدمجاً في الطلب: <b>تقرير المنصة</b> — توقفات، OEE، تقرير نوبة — شيء،
+        و<b>تقرير أوراكل</b> — رصيد صنف، تكلفة أمر عمل — شيء آخر تماماً، ولكلٍّ مسار مختلف.
+      </p>
+    </div>
+
+    <div class="options">
+      <article class="opt opt--rec">
+        <div class="opt__head">
+          <span class="opt__n">١</span>
+          <h3 class="opt__title">عرض داخل التطبيق بلا ملف إطلاقاً</h3>
+          <span class="tag tag--rec">الافتراضي</span>
+        </div>
+        <p class="opt__how">
+          التقرير يصل كحمولة يرسمها التطبيق شاشةً. لا ملف على الجهاز، فلا نسخة تُسرَّب ولا نسخة قديمة
+          تُقرأ بعد شهر. محرّك الصفحات الحالي (<span class="path">PagesApiController</span>) يفعل هذا اليوم بلا
+          بناء جديد تقريباً، ويتوافق مع PDPL بأقل جدل.
+        </p>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٢</span>
+          <h3 class="opt__title">تشغيل تقرير ورابط تنزيل موقَّع قصير العمر</h3>
+          <span class="tag">عند الطلب الصريح</span>
+        </div>
+        <p class="opt__how">
+          يُولَّد <span class="path">ReportRun</span>، ويعود رابط صالح دقائق، لمرة واحدة، والملف يحمل علامة مائية
+          باسم الساحب ووقته. الكيانات موجودة كلها في <span class="path">Core/Reports/ReportEntities.cs</span>. هذا
+          ما يطلبه المدير الذي يريد Excel فعلاً لا شاشة.
+        </p>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٣</span>
+          <h3 class="opt__title">اشتراك مجدول وإشعار يحمل معرّفاً فقط</h3>
+          <span class="tag">نصّ NFR-26</span>
+        </div>
+        <p class="opt__how">
+          المحرّك يولّد التقرير بموعده، والإشعار لا يحمل أي بيان عمل — فقط معرّف يُفتح داخل التطبيق. هذا
+          حرفياً ما يجعل استخدام FCM مقبولاً أمام لجنة الأمن بدل أن يكون بنداً يُعترض عليه.
+        </p>
+      </article>
+
+      <article class="opt">
+        <div class="opt__head">
+          <span class="opt__n">٤</span>
+          <h3 class="opt__title">سحب تقرير أوراكل نفسه — BI Publisher أو OTBI</h3>
+          <span class="tag">يمرّ بالوكيل دائماً</span>
+        </div>
+        <p class="opt__how">
+          الجوال يطلب، الوكيل ينفّذ داخل الشبكة عبر <span class="path">ERP Integration Service</span>، والناتج يمرّ
+          عبر المنصة بنطاق بيانات المستخدم مفروضاً عليه. <b>لا تسمح للجوال بمخاطبة أوراكل مباشرة أبداً</b> —
+          هذه أسرع طريقة لرفض الميزة كلها في أول مراجعة.
+        </p>
+      </article>
+
+      <article class="opt opt--rec">
+        <div class="opt__head">
+          <span class="opt__n">٥</span>
+          <h3 class="opt__title">الأداة نفسها تسحب التقرير — بجلسة الموظّف وصلاحياته</h3>
+          <span class="tag tag--rec">امتداد طبيعي للمسار ٨</span>
+        </div>
+        <p class="opt__how">
+          نفس أداة <span class="path">WebView2</span> بنفس مواصفاتها: متصفّح ظاهر، والموظّف مسجَّل بحسابه، ونصّ
+          معتمَد يُشغَّل من الجوال. تُقدّم الطلب أو تفتح التحليل، وتتحقّق من الصفحة، ثم تعيد النتيجة.
+          <b>والميزة نفسها التي في الكتابة تنطبق هنا:</b> الموظّف لا يستخرج إلا تقريراً <b>يستطيع تشغيله
+          وقراءته بيده أصلاً</b> — فلا حساب تكامل بصلاحيات تقارير واسعة، ولا مسار شبكي، ولا شيء يُطلب من
+          فريق أوراكل.
+        </p>
+        <dl class="facts">
+          <div class="bad"><dt>لكن انتبه — الخطر ينقلب</dt><dd>الكتابة حمولة صغيرة وهدف واحد وتأكيد واحد. <b>التقرير بيانات تخرج من تحت ضوابط أوراكل</b> — فينتقل النقاش من «هل تستطيع أن تفعل؟» إلى <b>«إلى أين تذهب البيانات؟»</b>، وهو مراجع آخر وضوابط أخرى: تصنيف، واحتفاظ، وحجم، وPDPL.</dd></div>
+          <div><dt>كتالوج لا استخراج حرّ</dt><dd>تقارير مسمّاة معتمَدة بمعاملات محدّدة، <b>ولا «صدّر ما على الشاشة»</b>. والمعاملات مقيّدة: لا يوسّع المستخدم المدى الزمني ولا نطاق المنظمة بما يتجاوز الكتالوج — وإلا شغّل تقريراً صغيراً بمدى عشر سنين وصدّر الدفتر كلّه.</dd></div>
+          <div><dt>التصنيف يسبق الأداة</dt><dd>كل مدخل في الكتالوج يعلن تصنيف بياناته. وما يحمل بيانات شخصية (رواتب، طبّي، موارد بشرية) <b>مستبعَد بالسياسة لا بمربّع اختيار</b> — وعندنا اصطلاح <span class="path">[Sensitive]</span> و<span class="path">[Medical]</span> يُحتذى.</dd></div>
+          <div class="bad"><dt>الفخّ الحقيقي</dt><dd>تقرير سُحب بصلاحيات <b>شخص واحد</b> يجب ألّا يصير مقروءاً للجميع داخل المنصة. يُخزَّن مربوطاً بطالبه ومصنعه وتحت <span class="path">IExecutionScope</span>، <b>لا في مكتبة مشتركة</b> — وإلا صارت المنصة قناة لتجاوز صلاحيات أوراكل بخطوة واحدة.</dd></div>
+          <div><dt>الاحتفاظ</dt><dd>ما يُسحب <b>ينتهي</b>. أيام لا سنوات: هو ذاكرة مؤقّتة لا أرشيف، وأرشيف السجلّ يبقى في أوراكل. وعلامة مائية وتدقيق <b>عند كل فتح</b> لا عند السحب فقط.</dd></div>
+          <div class="bad"><dt>وأشدّ ما يخيف في التقارير</dt><dd>الكتابة الفاشلة <b>مرئية</b>، أمّا التقرير فيعود برقم خاطئ في يد مدير. فالتحقّق هنا <b>أشدّ</b> منه في الكتابة: طابق اسم التقرير وكل معاملاته كما تعرضها الصفحة، وتأكّد أن الطابع الزمني لهذا التشغيل لا لتشغيل مخزَّن، و<b>قارن عدد الصفوف بالإجمالي الذي تعلنه الصفحة نفسها</b> — فإن قالت «١–٥٠ من ١٢٨٤» والتقطتَ ٥٠، فهذا <b>فشل لا نتيجة</b> (NFR-24).</dd></div>
+        </dl>
+
+        <figure class="dia" dir="ltr">
+          <div class="dia__wrap">
+            <svg viewBox="0 0 900 330" role="img" aria-label="Three modes of getting an Oracle report out with the tool, and what leaves Oracle in each: nothing, the rows, or a forwardable file.">
+              <rect class="d-z" x="8" y="40" width="286" height="250" rx="8"/>
+              <rect class="d-z" x="308" y="40" width="286" height="250" rx="8"/>
+              <rect class="d-z" x="608" y="40" width="284" height="250" rx="8"/>
+              <text class="d-zl" x="18" y="32">A &#183; TRIGGER ONLY</text>
+              <text class="d-zl" x="318" y="32">B &#183; ROWS</text>
+              <text class="d-zl" x="618" y="32">C &#183; FILE</text>
+
+              <rect class="d-n" x="22" y="70" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="34" y="92">Tool submits the request</text>
+              <text class="d-ns" x="34" y="110">as the signed-in user</text>
+              <rect class="d-n" x="22" y="146" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="34" y="168">Output stays in Oracle</text>
+              <text class="d-ns" x="34" y="186">nothing is captured</text>
+              <rect class="d-hum" x="22" y="222" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="34" y="244">Phone: it is ready</text>
+              <text class="d-ns" x="34" y="262">he opens it in Oracle at a PC</text>
+
+              <rect class="d-n" x="322" y="70" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="334" y="92">Tool reads the table</text>
+              <text class="d-ns" x="334" y="110">asserts the stated total first</text>
+              <rect class="d-n" x="322" y="146" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="334" y="168">Rows to the platform</text>
+              <text class="d-ns" x="334" y="186">scoped to requester + plant</text>
+              <rect class="d-hum" x="322" y="222" width="258" height="54" rx="6"/>
+              <text class="d-nt" x="334" y="244">Phone renders on screen</text>
+              <text class="d-ns" x="334" y="262">no file anywhere</text>
+
+              <rect class="d-n" x="622" y="70" width="256" height="54" rx="6"/>
+              <text class="d-nt" x="634" y="92">Tool captures PDF / XLSX</text>
+              <text class="d-ns" x="634" y="110">no local copy kept</text>
+              <rect class="d-n" x="622" y="146" width="256" height="54" rx="6"/>
+              <text class="d-nt" x="634" y="168">Uploaded, watermarked</text>
+              <text class="d-ns" x="634" y="186">retention clock starts</text>
+              <rect class="d-risk" x="622" y="222" width="256" height="54" rx="6"/>
+              <text class="d-nt" x="634" y="244">Signed short-lived link</text>
+              <text class="d-ns" x="634" y="262">forwardable &#8212; that is the risk</text>
+
+              <line class="d-ar" x1="151" y1="128" x2="151" y2="137"/>
+              <polygon class="d-hd" points="146.5,137 155.5,137 151,146"/>
+              <line class="d-ar" x1="151" y1="204" x2="151" y2="213"/>
+              <polygon class="d-hd" points="146.5,213 155.5,213 151,222"/>
+              <line class="d-ar" x1="451" y1="128" x2="451" y2="137"/>
+              <polygon class="d-hd" points="446.5,137 455.5,137 451,146"/>
+              <line class="d-ar" x1="451" y1="204" x2="451" y2="213"/>
+              <polygon class="d-hd" points="446.5,213 455.5,213 451,222"/>
+              <line class="d-bad" x1="750" y1="128" x2="750" y2="137"/>
+              <polygon class="d-hdbad" points="745.5,137 754.5,137 750,146"/>
+              <line class="d-bad" x1="750" y1="204" x2="750" y2="213"/>
+              <polygon class="d-hdbad" points="745.5,213 754.5,213 750,222"/>
+
+              <text class="d-algo" x="151" y="310" text-anchor="middle">leaves Oracle: nothing</text>
+              <text class="d-al" x="451" y="310" text-anchor="middle">leaves Oracle: the rows</text>
+              <text class="d-albad" x="750" y="310" text-anchor="middle">leaves Oracle: a file that travels</text>
+            </svg>
+          </div>
+          <figcaption dir="rtl">
+            ثلاثة أنماط لنفس الأداة، والسطر الأسفل هو كل الفرق بينها. <b>ابدأ بالنمط A</b> — «شغّل لي التقرير
+            وأخبرني حين يجهز» يغطّي من الطلبات أكثر ممّا تتوقّع، ولا تخرج فيه بيانة واحدة من أوراكل.
+          </figcaption>
+        </figure>
+      </article>
+    </div>
+
+    <div class="callout" style="margin-block-start:1.25rem">
+      <h3>وللأرقام الرسمية استثناء</h3>
+      <p>
+        تقارير مجلس الإدارة وعلاقات المستثمرين: الجوال يقرأ <b>الأرشيف المجمّد ببصمته</b> ولا يعيد الحساب.
+        <span class="path">FrozenReportArchive</span> مبنيّ لهذا بالضبط (BR-04 / BR-05)، وإعادة الحساب على الجوال
+        تعني رقماً قد يخالف الرقم المنشور.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ القسم ج ═════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2><span class="n">ج.</span> الحزمة التي تجعل الأمن والـIT يوقّعون</h2>
+    <div class="prose" style="margin-block-end:1.25rem">
+      <p>هذه البنود مطلوبة في <b>كل</b> الخيارات أعلاه، ولا تتغيّر باختلاف المسار المختار.</p>
+    </div>
+    <ol class="pack">
+      <li><b>حساب تكامل مخصّص</b> بصلاحية على المستندات المسموحة فقط — لا DBA، لا تحديث، لا حذف.</li>
+      <li><b>قائمة سماح للكتابة:</b> أي أنواع مستندات، أي مصانع ومنظمات، وسقف قيمة. وما ليس على القائمة يُرفض في <span class="path">Core/</span> لا في نموذج شاشة.</li>
+      <li><b>مفتاح إيقاف واحد</b> (<span class="path">Integration:ErpWrite</span>) مع <b>ميزانية كتابة</b> — حدّ أقصى للمستندات في الساعة. سؤال الأمن الأول دائماً: «كيف نوقفه في ثلاث دقائق؟» ويجب أن يكون للجواب اسم ملف.</li>
+      <li><b>عدم التكرار من طرفين:</b> مفتاح تكرار في المنصة ومفتاح خارجي في أوراكل. ازدواج أمر عمل هو أكثر ما يخيف مالك الـERP، ونصف الآلية جاهز في <span class="path">IdempotencyStore</span>.</li>
+      <li><b>الأسرار في خزنة</b> عبر <span class="path">SecretRef</span> القائم، ولا تلمس ملف إعدادات أبداً.</li>
+      <li><b>mTLS وقائمة عناوين مسموحة</b> بين الوكيل والمنصة — مذكورة في المواصفة أصلاً فلا تحتاج دفاعاً.</li>
+      <li><b>تقرير تسوية يومي:</b> ما أرسلناه مقابل ما يوجد في أوراكل، والفروق بالاسم. هذا ما يُسكت سؤال «كيف نثق أنه لم يضِع شيء؟».</li>
+      <li><b>فصل المهام:</b> المنصة لا تعتمد طلبها. الاعتماد يبقى في سير عمل أوراكل، أو في محرّك اعتماد المنصة مع تسجيل المعتمِد داخل الحمولة.</li>
+      <li><b>PDPL والإقامة:</b> لا بيانات شخصية في حمولة أوراكل خلف الرقم الوظيفي، وكل شيء داخل المملكة (NFR-06).</li>
+      <li><b>ورقة ربط بضوابط NCA ECC</b> مع جملة صريحة: هذا المسار لا يمسّ DCS أو PLC إطلاقاً فلا يدخل نطاق OTCC (BR-20). هذه الجملة وحدها تختصر أسابيع.</li>
+    </ol>
+  </section>
+
+  <!-- ══ القسم د ═════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2><span class="n">د.</span> توصيتي والترتيب الزمني</h2>
+    <div class="prose" style="margin-block-end:1.5rem">
+      <p>
+        <b>الخيار ١ أساساً، مع الخيار ٦ يُشحن هذا الأسبوع، والخيار ٢ كخطة بديلة</b> إن كان العميل على EBS
+        ورفض الـDBA أي شيء غير جداول الواجهة. وللتقارير: <b>١ و٢ معاً</b> — عرض داخلي افتراضاً، وملف
+        موقَّع عند الطلب الصريح.
+      </p>
+      <p>
+        والترتيب الذي يقلّل المخاطرة هو أن تُبنى الأنصاف بالعكس: الميدان أولاً، وأوراكل بعد أن يصبح عندك
+        استخدام حقيقي تذهب به إلى لجنة الأمن.
+      </p>
+      <p>
+        <b>والمساران ٧ و٨ ليسا منافسَين للمسار ١ — هما شيء آخر.</b> المسار ١ يبني قناة تكامل، و٧ يبني
+        <b>محرّك أتمتة عاماً</b> هو منتج قائم بذاته تتجاوز قيمته أوراكل. لو أردته فاطلبه بهذه الصفة
+        وبميزانيته وجدوله، لا كطريق مختصر إلى أمر عمل — ولا يُخلط به قرار المسار ١ في جلسة واحدة. وابدأ
+        نطاقه من <b>المكتب</b> حيث يعمل فعلاً (مخطّط، أمين مستودع)، لا من الميدان.
+      </p>
+    </div>
+    <div class="phases">
+      <div class="phase">
+        <span class="when">المرحلة الأولى · بلا موافقة أحد</span>
+        <h3>نصف الجوال وحده</h3>
+        <p>
+          مُعالِج <span class="path">maintenance.workRequest</span> في الطابور القائم، فيفتح الفنّي بلاغاً من عند
+          المعدّة وهو خارج التغطية، ويتحوّل إلى مهمة تنفيذ <span class="path">JOB-</span>.
+        </p>
+        <p class="gate">لا يحتاج حساب أوراكل ولا مساراً شبكياً ولا لجنة تغيير.</p>
+      </div>
+      <div class="phase">
+        <span class="when">المرحلة الثانية · بالتوازي</span>
+        <h3>الحزمة الجاهزة والرابط العميق</h3>
+        <p>
+          الخيار ٦: طلب مكتمل ومُتحقَّق منه يصل مخطّط الصيانة فيضغط زراً واحداً داخل أوراكل. القيمة
+          الميدانية تُقاس من أول أسبوع.
+        </p>
+        <p class="gate">يُنتج الأرقام التي تُقنع لجنة الأمن في المرحلة الثالثة.</p>
+      </div>
+      <div class="phase">
+        <span class="when">المرحلة الثالثة · بعد الموافقة</span>
+        <h3>طابور الكتابة والوكيل</h3>
+        <p>
+          الخيار ١ كاملاً مع حزمة القبول العشرة، ثم يُرفع <span class="path">Integration:ErpWrite</span> على مصنع
+          واحد ونوع مستند واحد قبل أي توسّع.
+        </p>
+        <p class="gate">التوسّع بعد أول تقرير تسوية نظيف لأسبوعين.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ أثر المواصفة ════════════════════════════════════════════════════ -->
+  <section class="section">
+    <h2>أثر على المواصفة — يُقال صراحة</h2>
+    <div class="prose">
+      <p>
+        ملفا المواصفة هما المرجع المُلزِم، وهذه الميزة تلمسهما في موضعين:
+      </p>
+      <ul>
+        <li>
+          <b>صفحة طابور الكتابة الصادر غير موجودة</b> ضمن صفحات <span class="path">INT</span> الثلاثين. إمّا توسعة
+          <span class="path">INT-006</span> (الأخطاء وإعادة التشغيل) وهي الأقل كلفة، أو صفحة جديدة — وإضافة صفحة
+          تعني تعديلاً مُعلناً على ملف مواصفة الصفحات، لا إضافة صامتة في الكود.
+        </li>
+        <li>
+          <b>§9.4 تحصر الكتابة العائدة</b> في إنتاج فعلي واستهلاك مواد وتكاليف صيانة. إنشاء <em>مستند جديد</em>
+          (بلاغ صيانة أو طلب شراء) من الميدان توسيعٌ لنطاقها، ويحتاج سطراً في المواصفة يقول ذلك بدل أن
+          يُستنتج من الكود.
+        </li>
+        <li>
+          <b>والمساران ٧ و٨ يضيفان صفحة ثالثة</b> لم تخطر للمواصفة: مكتبة نصوص الأتمتة في قسم الـIT —
+          تحرير، إصدار، تجربة، وسجل تشغيل. وهي صفحة <span class="path">INT</span> جديدة بحقولها وصلاحيتها،
+          لا امتداد لصفحة قائمة.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══ ورقة القرار ═════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="decision">
+      <div>
+        <h2>ورقة القرار</h2>
+        <p>
+          اختر من الثلاثة، ثم انسخ سطر الملخّص أسفل الصفحة إلى المحادثة — وسأبدأ البناء وأسجّل القرار في
+          <span class="path">02-DECISIONS-LOG.md</span> بأدلّته.
+        </p>
+      </div>
+
+      <fieldset>
+        <legend>١ — مسار الكتابة إلى أوراكل</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="write" id="w1" value="طابور كتابة + سحب الوكيل (الخيار ١)" checked><span>طابور كتابة والوكيل يسحبه <small>بلا منفذ وارد · محايد بين EBS وFusion · توصيتي</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w2" value="جداول الواجهة المفتوحة (الخيار ٢)"><span>جداول الواجهة المفتوحة <small>مسار أوراكل المعتمد · الأنسب لـEBS</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w3" value="REST مباشر (الخيار ٣)"><span>استدعاء REST مباشر <small>رقم فوري · يحتاج مساراً شبكياً إن كانت المنصة في السحابة</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w4" value="ناقل التكامل المؤسسي (الخيار ٤)"><span>عبر ناقل التكامل المؤسسي <small>يملكه فريق التكامل · اعتماد عالٍ على جدولهم</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w5" value="ملفات SFTP (الخيار ٥)"><span>ملف موقَّع على SFTP <small>حين يُرفض أي واجهة برمجية في السنة الأولى</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w6" value="صفر كتابة — رابط عميق (الخيار ٦)"><span>صفر كتابة — حزمة ورابط عميق <small>أيام · إنسان في الحلقة · مرحلة صفر</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w7" value="امتداد متصفّح بلوحة جانبية (الخيار ٧)"><span>امتداد متصفّح بلوحة جانبية <small>لا كلمة مرور مخزّنة · يركب جلسة المستخدم · الجهد الأعلى</small></span></label>
+          <label class="choice"><input type="radio" name="write" id="w8" value="C# exe + WebView2 (الخيار ٨)"><span>برنامج <span class="path">C#</span> يحمل <span class="path">WebView2</span> <small>نفس المحرّك · محطّة مُقفلة · شاشة دخول داخل تطبيقنا</small></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>٢ — مسار التقارير على الجوال</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="report" id="r1" value="عرض داخل التطبيق بلا ملف" checked><span>عرض داخل التطبيق بلا ملف <small>لا نسخة على الجهاز · الأقل جدلاً مع PDPL</small></span></label>
+          <label class="choice"><input type="radio" name="report" id="r2" value="رابط تنزيل موقَّع قصير العمر"><span>تشغيل ورابط تنزيل موقَّع <small>Excel حقيقي بعلامة مائية باسم الساحب</small></span></label>
+          <label class="choice"><input type="radio" name="report" id="r3" value="اشتراك مجدول + إشعار بمعرّف فقط"><span>اشتراك مجدول وإشعار بمعرّف <small>نصّ NFR-26 · يجعل FCM مقبولاً</small></span></label>
+          <label class="choice"><input type="radio" name="report" id="r4" value="سحب تقرير أوراكل عبر الوكيل"><span>سحب تقرير أوراكل عبر الوكيل <small>BI Publisher أو OTBI · الجوال لا يخاطب أوراكل أبداً</small></span></label>
+          <label class="choice"><input type="radio" name="report" id="r5" value="أداة WebView2 تسحب التقرير بجلسة الموظّف"><span>الأداة نفسها تسحب التقرير <small>بصلاحيات الموظّف · ابدأ بنمط «شغّل وأخبرني» بلا خروج بيانات</small></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>٣ — نطاق المرحلة الأولى</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="scope" id="s1" value="بلاغ الصيانة وحده" checked><span>بلاغ الصيانة وحده <small>نوع مستند واحد يُثبت المسار كاملاً</small></span></label>
+          <label class="choice"><input type="radio" name="scope" id="s2" value="بلاغ الصيانة + طلب الشراء"><span>بلاغ الصيانة وطلب الشراء <small>يغطي أكثر ما يطلبه الميدان فعلاً</small></span></label>
+          <label class="choice"><input type="radio" name="scope" id="s3" value="بلاغ + طلب شراء + إصدار مخزني"><span>يُضاف إليهما الإصدار المخزني <small>أوسع نطاق · أكثر تحقّق مطلوب من أوراكل</small></span></label>
+        </div>
+      </fieldset>
+
+      <p class="summary">
+        <b>اختيارك الحالي:</b> <span id="picked"></span>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      CementOps · ورقة إضافة تحت <span class="path">.development/.additions</span> — ليست جزءاً من مواصفة الصفحات
+      الـ481 حتى يُعتمد ما فيها.
+    </p>
+    <p>
+      المراجع في الكود مقروءة من الشجرة بتاريخ 2026-09-20؛ وأسماء واجهات أوراكل استرشادية تُثبَّت مع فريق
+      العميل.
+    </p>
+  </footer>
+
+</main>
+
+<script>
+(function () {
+  var out = document.getElementById('picked');
+  function read(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '—';
+  }
+  function render() {
+    out.textContent = read('write') + ' · تقارير: ' + read('report') + ' · المرحلة الأولى: ' + read('scope');
+  }
+  document.querySelectorAll('.decision input[type="radio"]').forEach(function (el) {
+    el.addEventListener('change', render);
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>

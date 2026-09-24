@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attended Automation Tool · أداة الأتمتة المصاحبة</title>
+<style>
+/* ==========================================================================
+   وثيقة تقديم ثنائية اللغة — تتبع لغة CementOps البصرية (tokens.css).
+   Bilingual submission document. Single theme, no CDN, opens offline.
+   ========================================================================== */
+:root{
+  --ink:#102A43; --ink-2:#243B53; --ink-3:#334E68;
+  --teal:#0F766E; --teal-600:#115E59; --teal-50:#E6F4F2;
+  --gold:#E9B949; --gold-700:#8A6914;
+  --cream:#F8F4EC; --cream-2:#F2ECE0; --paper:#FFFFFF;
+  --muted:#486581; --muted-2:#627D98;
+  --line:rgba(16,42,67,.10); --line-strong:rgba(16,42,67,.18);
+  --nav-bg:#0B1F33; --nav-fg:rgba(248,244,236,.88); --nav-fg-soft:rgba(248,244,236,.66);
+  --nav-accent:#5EEAD4;
+  --ok:#067647; --ok-bg:#ECFDF3; --ok-line:#ABEFC6;
+  --warn:#B54708; --warn-bg:#FFFAEB; --warn-line:#FEDF89;
+  --danger:#B42318; --danger-bg:#FEF3F2; --danger-line:#FDA29B;
+  --info:#175CD3; --info-bg:#EFF8FF; --info-line:#B2DDFF;
+  --radius:1rem; --radius-sm:.625rem; --radius-xs:.4rem;
+  --shadow:0 16px 40px rgba(16,42,67,.10);
+  --shadow-sm:0 6px 18px rgba(16,42,67,.07);
+  --shadow-xs:0 1px 2px rgba(16,42,67,.06);
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--cream); color:var(--ink); font-family:var(--font); font-size:1rem; line-height:1.7}
+h1,h2,h3,h4{margin:0; text-wrap:balance; line-height:1.35; font-weight:700}
+p{margin:0} ul,ol{margin:0; padding-inline-start:1.25rem} li{margin-block:.3rem}
+code,.path{
+  font-family:var(--font-mono); font-size:.8125em; direction:ltr; unicode-bidi:isolate;
+  display:inline-block; background:var(--cream-2); border:1px solid var(--line);
+  border-radius:var(--radius-xs); padding:.05em .4em; color:var(--ink-2);
+}
+:focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-radius:var(--radius-xs)}
+.wrap{max-width:1180px; margin-inline:auto; padding-inline:20px}
+
+/* ─ رأس الوثيقة / document head ──────────────────────────────────────────── */
+.masthead{background:var(--nav-bg); color:var(--nav-fg); padding-block:2.5rem 2rem}
+.masthead .eyebrow{font-size:.8125rem; letter-spacing:.06em; color:var(--nav-accent); font-weight:600}
+.masthead h1{font-size:clamp(1.6rem,4vw,2.25rem); color:#F8F4EC; margin-block-start:.5rem}
+.masthead .h1en{font-size:clamp(1rem,2.2vw,1.25rem); color:var(--nav-fg-soft); font-weight:600; direction:ltr; text-align:start; margin-block-start:.25rem}
+.masthead .lede{margin-block-start:1rem; max-width:64ch; color:var(--nav-fg-soft); font-size:1rem}
+.docmeta{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:.6rem; margin-block-start:1.5rem}
+.docmeta div{border:1px solid rgba(248,244,236,.18); border-radius:var(--radius-sm); padding:.5rem .75rem}
+.docmeta dt{font-size:.6875rem; letter-spacing:.05em; color:var(--nav-accent); font-family:var(--font-mono); text-transform:uppercase}
+.docmeta dd{margin:0; font-size:.875rem; color:#F8F4EC; margin-block-start:.15rem}
+
+/* ─ الأقسام / sections ───────────────────────────────────────────────────── */
+main{padding-block:2.5rem 4rem}
+.section{margin-block-start:3rem}
+.section:first-child{margin-block-start:0}
+.section > h2{font-size:1.3125rem; padding-block-end:.55rem; border-block-end:2px solid var(--teal); display:inline-block}
+.section > h2 .num{color:var(--teal); font-family:var(--font-mono); font-size:.875rem; margin-inline-end:.5rem}
+.section > .h2en{direction:ltr; text-align:start; font-size:.9375rem; font-weight:600; color:var(--muted); margin-block:.5rem 1.25rem}
+.prose{display:grid; gap:.9rem; max-width:74ch}
+.prose.en{direction:ltr; text-align:start; color:var(--ink-2)}
+
+/* ─ كتلة ثنائية اللغة / bilingual block ──────────────────────────────────── */
+.bi{display:grid; grid-template-columns:1fr 1fr; gap:1rem 1.5rem; align-items:start}
+.bi > .en{direction:ltr; text-align:start}
+.bi .lab{
+  font-family:var(--font-mono); font-size:.6875rem; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--teal-600); display:block; margin-block-end:.3rem;
+}
+@media (max-width:820px){ .bi{grid-template-columns:1fr} }
+
+.callout{background:var(--teal-50); border:1px solid rgba(15,118,110,.22); border-radius:var(--radius); padding:1.2rem 1.35rem; display:grid; gap:.7rem}
+.callout h3{font-size:1.0625rem; color:var(--teal-600)}
+.callout.warnbox{background:var(--warn-bg); border-color:var(--warn-line)}
+.callout.warnbox h3{color:var(--warn)}
+
+/* ─ الجداول / tables ─────────────────────────────────────────────────────── */
+.scroller{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--paper); margin-block-start:1rem}
+table{border-collapse:collapse; width:100%; font-size:.875rem}
+th,td{padding:.7rem .85rem; text-align:start; border-block-end:1px solid var(--line); vertical-align:top}
+thead th{background:var(--cream-2); font-size:.75rem; color:var(--ink-2); white-space:nowrap; letter-spacing:.02em}
+tbody tr:last-child td, tbody tr:last-child th{border-block-end:0}
+tbody th[scope="row"]{
+  font-family:var(--font-mono); font-size:.75rem; font-weight:700; color:var(--teal-600);
+  white-space:nowrap; background:var(--paper); position:sticky; inset-inline-start:0; z-index:1;
+  box-shadow:-1px 0 0 var(--line);
+}
+td.en{direction:ltr; text-align:start}
+caption{caption-side:bottom; text-align:start; color:var(--muted); font-size:.8125rem; padding:.75rem .9rem; line-height:1.6}
+.reqtable{min-width:860px}
+.reqtable th:nth-child(2), .reqtable td:nth-child(2){width:42%}
+.reqtable th:nth-child(3), .reqtable td:nth-child(3){width:46%}
+.maptable{min-width:800px}
+.threattable{min-width:820px}
+
+/* ─ لن تفعله / never list ────────────────────────────────────────────────── */
+.never{list-style:none; padding:0; margin:0; display:grid; gap:.6rem}
+.never li{
+  background:var(--paper); border:1px solid var(--danger-line); border-radius:var(--radius-sm);
+  padding:.75rem .95rem; box-shadow:var(--shadow-xs); display:grid; gap:.25rem;
+}
+.never b{color:var(--danger); font-size:.9375rem}
+.never span{direction:ltr; text-align:start; color:var(--ink-2); font-size:.875rem}
+
+/* ─ الرسوم / diagrams ────────────────────────────────────────────────────── */
+.dia{margin:0; display:grid; gap:.8rem; margin-block-start:1.25rem}
+.dia__wrap{overflow-x:auto; background:var(--cream-2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:.85rem}
+.dia svg{display:block; width:100%; min-width:660px; height:auto}
+.dia figcaption{font-size:.8125rem; color:var(--muted); line-height:1.65}
+.dia figcaption.en{direction:ltr; text-align:start}
+svg text{font-family:var(--font)}
+.d-z{fill:rgba(16,42,67,.04); stroke:var(--muted-2); stroke-dasharray:4 4; stroke-width:1}
+.d-zl{font-size:10px; letter-spacing:.07em; font-weight:700; fill:var(--muted-2)}
+.d-n{fill:var(--paper); stroke:var(--ink-3); stroke-width:1.1}
+.d-new{fill:#FDF7E6; stroke:var(--gold-700); stroke-width:1.8}
+.d-erp{fill:#EDF1F5; stroke:var(--ink-3); stroke-width:1.1}
+.d-hum{fill:var(--teal-50); stroke:var(--teal-600); stroke-width:1.2}
+.d-risk{fill:var(--danger-bg); stroke:var(--danger); stroke-width:1.6}
+.d-nt{font-size:12.5px; font-weight:700; fill:var(--ink)}
+.d-ns{font-size:10.5px; fill:var(--muted)}
+.d-ar{stroke:var(--ink-3); stroke-width:1.4; fill:none}
+.d-go{stroke:var(--teal); stroke-width:2; fill:none}
+.d-bad{stroke:var(--danger); stroke-width:2; fill:none}
+.d-dash{stroke:var(--muted-2); stroke-width:1.3; fill:none; stroke-dasharray:5 4}
+.d-hd{fill:var(--ink-3)} .d-hdgo{fill:var(--teal)} .d-hdbad{fill:var(--danger)} .d-hddash{fill:var(--muted-2)}
+.d-al{font-size:10.5px; fill:var(--muted)}
+.d-algo{font-size:10.5px; fill:var(--teal-600); font-weight:600}
+.d-albad{font-size:10.5px; fill:var(--danger); font-weight:600}
+
+/* ─ الخطوات / phases ─────────────────────────────────────────────────────── */
+.phases{display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); margin-block-start:1rem}
+.phase{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:1.05rem 1.15rem; display:grid; gap:.4rem; box-shadow:var(--shadow-xs)}
+.phase .when{font-size:.75rem; font-weight:700; letter-spacing:.04em; color:var(--teal); font-family:var(--font-mono)}
+.phase h3{font-size:1rem}
+.phase .en{direction:ltr; text-align:start; font-size:.8125rem; color:var(--muted)}
+.phase .gate{font-size:.8125rem; color:var(--ink-2); border-block-start:1px dashed var(--line-strong); padding-block-start:.5rem}
+
+footer{margin-block-start:3.5rem; padding-block-start:1.25rem; border-block-start:1px solid var(--line); color:var(--muted); font-size:.8125rem}
+footer p{margin-block:.3rem}
+footer .en{direction:ltr; text-align:start}
+
+@media print{
+  body{background:#fff; font-size:10pt}
+  .masthead{background:#fff; color:#102A43; border-block-end:2px solid #102A43}
+  .masthead h1,.docmeta dd{color:#102A43}
+  .masthead .lede,.masthead .h1en{color:#334E68}
+  .docmeta div{border-color:#bbb}
+  .section{break-inside:avoid-page}
+  .scroller,.phase,.never li,.callout{box-shadow:none}
+  tr{break-inside:avoid}
+  .dia svg{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">مقترح للمراجعة الأمنية · SECURITY REVIEW SUBMISSION</p>
+    <h1>أداة الأتمتة المصاحبة لأنظمة أوراكل</h1>
+    <p class="h1en">Attended Automation Tool for Oracle — write path 8 and report path 5</p>
+    <p class="lede">
+      أداة سطح مكتب من C# تحمل متصفّح <span class="path">WebView2</span> ظاهراً، تُنفّذ نصوصاً معتمَدة
+      <b>داخل جلسة الموظّف نفسه وبصلاحياته</b>، ولا تحمل بيانات اعتماد ولا تفتح منفذاً وارداً ولا تمسّ أنظمة
+      التحكّم الصناعي.
+    </p>
+    <dl class="docmeta">
+      <div><dt>Document</dt><dd>ADD-002 · v2.0</dd></div>
+      <div><dt>Date</dt><dd>2026-09-21</dd></div>
+      <div><dt>Classification</dt><dd>داخلي · Internal</dd></div>
+      <div><dt>Status</dt><dd>للمراجعة · For review</dd></div>
+      <div><dt>Audience</dt><dd>IT · Cyber Security · Compliance</dd></div>
+      <div><dt>Scope</dt><dd>التقارير أولاً (مسار ٥) ثم الكتابة (مسار ٨)</dd></div>
+    </dl>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ══ 1 · الغرض ═══════════════════════════════════════════════════════ -->
+  <section class="section" id="purpose">
+    <h2><span class="num">1</span>الغرض والنطاق</h2>
+    <p class="h2en">Purpose and scope</p>
+
+    <div class="bi">
+      <div>
+        <span class="lab">عربي</span>
+        <p>
+          تمكين الموظّف من تنفيذ عمله في أوراكل من الميدان عبر جواله، ومن سحب تقارير يملك صلاحيتها، دون
+          إنشاء حساب تكامل جديد، ودون فتح منفذ إلى شبكة المصنع، ودون أن تحمل أي أداة بيانات اعتماده.
+          الموظّف يسجّل دخوله بنفسه في متصفّح ظاهر على صفحة أوراكل الحقيقية، والأداة تنفّذ نصوصاً
+          <b>معتمَدة ومحدودة</b> داخل تلك الجلسة.
+        </p>
+        <p style="margin-block-start:.75rem">
+          <b>خارج النطاق صراحةً:</b> لا مساس بأنظمة التحكّم الصناعي (DCS/PLC)، ولا إنشاء سلسلة أرقام رسمية
+          موازية، ولا استبدال لأي وظيفة في أوراكل. المنصة <b>تُكمِّل</b> نظام تخطيط الموارد ولا تحلّ محلّه.
+        </p>
+      </div>
+      <div class="en">
+        <span class="lab">English</span>
+        <p>
+          To let an employee complete his Oracle work from the field through his phone, and pull reports he
+          is already entitled to, <b>without</b> a new integration account, <b>without</b> an inbound port into
+          the plant network, and <b>without</b> any tool holding his credentials. The employee signs in himself,
+          in a visible browser, on the genuine Oracle page; the tool executes <b>approved, bounded</b> scripts
+          inside that session.
+        </p>
+        <p style="margin-block-start:.75rem">
+          <b>Explicitly out of scope:</b> no contact with industrial control systems (DCS/PLC), no second
+          official numbering series, and no replacement of any Oracle function. The platform
+          <b>complements</b> the ERP; it does not substitute for it.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-block-start:1.5rem">
+      <h3>الجملة التي تُلخّص الضمانة كلّها · The one sentence that carries the assurance</h3>
+      <p>
+        <b>«الأداة لا تستطيع فعل شيء لا يستطيعه صاحب الجلسة بيده، ولا أن تتصرّف باسم غيره، ولا أن تعمل على
+        صفحة لم تتعرّف عليها يقيناً.»</b> وكل جملة منها مفروضة بآلية قابلة للفحص: صلاحية أوراكل نفسها،
+        وحارس الجلسة، وتحقّق الهدف.
+      </p>
+      <p class="en" style="direction:ltr;text-align:start">
+        <b>“The tool can do nothing the signed-in person could not do by hand, cannot act as anyone else, and
+        cannot act on a page it has not positively identified.”</b> Each clause is enforced by a mechanism a
+        reviewer can test: Oracle's own authorisation, the session guard, and the target assertion.
+      </p>
+    </div>
+    <h3 style="font-size:1.0625rem; margin-block:2rem .75rem">قابلية التطبيق حسب نظام أوراكل — يُحسم قبل تسجيل أي نص</h3>
+    <p class="h2en" style="margin-block:0 1rem">Applicability by Oracle system — settled before any script is recorded</p>
+    <div class="scroller">
+      <table class="maptable">
+        <thead><tr><th scope="col">النظام — System</th><th scope="col">ما يمكن أتمتته — What can be automated</th><th scope="col">القيد الحاسم — The decisive constraint</th></tr></thead>
+        <tbody>
+          <tr>
+            <th scope="row">Oracle EBS 12.2</th>
+            <td>صفحات الويب (OAF) وحدها: بلاغ الصيانة الذاتي، إدخال الوقت الذاتي، طلب الشراء، صندوق الاعتمادات.<span class="en" style="display:block;color:var(--muted)">Web (OAF) pages only: self-service work requests, self-service time entry, purchase requisitions, the approvals worklist.</span></td>
+            <td>شاشات <b>Forms</b> تُشغَّل عبر <span class="path">Java Web Start</span> <b>خارج المتصفّح</b>، فلا تراها أي أداة متصفّح إطلاقاً — ومنها ورشة أمر العمل وحركات المخزون. <b>وهي خارج النطاق باختيار العميل.</b><span class="en" style="display:block;color:var(--muted)"><b>Forms</b> screens launch through <span class="path">Java Web Start</span> <b>outside the browser</b>, so no browser tool can see them at all — including the work-order workbench and inventory transactions. <b>They are out of scope by the customer's own choice.</b></span></td>
+          </tr>
+          <tr>
+            <th scope="row">Oracle Fusion Cloud</th>
+            <td>كل الشاشات ويب، فكلّها قابلة للأتمتة من حيث المبدأ.<span class="en" style="display:block;color:var(--muted)">Every screen is web, so all are automatable in principle.</span></td>
+            <td><b>لكن واجهة Redwood صارت إلزامية:</b> سلاسل الإمداد مطلوبة بنهاية 2026، والواجهة الكلاسيكية تُحذف في 27A (فبراير 2027) — فأي نص يُسجَّل عليها له تاريخ انتهاء. <b>ولأن Fusion يملك واجهة REST موثّقة تؤدّي العمل نفسه، فالأتمتة هنا خيار أضعف من الواجهة البرمجية.</b><span class="en" style="display:block;color:var(--muted)"><b>But Redwood is mandatory:</b> SCM is required by the end of 2026 and the Classic UI is removed at 27A (February 2027), so any script recorded against it has an expiry date. <b>And because Fusion has a documented REST API that does the same work, UI automation here is the weaker choice.</b></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 2 · المعمارية ═══════════════════════════════════════════════════ -->
+  <section class="section" id="architecture">
+    <h2><span class="num">2</span>المعمارية وحدود الثقة</h2>
+    <p class="h2en">Architecture and trust boundaries</p>
+
+    <figure class="dia" dir="ltr">
+      <div class="dia__wrap">
+        <svg viewBox="0 0 900 360" role="img" aria-label="Architecture: the phone queues work, the platform holds the approved script catalogue, and a C# WinForms tool with a visible WebView2 executes inside the employee's own Oracle session. All connections are outbound.">
+          <rect class="d-z" x="8" y="38" width="186" height="296" rx="8"/>
+          <rect class="d-z" x="272" y="38" width="262" height="296" rx="8"/>
+          <rect class="d-z" x="620" y="38" width="272" height="296" rx="8"/>
+          <text class="d-zl" x="18" y="30">FIELD — MOBILE</text>
+          <text class="d-zl" x="282" y="30">PLATFORM — IN-KINGDOM</text>
+          <text class="d-zl" x="630" y="30">PLANT NETWORK — EMPLOYEE'S PC</text>
+
+          <rect class="d-n" x="20" y="68" width="162" height="100" rx="6"/>
+          <text class="d-nt" x="32" y="92">Flutter app</text>
+          <text class="d-ns" x="32" y="110">encrypted offline queue</text>
+          <text class="d-ns" x="32" y="125">scans QR or enters OTP</text>
+          <text class="d-ns" x="32" y="140">runs a named script</text>
+          <text class="d-ns" x="32" y="155">sees the result only</text>
+
+          <rect class="d-n" x="286" y="70" width="234" height="96" rx="6"/>
+          <text class="d-nt" x="298" y="92">CementOps platform</text>
+          <text class="d-ns" x="298" y="110">signed script catalogue</text>
+          <text class="d-ns" x="298" y="125">approval workflow · kill switch</text>
+          <text class="d-ns" x="298" y="140">rate limit · daily cap</text>
+          <text class="d-ns" x="298" y="155">append-only audit</text>
+
+          <rect class="d-n" x="286" y="204" width="234" height="58" rx="6"/>
+          <text class="d-nt" x="298" y="226">PostgreSQL</text>
+          <text class="d-ns" x="298" y="244">scripts · runs · results · audit</text>
+
+          <rect class="d-new" x="634" y="70" width="244" height="96" rx="6"/>
+          <text class="d-nt" x="646" y="92">CementOps.ErpConsole</text>
+          <text class="d-ns" x="646" y="110">.NET 10 WinForms — signed exe</text>
+          <text class="d-ns" x="646" y="125">visible WebView2 · real chrome</text>
+          <text class="d-ns" x="646" y="140">interpreter only — no eval</text>
+          <text class="d-ns" x="646" y="155">holds no ERP credential</text>
+
+          <rect class="d-erp" x="634" y="192" width="244" height="58" rx="6"/>
+          <text class="d-nt" x="646" y="214">Oracle EBS / Fusion</text>
+          <text class="d-ns" x="646" y="232">the genuine page, in session</text>
+          <text class="d-ns" x="646" y="246">issues the official number</text>
+
+          <rect class="d-hum" x="634" y="272" width="244" height="50" rx="6"/>
+          <text class="d-nt" x="646" y="294">The employee</text>
+          <text class="d-ns" x="646" y="311">types his own password · present</text>
+
+          <line class="d-ar" x1="182" y1="112" x2="277" y2="112"/>
+          <polygon class="d-hd" points="277,107.5 277,116.5 286,112"/>
+          <text class="d-al" x="234" y="90" text-anchor="middle">TLS · JWT</text>
+          <text class="d-al" x="234" y="102" text-anchor="middle">queue push</text>
+
+          <circle class="d-hdgo" cx="634" cy="112" r="3.5"/>
+          <line class="d-go" x1="634" y1="112" x2="529" y2="112"/>
+          <polygon class="d-hdgo" points="529,107.5 529,116.5 520,112"/>
+          <text class="d-al" x="577" y="90" text-anchor="middle">outbound 443</text>
+          <text class="d-al" x="577" y="102" text-anchor="middle">mTLS + API key</text>
+          <text class="d-algo" x="577" y="132" text-anchor="middle">tool connects out</text>
+
+          <line class="d-ar" x1="400" y1="170" x2="400" y2="199"/>
+          <polygon class="d-hd" points="395.5,199 404.5,199 400,204"/>
+
+          <line class="d-ar" x1="756" y1="170" x2="756" y2="183"/>
+          <polygon class="d-hd" points="751.5,183 760.5,183 756,192"/>
+          <text class="d-al" x="766" y="180">drives the page</text>
+
+          <line class="d-go" x1="700" y1="272" x2="700" y2="259"/>
+          <polygon class="d-hdgo" points="695.5,259 704.5,259 700,250"/>
+          <text class="d-algo" x="710" y="268">signs in here</text>
+
+          <text class="d-albad" x="450" y="350" text-anchor="middle">no inbound port · no listening service · no path to DCS or PLC</text>
+        </svg>
+      </div>
+      <figcaption>
+        كل الأسهم التي تعبر حدود الثقة <b>صادرة</b>. لا منفذ وارد، ولا خدمة مستمعة على جهاز الموظّف، ولا
+        مسار بين الأداة وأي نظام تحكّم صناعي.
+      </figcaption>
+      <figcaption class="en">
+        Every arrow crossing a trust boundary is <b>outbound</b>. There is no inbound port, no listening service
+        on the employee's machine, and no path between the tool and any industrial control system.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ 3 · المتطلبات ═══════════════════════════════════════════════════ -->
+  <section class="section" id="requirements">
+    <h2><span class="num">3</span>المتطلبات — مرقّمة وقابلة للاختبار</h2>
+    <p class="h2en">Requirements — numbered and testable</p>
+    <div class="prose">
+      <p>
+        كل متطلّب له معرّف ثابت يُشار إليه في المراجعة وفي اختبارات القبول (القسم 7).
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          Every requirement carries a stable identifier referenced in the review and in the acceptance tests (section 7).
+        </span>
+      </p>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">A · الهوية والمصادقة — Identity and authentication</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">A1</th><td>الأداة لا تطلب ولا تخزّن ولا تعرض حقلاً لبيانات اعتماد أوراكل إطلاقاً. المستخدم يكتبها بنفسه في صفحة أوراكل الحقيقية داخل متصفّح ظاهر.</td><td class="en">The tool never requests, stores or renders a field for Oracle credentials. The user types them himself into the genuine Oracle page inside a visible browser.</td></tr>
+          <tr><th scope="row">A2</th><td>المحرّك يرفض تنفيذ أي خطوة على صفحة مصادقة (دخول، تحقّق ثنائي، تغيير كلمة مرور) أو على أي صفحة تحوي حقل كلمة مرور.</td><td class="en">The engine refuses every step on an authentication page (sign-in, MFA, password change) or on any page containing a password input.</td></tr>
+          <tr><th scope="row">A3</th><td>لا يُحقَن نصّ المحتوى قبل أن يطابق العنوان نمط ما بعد الدخول؛ فقبل تلك اللحظة لا تملك الأداة وصولاً إلى الصفحة أصلاً.</td><td class="en">No content script is injected before the URL matches a post-login pattern; before that moment the tool has no access to the page at all.</td></tr>
+          <tr><th scope="row">A4</th><td>النافذة تعرض شريط العنوان الحقيقي وحالة TLS والقفل، فلا يتعارض التطبيق مع تدريب التوعية بالتصيّد.</td><td class="en">The window shows the real address bar, TLS state and padlock, so the application does not contradict phishing-awareness training.</td></tr>
+          <tr><th scope="row">A5</th><td>تُفعَّل مصادقة ويندوز المدمجة حيث تتوفّر فلا يُكتب حقل كلمة مرور أصلاً — <b>وضبطها بسياسة سجلّ على الجهاز تنشرها تقنية المعلومات</b> (<span class="path">AuthServerAllowlist</span> و<span class="path">AuthNegotiateDelegateAllowlist</span> تحت مفتاح <span class="path">WebView2</span>)، <b>ولا يمكن للتطبيق ضبطها بنفسه</b>: معاملات المتصفّح الإضافية توقّفت عن العمل في إصدار التشغيل 110 فما فوق.</td><td class="en">Windows Integrated Authentication is enabled where available, so no password field is typed at all — <b>configured by a machine registry policy that IT pushes</b> (<span class="path">AuthServerAllowlist</span> and <span class="path">AuthNegotiateDelegateAllowlist</span> under the <span class="path">WebView2</span> key). <b>The application cannot set it itself</b>: additional browser arguments stopped working in Runtime 110 and later.</td></tr>
+          <tr><th scope="row">A6</th><td>الاقتران <b>بإجراء الدخول القائم في المنصة</b>: تفتح الأداة صفحة دخول CementOps المعتادة بتحقّقها الثنائي، فيستعمل الموظّف ما يعرفه ولا يتعلّم إجراءً جديداً. ويبقى <b>QR أو OTP بديلاً</b> للأجهزة المشتركة والأكشاك. وفي الحالتين يُربط الجهاز وتُلغى الصلاحية مركزياً من صفحة الأجهزة.</td><td class="en">Pairing uses <b>the platform's existing sign-in</b>: the tool opens the familiar CementOps login with its MFA, so the employee uses what he already knows and learns no new procedure. <b>QR or OTP remains the fallback</b> for shared devices and kiosks. Either way the device is bound and access is revoked centrally from the devices page.</td></tr>
+          <tr><th scope="row">A7</th><td>رمز الاقتران قصير الأجل، لمرة واحدة، ومربوط بالمستخدم والجهاز معاً.</td><td class="en">The pairing code is short-lived, single-use, and bound to both the user and the device.</td></tr>
+          <tr><th scope="row">A8</th><td>جلسة الأداة مع المنصة تنتهي بالخمول وتحتاج إعادة اقتران بعد مدّة معلنة.</td><td class="en">The tool's platform session expires on idle and requires re-pairing after a declared period.</td></tr>
+          <tr><th scope="row">A9</th><td><b>استمرار الجلسة بلا اعتماد:</b> تُحفظ جلسة أوراكل في <b>ملفّ تعريف <span class="path">WebView2</span> ثابت</b> كما يفعل أي متصفّح — لا أكثر. والاستطلاع الدوري نشاطٌ طبيعي على الصفحة يمدّ الجلسة ضمن مهلة الخمول التي تضبطها تقنية المعلومات، <b>ولا تُرسل الأداة نبضات صناعية</b> لإبقاء الجلسة حيّة.</td><td class="en"><b>Session continuity without credentials:</b> the Oracle session lives in a <b>persisted <span class="path">WebView2</span> profile</b>, exactly as any browser keeps it — no more. Periodic polling is ordinary page activity that extends the session within the idle timeout IT sets, and the tool <b>sends no synthetic keep-alive</b> to hold a session open.</td></tr>
+          <tr><th scope="row">A10</th><td><b>اسم المستخدم يجوز حفظه، وكلمة المرور لا.</b> يُحفظ الاسم للتعبئة المسبقة ولمقارنة حارس الجلسة (B8). ولا تُحفظ كلمة المرور ولا رمز التحقق <b>في قرص ولا في ذاكرة ولا مشفّرة</b> — لأن مفتاح فكّ التشفير يكون في الذاكرة نفسها، ولأن التقاطها أصلاً يستلزم قراءة حقل كلمة مرور، وهو ممنوع (A2، A3، D10).</td><td class="en"><b>The username may be kept; the password may not.</b> The name is kept for pre-fill and for the session-guard comparison (B8). The password and any OTP are never kept <b>on disk, in memory, or encrypted</b> — because the decryption key would sit in that same memory, and because capturing one at all requires reading a password field, which is forbidden (A2, A3, D10).</td></tr>
+          <tr><th scope="row">A11</th><td><b>لا استطلاع بلا مهمة قائمة.</b> الاستطلاع يوجد فقط ما دام هناك طلب أوراكل لم يُنجَز؛ فإذا لم تكن هناك مهمة، <b>لا تُحمَّل أي صفحة وتنتهي الجلسة بالخمول كما تنتهي لأي مستخدم</b>. وهذا قابل للاختبار مباشرةً.</td><td class="en"><b>No poll without an outstanding job.</b> Polling exists only while an Oracle request is unfinished; with no job, <b>no page is loaded and the session idles out exactly as it would for any user</b>. This is directly testable.</td></tr>
+          <tr><th scope="row">A12</th><td><b>مدّة الاستطلاع تضبطها تقنية المعلومات لا نحن</b>، ويجوز لهم ضبطها <b>أطول من مهلة الخمول</b> (<span class="path">ICX: Session Timeout</span>) — فتنتهي الجلسة وتنتقل المهمة إلى «بانتظارك». <b>فالميزة تتدرّج ولا تتجاوز الضابط</b>، والمفتاح بيدهم.</td><td class="en"><b>IT sets the poll interval, not us</b>, and may set it <b>longer than the idle timeout</b> (<span class="path">ICX: Session Timeout</span>) — in which case the session expires and the job parks as "waiting for you". <b>The feature degrades; it never defeats the control</b>, and the dial is theirs.</td></tr>
+          <tr><th scope="row">A13</th><td><b>يستمرّ الاستطلاع ما دامت جلسة نظام التشغيل قائمة — بما في ذلك والشاشة مقفلة</b>، لأن القفل هو السلوك الآمن المطلوب من الموظّف ولا يصحّ معاقبته عليه. <b>ويتوقّف فوراً عند انتهاء تلك الجلسة بأي سبب:</b> إطفاء الجهاز، أو إعادة تشغيله، أو تسجيل خروج، أو <b>خروج تلقائي تفرضه السياسة</b>، أو التبديل إلى مستخدم آخر.</td><td class="en"><b>Polling continues while the OS session is alive — including with the screen locked</b>, because locking is the secure behaviour the employee is required to perform and must not be penalised for. <b>It stops at once when that session ends for any reason:</b> shutdown, restart, sign-out, a <b>policy-enforced automatic logoff</b>, or switching to another user.</td></tr>
+          <tr><th scope="row">A14</th><td><b>سقف مطلق للامتداد:</b> لا يمدّ الاستطلاع جلسة أوراكل أبعد من مدّة قصوى معلنة من لحظة الدخول (الافتراضي وردية واحدة). وبعدها تنتهي الجلسة وتنتقل المهمة إلى «بانتظارك» ويحتاج الأمر دخولاً جديداً. <b>فالامتداد محدود لا مفتوح.</b></td><td class="en"><b>An absolute extension ceiling:</b> polling never extends an Oracle session beyond a declared maximum from sign-in (default one shift). After it the session ends, the job parks as "waiting for you", and a fresh sign-in is required. <b>The extension is bounded, never open-ended.</b></td></tr>
+          <tr><th scope="row">A15</th><td>عند <b>العودة من السكون أو الإسبات</b> يُعاد التحقّق من حارس الجلسة (B8) قبل أول استطلاع — فجهاز نام في مكان وصحا في مكان آخر لا يستأنف بصمت.</td><td class="en">On <b>resume from sleep or hibernation</b> the session guard (B8) is re-verified before the first poll — a machine that slept in one place and woke in another does not resume silently.</td></tr>
+          <tr><th scope="row">A16</th><td><b>مفتاح سياسة لتقنية المعلومات:</b> <span class="path">StopPollingOnLock</span> — فإن فرضته السياسة توقّف الاستطلاع عند القفل واستأنف عند فتحه. <b>القرار سياستهم لا تفضيلنا</b>، والأداة تطيعه بلا نقاش.</td><td class="en"><b>An IT policy switch:</b> <span class="path">StopPollingOnLock</span> — when their policy requires it, polling stops on lock and resumes on unlock. <b>The decision is their policy, not our preference</b>, and the tool obeys it without argument.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">B · الصلاحية — Authorisation and entitlement</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">B1</th><td>لا يُسمح باستخدام الأداة إلا لمن يملك حساب أوراكل والصلاحيات اللازمة لتنفيذ العمل.</td><td class="en">Only a person holding an Oracle account and the privileges required for the work may use the tool.</td></tr>
+          <tr><th scope="row">B2</th><td>كل نص يعلن الصلاحية التي يحتاجها — مسؤولية ووظيفة في EBS، دور وامتياز في Fusion — وتُطابَق بما يملكه المسجَّل بعد دخوله.</td><td class="en">Every script declares the privilege it needs — responsibility and function in EBS, role and privilege in Fusion — matched against what the signed-in user actually holds.</td></tr>
+          <tr><th scope="row">B3</th><td>النص الذي لا تتوفّر صلاحيته يُعرض مُعطَّلاً بسبب مكتوب، ولا يبدأ تنفيذاً يفشل في منتصفه.</td><td class="en">A script whose privilege is absent is shown disabled with a written reason; it never starts an execution that fails half-way.</td></tr>
+          <tr><th scope="row">B4</th><td>يُتحقَّق من الصلاحية بالقراءة فقط — بفتح الشاشة أو قراءة قائمة المسؤوليات — ولا يُتحقَّق بإنشاء مستند تجريبي وإلغائه.</td><td class="en">Entitlement is probed read-only — opening the screen or reading the responsibility list — never by creating and cancelling a test document.</td></tr>
+          <tr><th scope="row">B5</th><td>الأداة لا تبدّل مسؤولية ولا دوراً نيابةً عن المستخدم للوصول إلى وظيفة. لا رفع صلاحية بأي شكل.</td><td class="en">The tool never switches responsibility or role on the user's behalf to reach a function. No privilege elevation of any kind.</td></tr>
+          <tr><th scope="row">B6</th><td>يُعاد فحص الصلاحية عند كل تشغيل، لا عند تسجيل الدخول فقط.</td><td class="en">Entitlement is re-checked on every run, not only at sign-in.</td></tr>
+          <tr><th scope="row">B7</th><td>يُفحص ما يحتاجه النص فقط؛ ولا تُعدَّد ولا تُخزَّن مجموعة صلاحيات المستخدم كاملة.</td><td class="en">Only the privilege the script needs is checked; the user's full entitlement set is never enumerated or stored.</td></tr>
+          <tr><th scope="row">B8</th><td>حارس الجلسة: يُقرأ اسم المستخدم المسجَّل من الصفحة ويُقارَن بالمقترن بالمنصة؛ والاختلاف يوقف التنفيذ. <b>ويُصنَّف ضابطاً كاشفاً وطبقة دفاع ثانية لا ضمانة قاطعة</b> — لأن القراءة من صفحة قابلة للتزوير من الصفحة نفسها وهشّة أمام تغيّر الواجهة. الضمانة الأصلية للنسبة أن الجلسة لمن كتب كلمة المرور (A1).</td><td class="en">Session guard: the signed-in username is read from the page and compared with the paired user; a mismatch stops execution. <b>Classified as a detective, defence-in-depth control rather than a guarantee</b> — reading from a page is spoofable by that page and brittle under UI change. The primary attribution guarantee is that the session belongs to whoever typed the password (A1).</td></tr>
+          <tr><th scope="row">B9</th><td>الأداة ترث حقوق المستخدم ولا تغيّرها؛ وفصل المهام يبقى مسؤولية أوراكل ومراجعته.</td><td class="en">The tool inherits the user's rights and alters none; segregation of duties remains Oracle's responsibility and Oracle's review.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">C · حوكمة النصوص — Script governance</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">C1</th><td>النصوص <b>بيانات</b> يفسّرها مفسّر مشحون داخل الأداة؛ لا <span class="path">eval</span> ولا كود يُحمَّل وقت التشغيل من أي مصدر.</td><td class="en">Scripts are <b>data</b>, run by an interpreter shipped inside the tool. No <span class="path">eval</span> and no code loaded at runtime from any source.</td></tr>
+          <tr><th scope="row">C2</th><td>مفردات مغلقة: <span class="path">Set · Get · Click · WaitFor · Assert</span> فقط. لا ملفات ولا حافظة ولا شبكة ولا انتقال إلى عنوان حرّ من داخل النص.</td><td class="en">Closed vocabulary: <span class="path">Set · Get · Click · WaitFor · Assert</span> only. No file, clipboard or network access, and no arbitrary navigation, from inside a script.</td></tr>
+          <tr><th scope="row">C3</th><td>كل نص موقّع على الخادم، والأداة ترفض غير الموقّع أو المعدَّل؛ والمفتاح العام مثبّت وقت البناء.</td><td class="en">Every script is signed server-side; the tool refuses anything unsigned or altered; the public key is pinned at build time.</td></tr>
+          <tr><th scope="row">C4</th><td>دورة اعتماد: مسودّة ← مراجعة تقنية المعلومات ← معتمَد ← منشور. ولا يُشغَّل في الإنتاج إلا المعتمَد، والاعتماد صفّ تدقيق باسم معتمِده.</td><td class="en">Approval workflow: draft → IT review → approved → published. Only approved scripts run in production, and the approval is an audit row naming its approver.</td></tr>
+          <tr><th scope="row">C5</th><td>كل نص يعلن الأصل ونمط العنوان المسموح له بالعمل عليه، ويُرفض في غيرهما.</td><td class="en">Every script declares the origin and URL pattern it may run on, and is refused anywhere else.</td></tr>
+          <tr><th scope="row">C6</th><td>الجوال يرسل <span class="path">runScript(id, params)</span> فقط ولا يرسل خطوات؛ والمعاملات تُتحقَّق على الخادم مقابل مخطّط معرَّف.</td><td class="en">The phone sends only <span class="path">runScript(id, params)</span>, never steps; parameters are validated server-side against a declared schema.</td></tr>
+          <tr><th scope="row">C7</th><td>المسجّل غير موجود في نسخة الإنتاج؛ وهو بناء منفصل مقصور على تقنية المعلومات.</td><td class="en">No recorder is present in the production build; it is a separate build restricted to IT.</td></tr>
+          <tr><th scope="row">C8</th><td>كل نص يحمل رقم إصدار وبصمة الصفحة التي سُجِّل عليها.</td><td class="en">Every script carries a version number and the signature of the page it was recorded against.</td></tr>
+          <tr><th scope="row">C9</th><td>المفسّر نفسه سطح هجوم ويُقيَّم أمنياً: نموذج تهديد مكتوب، واختبار بمدخلات مشوّهة، وسلوك معرَّف عند نصّ غير صالح (رفض لا تنفيذ جزئي).</td><td class="en">The interpreter is itself an attack surface and is assessed: a written threat model, fuzz testing, and a defined behaviour for a malformed script (reject, never partially execute).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">D · سلامة التنفيذ — Execution safety</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">D1</th><td>لا يبدأ أي تنفيذ قبل التحقّق من أن الصفحة المقصودة موجودة وبياناتها مكتملة.</td><td class="en">No execution begins until the target page is confirmed present with its data complete.</td></tr>
+          <tr><th scope="row">D2</th><td>التحقّق بالهوية: نمط عنوان وعنصر مرجعي معروف — لا لقطات شاشة ولا إحداثيات.</td><td class="en">Verification by identity: a URL pattern plus a known anchor element — never screenshots or coordinates.</td></tr>
+          <tr><th scope="row">D3</th><td>انتظار «الاستقرار» لا «التحميل»: شرط محدّد ثم فترة سكون قصيرة بلا تغيّر في الصفحة، لأن العرض الجزئي في ADF يسبق وصول البيانات.</td><td class="en">Wait for <i>settled</i>, not <i>loaded</i>: a specific condition then a short quiet period with no DOM change, because ADF partial rendering precedes the data.</td></tr>
+          <tr><th scope="row">D4</th><td>تحقّق <b>إلزامي</b> من هوية السجل قبل أي كتابة: الشاشة تعرض المستند المقصود بعينه ورقمه.</td><td class="en">A <b>mandatory</b> record-identity assertion before any write: the screen shows the intended document and its number.</td></tr>
+          <tr><th scope="row">D5</th><td>عند تغيّر واجهة أوراكل بعد ترقيع، يفشل النص على بصمة الصفحة <b>قبل كتابة أي حرف</b>.</td><td class="en">When an Oracle patch changes the UI, the script fails on the page signature <b>before a single character is written</b>.</td></tr>
+          <tr><th scope="row">D6</th><td>لكل انتظار مهلة معلنة؛ ولا استطلاع بلا سقف.</td><td class="en">Every wait has a declared timeout; no unbounded polling.</td></tr>
+          <tr><th scope="row">D7</th><td>الفشل يوقف ولا يعالج: لا محاولة تعافٍ، والصفحة تُترك كما هي، ويُبلَّغ عن التحقّق الذي سقط بأسماء الحقول لا بلقطة للصفحة.</td><td class="en">A failure stops and does not repair: no recovery attempt, the page is left as it is, and the failed assertion is reported by field name, not by a page capture.</td></tr>
+          <tr><th scope="row">D8</th><td>خطوة تأكيد قبل التشغيل تعرض ما سيُكتب وأين، والمستخدم يضغط «تشغيل». لا تنفيذ صامت.</td><td class="en">A pre-run confirmation shows exactly what will be written and where; the user presses Run. No silent execution.</td></tr>
+          <tr><th scope="row">D9</th><td>قائمة خطوات حيّة أثناء التشغيل، وإيقاف فوري عند انتقال الصفحة أو إخفاء النافذة أو تدخّل المستخدم.</td><td class="en">A live step list while running, aborting immediately on navigation, window hide or user input.</td></tr>
+          <tr><th scope="row">D10</th><td>المحرّك لا يكتب في حقل من نوع كلمة مرور بأي حال من الأحوال.</td><td class="en">The engine never types into a password-type field under any circumstance.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">E · بيانات التقارير — Report data handling</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">E1</th><td>التقارير تُسحب من كتالوج مسمّى معتمَد بمعاملات محدّدة؛ ولا يوجد «تصدير ما على الشاشة».</td><td class="en">Reports are pulled from a named, approved catalogue with constrained parameters. There is no "export what is on screen".</td></tr>
+          <tr><th scope="row">E2</th><td>كل مدخل في الكتالوج يعلن تصنيف بياناته، وما يحمل بيانات شخصية (رواتب، طبّي، موارد بشرية) مستبعَد <b>بالسياسة</b> لا بمربّع اختيار.</td><td class="en">Every catalogue entry declares its data classification; anything carrying personal data (payroll, medical, HR) is excluded <b>by policy</b>, not by a checkbox.</td></tr>
+          <tr><th scope="row">E3</th><td>النمط الافتراضي هو «تشغيل وإشعار»: الناتج يبقى في أوراكل ولا تخرج بيانات.</td><td class="en">The default mode is trigger-and-notify: the output stays in Oracle and no data leaves it.</td></tr>
+          <tr><th scope="row">E4</th><td>نمط الصفوف يُعرض على شاشة الجوال بلا ملف على أي جهاز.</td><td class="en">Row mode renders on the phone screen with no file on any device.</td></tr>
+          <tr><th scope="row">E5</th><td>نمط الملف يُرفع إلى المنصة بعلامة مائية ورابط موقّع قصير الأجل لمرة واحدة، ولا تبقى نسخة محلية على حاسوب الموظّف.</td><td class="en">File mode uploads to the platform watermarked, behind a single-use short-lived signed link; no local copy remains on the employee's PC.</td></tr>
+          <tr><th scope="row">E6</th><td>ما يُسحب يخضع لنطاق بيانات المنصة ويُربط بطالبه ومصنعه؛ ولا يوضع في مكتبة مشتركة. تقرير سُحب بصلاحيات شخص لا يصير مقروءاً للجميع.</td><td class="en">What is pulled is subject to the platform data scope and bound to its requester and plant; it is never placed in a shared library. A report pulled under one person's rights does not become readable by everyone.</td></tr>
+          <tr><th scope="row">E7</th><td>مدّة احتفاظ قصيرة معلنة تنتهي تلقائياً؛ وأرشيف السجلّ يبقى في أوراكل.</td><td class="en">A short, declared retention that expires automatically; the archive of record remains in Oracle.</td></tr>
+          <tr><th scope="row">E8</th><td>سقف للحجم ولعدد الصفوف؛ والتجاوز يوقف العملية ولا يقتطع بصمت.</td><td class="en">A size and row cap; exceeding it stops the operation rather than silently truncating.</td></tr>
+          <tr><th scope="row">E9</th><td>يُطابَق اسم التقرير وكل معاملاته وطابعه الزمني، ويُقارَن عدد الصفوف الملتقطة بالإجمالي الذي تعلنه الصفحة نفسها؛ والنقص <b>فشل لا نتيجة</b>.</td><td class="en">The report name, every parameter and the run timestamp are matched, and the captured row count is compared with the total the page itself states; a shortfall is a <b>failure, not a result</b>.</td></tr>
+          <tr><th scope="row">E10</th><td>علامة مائية وصفّ تدقيق عند <b>كل فتح</b>، لا عند السحب فقط.</td><td class="en">Watermark and an audit row on <b>every open</b>, not only on pull.</td></tr>
+          <tr><th scope="row">E11</th><td><b>جرد تدفّق البيانات</b> يُسلَّم مع الكتالوج: أي حقول، بأي تصنيف، من أي شاشة، إلى أين، وكم تبقى. ويُحدَّث مع كل مدخل جديد.</td><td class="en">A <b>data-flow inventory</b> delivered with the catalogue: which fields, of what classification, from which screen, to where, and for how long. Updated with every new entry.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure class="dia" dir="ltr">
+      <div class="dia__wrap">
+        <svg viewBox="0 0 900 330" role="img" aria-label="The three report modes required by E3 to E5, and what leaves Oracle in each: nothing, the rows, or a forwardable file.">
+          <rect class="d-z" x="8" y="40" width="286" height="250" rx="8"/>
+          <rect class="d-z" x="308" y="40" width="286" height="250" rx="8"/>
+          <rect class="d-z" x="608" y="40" width="284" height="250" rx="8"/>
+          <text class="d-zl" x="18" y="32">A &#183; TRIGGER ONLY &#183; E3 &#8212; DEFAULT</text>
+          <text class="d-zl" x="318" y="32">B &#183; ROWS &#183; E4</text>
+          <text class="d-zl" x="618" y="32">C &#183; FILE &#183; E5</text>
+
+          <rect class="d-n" x="22" y="70" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="34" y="92">Tool submits the request</text>
+          <text class="d-ns" x="34" y="110">as the signed-in user</text>
+          <rect class="d-n" x="22" y="146" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="34" y="168">Output stays in Oracle</text>
+          <text class="d-ns" x="34" y="186">nothing is captured</text>
+          <rect class="d-hum" x="22" y="222" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="34" y="244">Phone: it is ready</text>
+          <text class="d-ns" x="34" y="262">he opens it in Oracle at a PC</text>
+
+          <rect class="d-n" x="322" y="70" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="334" y="92">Tool reads the table</text>
+          <text class="d-ns" x="334" y="110">asserts the stated total first</text>
+          <rect class="d-n" x="322" y="146" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="334" y="168">Rows to the platform</text>
+          <text class="d-ns" x="334" y="186">scoped to requester + plant</text>
+          <rect class="d-hum" x="322" y="222" width="258" height="54" rx="6"/>
+          <text class="d-nt" x="334" y="244">Phone renders on screen</text>
+          <text class="d-ns" x="334" y="262">no file anywhere</text>
+
+          <rect class="d-n" x="622" y="70" width="256" height="54" rx="6"/>
+          <text class="d-nt" x="634" y="92">Tool captures PDF / XLSX</text>
+          <text class="d-ns" x="634" y="110">no local copy kept</text>
+          <rect class="d-n" x="622" y="146" width="256" height="54" rx="6"/>
+          <text class="d-nt" x="634" y="168">Uploaded, watermarked</text>
+          <text class="d-ns" x="634" y="186">retention clock starts</text>
+          <rect class="d-risk" x="622" y="222" width="256" height="54" rx="6"/>
+          <text class="d-nt" x="634" y="244">Signed short-lived link</text>
+          <text class="d-ns" x="634" y="262">forwardable &#8212; that is the risk</text>
+
+          <line class="d-ar" x1="151" y1="128" x2="151" y2="137"/>
+          <polygon class="d-hd" points="146.5,137 155.5,137 151,146"/>
+          <line class="d-ar" x1="151" y1="204" x2="151" y2="213"/>
+          <polygon class="d-hd" points="146.5,213 155.5,213 151,222"/>
+          <line class="d-ar" x1="451" y1="128" x2="451" y2="137"/>
+          <polygon class="d-hd" points="446.5,137 455.5,137 451,146"/>
+          <line class="d-ar" x1="451" y1="204" x2="451" y2="213"/>
+          <polygon class="d-hd" points="446.5,213 455.5,213 451,222"/>
+          <line class="d-bad" x1="750" y1="128" x2="750" y2="137"/>
+          <polygon class="d-hdbad" points="745.5,137 754.5,137 750,146"/>
+          <line class="d-bad" x1="750" y1="204" x2="750" y2="213"/>
+          <polygon class="d-hdbad" points="745.5,213 754.5,213 750,222"/>
+
+          <text class="d-algo" x="151" y="310" text-anchor="middle">leaves Oracle: nothing</text>
+          <text class="d-al" x="451" y="310" text-anchor="middle">leaves Oracle: the rows</text>
+          <text class="d-albad" x="750" y="310" text-anchor="middle">leaves Oracle: a file that travels</text>
+        </svg>
+      </div>
+      <figcaption>
+        أنماط التقارير الثلاثة التي تفرضها المتطلبات E3 و E4 و E5. <b>النمط A هو الافتراضي</b>، ولا تخرج فيه
+        بيانة واحدة من أوراكل. ولا يُفعَّل النمطان B وC إلا لمدخل في الكتالوج أُقرّ تصنيفه.
+      </figcaption>
+      <figcaption class="en">
+        The three report modes required by E3&#8211;E5. <b>Mode A is the default</b> and no data leaves Oracle in it.
+        Modes B and C are enabled only for a catalogue entry whose classification has been approved.
+      </figcaption>
+    </figure>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">F · التدقيق والأثر — Audit and traceability</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">F1</th><td>صفّ تدقيق لكل تشغيل: رقم النص وإصداره، المستخدم، الجهاز، الوقت، الحقول المكتوبة مع حجب الحسّاس، النتيجة، ورقم المستند العائد.</td><td class="en">An audit row per run: script id and version, user, device, timestamp, the fields written with sensitive values redacted, the outcome, and the returned document number.</td></tr>
+          <tr><th scope="row">F2</th><td>نتيجة فحص الصلاحية تُسجَّل مع التشغيل، فيصير الشرط دليلاً لا ادّعاءً.</td><td class="en">The entitlement check result is recorded with the run, which turns the condition into evidence rather than a claim.</td></tr>
+          <tr><th scope="row">F3</th><td>علامة ارتباط تُكتب في حقل حرّ يحمله مستند أوراكل، فيصل المدقّق سجلّ أوراكل بصفّ تدقيقنا — وهذا يُنشئ أثر تدقيق على جانب النظام المصدر.</td><td class="en">A correlation marker is written into a free-text field the Oracle document carries, joining Oracle's record to our audit row — which creates a source-system audit trail where UI automation normally leaves none.</td></tr>
+          <tr><th scope="row">F4</th><td>تحقّق بالقراءة العائدة: يُلتقط رقم المستند من شاشة التأكيد؛ وتشغيل بلا رقم مؤكَّد يُعدّ فشلاً.</td><td class="en">Read-back verification: the document number is captured from the confirmation page; a run with no confirmed number counts as a failure.</td></tr>
+          <tr><th scope="row">F5</th><td>سجلّ التدقيق غير قابل للتعديل أو الحذف على مستوى قاعدة البيانات.</td><td class="en">The audit log is not modifiable or deletable at database level.</td></tr>
+          <tr><th scope="row">F6</th><td>تقرير تسوية يومي: ما نُفِّذ مقابل ما يوجد في أوراكل، والفروق مسمّاة.</td><td class="en">A daily reconciliation report: what ran versus what exists in Oracle, with the differences named.</td></tr>
+          <tr><th scope="row">F7</th><td>لا التقاط للصفحة كاملة ولا تسجيل لضغطات المفاتيح؛ ولا يُقرأ من الصفحة إلا ما يسمّيه النص.</td><td class="en">No full-page capture and no keystroke logging; only the elements the script names are read.</td></tr>
+          <tr><th scope="row">F8</th><td><b>تُصدَّر أحداث التدقيق لحظياً إلى نظام المراقبة الأمنية عند العميل (SIEM)</b> بصيغة متّفق عليها، فلا يكون الدليل على سلوك أداتنا محفوظاً عندنا وحدنا.</td><td class="en"><b>Audit events are forwarded in real time to the customer's SIEM</b> in an agreed format, so the evidence of our tool's behaviour does not live only in our own system.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">G · النشر ونقطة النهاية — Deployment and endpoint</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">G1</th><td>ملف تنفيذي موقّع رقمياً يُوزَّع كحزمة MSI عبر Intune أو SCCM من داخل مستأجر الشركة.</td><td class="en">A code-signed executable distributed as an MSI through Intune or SCCM from inside the company's own tenant.</td></tr>
+          <tr><th scope="row">G2</th><td>لا تثبيت من متجر عام ولا تحديث تلقائي من مصدر خارج الشركة.</td><td class="en">No public-store installation and no automatic update from a source outside the company.</td></tr>
+          <tr><th scope="row">G3</th><td>تعمل بصلاحيات المستخدم العادي ولا تحتاج صلاحية مسؤول النظام للتشغيل.</td><td class="en">Runs with standard user rights; no administrator privilege is required to operate it.</td></tr>
+          <tr><th scope="row">G4</th><td>بيئة <span class="path">WebView2</span> بملفّ تعريف مخصّص ومجلّد تنزيل مؤقّت يُمسح عند انتهاء العملية.</td><td class="en">A <span class="path">WebView2</span> environment with a dedicated profile and a temporary download folder cleared when the operation ends.</td></tr>
+          <tr><th scope="row">G5</th><td><b>لا قياس عن بُعد</b> ولا إرسال تشخيصي إلى أي جهة، وبالأخص لا إلى أي وجهة خارج المملكة.</td><td class="en"><b>No telemetry</b> and no diagnostic transmission to any party, and in particular to no destination outside the Kingdom.</td></tr>
+          <tr><th scope="row">G6</th><td>قائمة مكوّنات البرمجيات (SBOM) تُسلَّم مع كل إصدار، مع فحص التبعيات المعروفة الثغرات في كل مرحلة.</td><td class="en">A software bill of materials is delivered with every release, with a vulnerable-dependency scan each phase.</td></tr>
+          <tr><th scope="row">G7</th><td>لا مكوّن تجاري لطرف ثالث للأتمتة؛ المحرّك مبنيّ داخلياً وشفرته متاحة للمراجعة.</td><td class="en">No third-party commercial automation component; the engine is built in-house and its source is available for review.</td></tr>
+          <tr><th scope="row">G8</th><td><b>بناء قابل لإعادة الإنتاج ببصمة معلنة</b> لكل إصدار، فيتحقّق المراجع أن الملف المُسلَّم هو الشفرة التي راجعها.</td><td class="en">A <b>reproducible build with a published hash</b> for every release, so a reviewer can verify the delivered binary is the source he reviewed.</td></tr>
+          <tr><th scope="row">G9</th><td>لا تعمل الأداة إلا على <b>جهاز مُدار ومتوافق</b>: مشمول بسياسة الامتثال، قرصه مشفّر، وعليه حماية نقاط النهاية.</td><td class="en">The tool runs only on a <b>managed, compliant device</b>: covered by the compliance policy, disk encrypted, and running endpoint protection.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">H · الشبكة والعزل — Network and segregation</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">H1</th><td>كل اتصالات الأداة <b>صادرة فقط</b>؛ لا منفذ وارد ولا خدمة مستمعة على جهاز المستخدم.</td><td class="en">All tool connections are <b>outbound only</b>; there is no inbound port and no listening service on the user's machine.</td></tr>
+          <tr><th scope="row">H2</th><td>الاتصال بالمنصة عبر TLS مع شهادة عميل ومفتاح واجهة، ومثبّت على المضيف المتوقّع.</td><td class="en">The platform connection uses TLS with a client certificate and an API key, pinned to the expected host.</td></tr>
+          <tr><th scope="row">H3</th><td>الأداة لا تفتح منفذ تنقيح ولا ترتبط بمتصفّح المستخدم الحقيقي بأي وسيلة.</td><td class="en">The tool opens no debugging port and attaches to the user's real browser by no means whatsoever.</td></tr>
+          <tr><th scope="row">H4</th><td><b>لا مساس بأنظمة التحكّم الصناعي</b>: لا مسار ولا اتصال بين الأداة وأي DCS أو PLC أو مؤرّخ عمليات.</td><td class="en"><b>No contact with industrial control systems</b>: no path and no connection between the tool and any DCS, PLC or process historian.</td></tr>
+          <tr><th scope="row">H5</th><td>كل البيانات والسجلّات والنسخ الاحتياطية داخل المملكة العربية السعودية.</td><td class="en">All data, logs and backups remain inside the Kingdom of Saudi Arabia.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">I · الطابور دون اتصال — Offline queue</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">I1</th><td>مفتاح عدم تكرار لكل عنصر؛ فإعادة المحاولة أو الوصول إلى حاسوبين لا يُنشئ المستند مرتين.</td><td class="en">An idempotency key per item, so a retry — or reaching two PCs — never creates the document twice.</td></tr>
+          <tr><th scope="row">I2</th><td>كل عنصر في الطابور يعلن فاعله في أوراكل؛ واختلافه عن المسجَّل يوقف التنفيذ أو يمرّ بعلم «نيابةً عن» معتمَد يظهر في التدقيق وفي علامة الارتباط معاً.</td><td class="en">Every queued item declares its Oracle actor; a mismatch with the signed-in user stops execution or passes an approved on-behalf-of flag that appears in both the audit row and the correlation marker.</td></tr>
+          <tr><th scope="row">I3</th><td>صلاحية زمنية للعنصر؛ وما تجاوزها يُعاد تأكيده ولا يُرحَّل صامتاً لأن بياناته قد تكون قديمة.</td><td class="en">Items expire; anything past the window is re-confirmed and never posted silently, because its data may be stale.</td></tr>
+          <tr><th scope="row">I4</th><td>الطابور مشفّر على الجهاز، ومربوط بالمستخدم على الأجهزة المشتركة.</td><td class="en">The queue is encrypted on the device and held per user on shared devices.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">J · الحوكمة ودورة الحياة — Governance and lifecycle</h3>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">J1</th><td>بيان نطاق مكتوب ومعتمَد: الشاشات، المستندات، سقف القيمة، وتاريخ المراجعة — <b>ومدّة الاستطلاع وسلوكه عند قفل الشاشة وسقف الامتداد المطلق مذكورة فيه صراحةً</b> (A11–A16)، فلا تُكتشف لاحقاً.</td><td class="en">A written, approved scope statement: screens, documents, value ceiling and review date — <b>with the poll interval, its behaviour on screen lock and the absolute extension ceiling stated explicitly</b> (A11–A16), so it is never discovered later.</td></tr>
+          <tr><th scope="row">J2</th><td>حدّ معدّل وسقف يومي لكل نص، مفروضان على <b>الخادم</b> لا في الأداة.</td><td class="en">A rate limit and a daily cap per script, enforced on the <b>server</b> rather than in the tool.</td></tr>
+          <tr><th scope="row">J3</th><td>مفتاح إيقاف عام يُفحص عند كل تشغيل ويوقف كل الأتمتة فوراً، مع عرض السبب للمستخدم.</td><td class="en">A global kill switch checked on every run that stops all automation immediately, with the reason shown to the user.</td></tr>
+          <tr><th scope="row">J4</th><td>اختبار اختراق سنوي يشمل الأداة ومفسّرها وقناة الاقتران.</td><td class="en">An annual penetration test covering the tool, its interpreter and the pairing channel.</td></tr>
+          <tr><th scope="row">J5</th><td>مراجعة دورية لمستخدمي الأداة ولكتالوج النصوص المعتمَدة.</td><td class="en">A periodic review of tool users and of the approved script catalogue.</td></tr>
+          <tr><th scope="row">J6</th><td>الشفرة المصدرية متاحة لمراجعة فريق الأمن عند العميل، مع إمكانية الإيداع لدى طرف محايد.</td><td class="en">Source code available for review by the customer's security team, with escrow available.</td></tr>
+          <tr><th scope="row">J7</th><td>إجراء إبلاغ عن الحوادث خلال المدّة التي تحدّدها الأنظمة السارية.</td><td class="en">An incident notification procedure within the window the applicable regulations set.</td></tr>
+          <tr><th scope="row">J8</th><td><b>سجلّ مخاطر متبقّية بمالك مُسمّى</b> يوقّع على قبولها. لا اعتماد بلا اسم.</td><td class="en">A <b>residual risk register with a named owner</b> who signs the acceptance. No approval without a name.</td></tr>
+          <tr><th scope="row">J9</th><td>نشر أي نسخة نصّ إلى الإنتاج <b>تغييرٌ يمرّ بإدارة التغيير عند العميل</b>، لا عندنا — لأنه يغيّر كيفية إنشاء معاملة في نظام الأعمال.</td><td class="en">Publishing any script version to production is a <b>change that goes through the customer's change management</b>, not ours, because it alters how a business transaction is created.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">K · ضمان المورّد — Supplier assurance</h3>
+    <div class="prose" style="margin-block-end:.75rem">
+      <p>
+        ضوابط <span class="path">NCNICC-1:2025</span> تضمّ مكوّناً كاملاً لأمن <b>الأطراف الثالثة</b>، فالعميل
+        مُلزَم بتقييمنا نحن. وهذه المجموعة تستبق ذلك التقييم بدل انتظاره.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          <span class="path">NCNICC-1:2025</span> carries a full <b>third-party</b> cybersecurity component, so the
+          customer is obliged to assess us. This group anticipates that assessment instead of waiting for it.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">K1</th><td>استبيان أمن مورّد مُجاب مسبقاً، مع سياسات أمن المعلومات وإدارة الثغرات والاستجابة للحوادث.</td><td class="en">A pre-completed supplier security questionnaire, with our information security, vulnerability management and incident response policies.</td></tr>
+          <tr><th scope="row">K2</th><td>حقّ التدقيق منصوصٌ عليه في العقد، ومراجعة الشفرة والبناء متاحة لفريق العميل.</td><td class="en">A contractual right to audit, with code and build review available to the customer's team.</td></tr>
+          <tr><th scope="row">K3</th><td>لا دعم ولا وصول عن بُعد من خارج المملكة، ولا مقاولة من الباطن لطرف أجنبي على هذا المكوّن.</td><td class="en">No support and no remote access from outside the Kingdom, and no foreign subcontracting on this component.</td></tr>
+          <tr><th scope="row">K4</th><td>التزام بالإبلاغ عن أي حادث يمسّ المكوّن أو سلسلة توريده خلال المدّة النظامية، وبإشعار مسبق بأي تغيير في المورّدين الفرعيين.</td><td class="en">A commitment to report any incident affecting the component or its supply chain within the regulatory window, and to give prior notice of any change in sub-suppliers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">L · دورة حياة النص: التصميم والاختبار قبل النشر — Script lifecycle: authoring and testing before publication</h3>
+    <div class="prose" style="margin-block-end:.75rem">
+      <p>
+        بقية الوثيقة تشترط «نصّاً معتمَداً». وهذه المجموعة تقول <b>أين يُصنع، وكيف يُختبر، ومن يعتمده</b> —
+        وهي نصف الضمانة الذي لا يظهر للمستخدم النهائي إطلاقاً.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          The rest of the document requires an <i>approved script</i>. This group says <b>where it is made, how it is
+          tested and who approves it</b> — the half of the assurance the end user never sees.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">L1</th><td>التصميم يتمّ <b>داخل الأداة نفسها</b> في وضع «مصمّم النصوص»، ولا يُفتح هذا الوضع إلا لمن منحه المسؤول صلاحية <span class="path">Integration.Scripts.Design</span> باسمه. ولا تظهر أدوات التصميم إطلاقاً لمن لا يملكها.</td><td class="en">Authoring happens <b>inside the tool itself</b>, in a Script Designer mode that opens only for a person the administrator has granted <span class="path">Integration.Scripts.Design</span> by name. The authoring tools are not rendered at all for anyone else.</td></tr>
+          <tr><th scope="row">L2</th><td>المسجّل يلتقط المراسي من <b>شجرة الوصولية</b> (التسمية والدور والربط) وبصمة الصفحة، ويقترح التحقّقات — ولا يعتمد على إحداثيات ولا على ترتيب بصري.</td><td class="en">The recorder captures anchors from the <b>accessibility tree</b> (label, role, association) plus the page signature, and proposes the assertions — never coordinates or visual order.</td></tr>
+          <tr><th scope="row">L3</th><td>لا يُقبل نص للاعتماد بلا <b>تحقّق هوية سجل</b> (D4) وبلا بصمة صفحة (C8). الفحص <b>آلي</b> لا يُترك لانتباه مراجع.</td><td class="en">No script is accepted for approval without a <b>record-identity assertion</b> (D4) and a page signature (C8). The check is <b>automatic</b>, not left to a reviewer's attention.</td></tr>
+          <tr><th scope="row">L4</th><td><b>تشغيل تجريبي جافّ:</b> ينفّذ كل الخطوات ويتوقّف قبل فعل الالتزام الأخير، فيُثبت المسار والتحقّقات <b>بلا إنشاء مستند</b>.</td><td class="en"><b>Dry run:</b> executes every step and stops before the final commit action, proving the path and the assertions <b>without creating a document</b>.</td></tr>
+          <tr><th scope="row">L5</th><td>لا يُعتمد نص إلا بعد <b>اجتياز تشغيل كامل على بيئة الاختبار</b>، بنتيجة مسجّلة وتاريخها ورقم المستند الذي أنشأه هناك.</td><td class="en">No script is approved until it has <b>passed a full run on the test environment</b>, with a recorded result, its date, and the document number it created there.</td></tr>
+          <tr><th scope="row">L6</th><td><b>فصل مهام:</b> من سجّل النص <b>لا يعتمده</b>. المسجّل والمعتمِد شخصان مختلفان، ويظهر الاسمان في صفّ التدقيق.</td><td class="en"><b>Segregation of duties:</b> whoever recorded the script <b>does not approve it</b>. Recorder and approver are different people, and both names appear in the audit row.</td></tr>
+          <tr><th scope="row">L7</th><td>قبل النشر تُطابَق بصمة الصفحة على <b>بيئة الإنتاج</b>؛ والاختلاف <b>يمنع النشر</b> لأن الاختبار والإنتاج ينحرفان.</td><td class="en">Before publication the page signature is matched against <b>production</b>; a difference <b>blocks the publish</b>, because test and production drift.</td></tr>
+          <tr><th scope="row">L8</th><td>كل نشر مربوط <b>برقم طلب تغيير</b> عند العميل، ولا يتمّ بدونه (J9).</td><td class="en">Every publish is tied to a <b>customer change request number</b> and does not proceed without one (J9).</td></tr>
+          <tr><th scope="row">L9</th><td><b>إعادة تحقّق مجدولة</b> لكل النصوص المعتمَدة على بيئة الاختبار، <b>وبعد كل ترقيع أوراكل</b> — فيُكتشف الكسر قبل أن يصطدم به مستخدم.</td><td class="en">A <b>scheduled re-validation</b> of every approved script on the test environment, <b>and after every Oracle patch</b>, so breakage is found before a user hits it.</td></tr>
+          <tr><th scope="row">L10</th><td>حالات النص معرَّفة ومغلقة: مسودّة ← مسجَّل ← تحت الاختبار ← اجتاز ← بانتظار الاعتماد ← معتمَد ← منشور ← (مُستبدَل · معلَّق · متقاعد). وكل انتقال مسجَّل بفاعله ووقته.</td><td class="en">Script states are defined and closed: draft → recorded → in test → passed → pending approval → approved → published → (superseded · suspended · retired). Every transition is recorded with its actor and time.</td></tr>
+          <tr><th scope="row">L11</th><td><b>مسار طارئ:</b> يجوز <b>تعليق</b> نص فوراً بلا اعتماد مسبق، ولا يجوز <b>نشره</b> كذلك أبداً. الطوارئ تُوقف ولا تُطلق.</td><td class="en"><b>Break-glass:</b> a script may be <b>suspended</b> immediately without prior approval; it may <b>never be published</b> that way. An emergency stops things, it does not release them.</td></tr>
+          <tr><th scope="row">L12</th><td>لكل نص <b>مالك مُسمّى</b> في تقنية المعلومات مسؤول عن صلاحيته بعد كل ترقيع، ويُنبَّه آلياً عند انحراف البصمة.</td><td class="en">Every script has a <b>named owner</b> in IT accountable for its validity after each patch, alerted automatically on signature drift.</td></tr>
+          <tr><th scope="row">L13</th><td>وضع المصمّم يعمل على <b>بيئة الاختبار</b>. وعلى الإنتاج يُسمح بالفحص وبناء النص <b>بلا تنفيذ أي <span class="path">Set</span> أو <span class="path">Click</span></b> — فيُبنى النص حيث لا توجد بيئة اختبار، ولا يُنفَّذ.</td><td class="en">Designer mode operates against the <b>test environment</b>. On production it permits inspection and authoring <b>with no <span class="path">Set</span> or <span class="path">Click</span> executed</b> — so a script can be built where no test instance exists, but never run there.</td></tr>
+          <tr><th scope="row">L14</th><td>المصمّم ينظّم عمله في <b>شجرة مجلّدات</b> (مجال ← وحدة ← نص)، ويسمّي النص برمز فريد، ثم يرفعه إلى الخادم بحالة <b>مسودّة</b>. والشجرة نفسها هي كتالوج الخادم.</td><td class="en">The designer organises work in a <b>folder tree</b> (area → module → script), names the script with a unique code, then uploads it to the server as a <b>draft</b>. The same tree is the server-side catalogue.</td></tr>
+          <tr><th scope="row">L15</th><td>لغة النصوص <b>مغلقة ومعلنة</b>: دوال محدودة، وثوابت <span class="path">Fields.*</span> و<span class="path">Locations.*</span>، ومتغيّرات بلا أنواع، وقيم افتراضية معلنة (<span class="path">Locations.Right</span> افتراضاً). <b>لا استدعاء ديناميكي، ولا تكرار غير محدود، ولا شبكة ولا ملفات ولا حافظة.</b></td><td class="en">The script language is <b>closed and published</b>: a fixed function set, <span class="path">Fields.*</span> and <span class="path">Locations.*</span> constants, untyped variables, and declared defaults (<span class="path">Locations.Right</span> by default). <b>No dynamic invocation, no unbounded iteration, no network, file or clipboard access.</b></td></tr>
+          <tr><th scope="row">L16</th><td>المحرّر يوفّر <b>إكمالاً تلقائياً</b> للدوال والثوابت، <b>ولعناوين العناصر المقروءة من الصفحة المفتوحة</b> عبر شجرة الوصولية — فلا تُكتب المراسي من الذاكرة ولا تُخمَّن.</td><td class="en">The editor provides <b>autocomplete</b> for functions and constants, <b>and for the element labels read from the open page</b> through the accessibility tree — so anchors are never typed from memory or guessed.</td></tr>
+          <tr><th scope="row">L17</th><td>منقّح كامل: <b>تشغيل، إيقاف مؤقّت، تنفيذ خطوة، ونقاط توقّف</b>. وعند التوقّف <b>يُبرَز العنصر المستهدف على الصفحة الحقيقية</b>، فيرى المصمّم ما سيلمسه السطر قبل تنفيذه.</td><td class="en">A full debugger: <b>run, pause, step in, and breakpoints</b>. On a pause the <b>target element is highlighted on the real page</b>, so the designer sees what the line will touch before it runs.</td></tr>
+          <tr><th scope="row">L18</th><td><b>سجلّ التشغيل وسجلّ الأخطاء في شبكة واحدة</b>: الوقت، رقم السطر، الفعل، الهدف، النتيجة، المدّة، ودرجة الخطورة — قابلة للتصفية على الأخطاء وحدها.</td><td class="en"><b>Run log and error log in one grid</b>: time, line number, action, target, result, duration and severity — filterable to errors alone.</td></tr>
+          <tr><th scope="row">L19</th><td><b>نصوص التقارير للقراءة فقط:</b> كل خطواتها قراءة وتنقّل، والكتابة مقصورة على <b>حقول معاملات التقرير</b> المعلنة. ويُفحص هذا <b>آلياً قبل الاعتماد</b> — أي <span class="path">Set</span> خارج المعاملات يمنع الاعتماد.</td><td class="en"><b>Report scripts are read-only:</b> every step is a read or a navigation, and writing is confined to the <b>declared report parameter fields</b>. This is checked <b>automatically before approval</b> — any <span class="path">Set</span> outside the parameters blocks it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">M · دورة حياة تقرير طويل الأمد — Long-running report job lifecycle</h3>
+    <div class="prose" style="margin-block-end:.75rem">
+      <p>
+        التقرير في أوراكل ليس فعلاً واحداً بل <b>أربعة أطوار</b> قد تمتدّ ساعات: إرسال يُرجع رقم الطلب،
+        ثم انتظار، ثم فحص حالة، ثم تنزيل وتحميل. وهذا يحوّل الأداة من مشغّل نصوص إلى <b>منسّق مهام دائمة</b>.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          A report in Oracle is not one act but <b>four phases</b> that may span hours: submit returning a request id,
+          then waiting, then a status check, then download and load. That turns the tool from a script runner into a
+          <b>durable job orchestrator</b>.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">M1</th><td>نص التقرير <b>مقسّم إلى أطوار معلنة</b>: <span class="path">Submit</span> يُرجع رقم الطلب · <span class="path">Poll</span> يقرأ الطور والحالة · <span class="path">Fetch</span> ينزّل الناتج · <span class="path">Load</span> يحمّله إلى المخزن المحلي. كل طور وحدة تشغيل مستقلّة على التعريف نفسه.</td><td class="en">A report script is <b>split into declared phases</b>: <span class="path">Submit</span> returns the request id · <span class="path">Poll</span> reads phase and status · <span class="path">Fetch</span> downloads the output · <span class="path">Load</span> writes it to the local store. Each phase is an independently runnable unit of the same definition.</td></tr>
+          <tr><th scope="row">M2</th><td><b>المهمة دائمة والتنفيذ مصاحب:</b> الخادم يحفظ المهمة ورقم طلبها وطورها، <b>ولا يُنفَّذ أي طور إلا والأداة مفتوحة والمستخدم مسجَّل بجلسته</b>. مهمة تنتظر يوماً تبقى «بانتظارك»، ولا تُنفَّذ بحساب خدمة أبداً.</td><td class="en"><b>The job is durable; execution stays attended:</b> the server holds the job, its request id and its phase, and <b>no phase runs unless the tool is open and the user is signed in</b>. A job that waits a day stays "waiting for you" and is never executed under a service account.</td></tr>
+          <tr><th scope="row">M3</th><td><b>تأكيد واحد عند الإرسال يغطّي الأطوار الأربعة</b> لأنها معلنة مسبقاً في التعريف. وهذا <b>تخفيف مُعلن للمتطلّب D8</b>، يقابله أن الوجهة ثابتة بالسياسة، والملف لا يُفتح، ولكل طور صفّ تدقيق.</td><td class="en"><b>One confirmation at submit covers all four phases</b>, because they are declared in advance in the definition. This is a <b>stated relaxation of D8</b>, compensated by a policy-fixed destination, a file that is never opened, and an audit row per phase.</td></tr>
+          <tr><th scope="row">M4</th><td><b>الطور والحالة حقلان لا حقل واحد</b> (Pending · Running · Completed · Inactive × Normal · Error · Warning · Cancelled · Terminated · Scheduled · Standby · Paused). و<b>قائمة القيم تُقرأ من بيئة العميل</b> (<span class="path">CP_PHASE_CODE</span> و<span class="path">CP_STATUS_CODE</span>) ولا تُكتب عندنا، لأنها مترجَمة وقابلة للتخصيص.</td><td class="en"><b>Phase and status are two fields, not one</b> (Pending · Running · Completed · Inactive × Normal · Error · Warning · Cancelled · Terminated · Scheduled · Standby · Paused). The value list is <b>read from the customer's own environment</b> (<span class="path">CP_PHASE_CODE</span>, <span class="path">CP_STATUS_CODE</span>), never hard-coded by us, because it is translated and customisable.</td></tr>
+          <tr><th scope="row">M5</th><td><b>لا تنزيل إلا عند Completed / Normal.</b> وأي تركيبة أخرى تُسجَّل وتُعرض بنصّها ولا تُنزَّل، ويُقرأ سجلّ الطلب للأخطاء ويُرفق بالمهمة.</td><td class="en"><b>No download unless Completed / Normal.</b> Any other combination is recorded and shown verbatim without downloading; the request log is read for errors and attached to the job.</td></tr>
+          <tr><th scope="row">M6</th><td><b>استطلاع متباعد:</b> كل دقيقتين لعشر دقائق، ثم كل عشر، ثم كل ثلاثين، بسقف زمني معلن يُعلَّم بعده «متروك» — حتى لا تُرهَق خوادم أوراكل ولا يُفسَّر الاستطلاع إساءةَ استخدام.</td><td class="en"><b>Backing-off poll:</b> every two minutes for ten, then every ten, then every thirty, with a declared ceiling after which the job is marked abandoned — so Oracle's servers are not hammered and the polling is never read as abuse.</td></tr>
+          <tr><th scope="row">M7</th><td><b>مجلّد التنزيل تحدّده السياسة لا المستخدم</b>، بصلاحيات عليه وحده، على قرص مشفّر، و<b>يُمسح الملف بعد نجاح التحميل</b> — فهو منطقة عبور لا أرشيف.</td><td class="en"><b>The download folder is set by policy, not by the user</b>, ACL'd to that user alone, on an encrypted disk, and <b>the file is deleted after a successful load</b> — it is a staging area, not an archive.</td></tr>
+          <tr><th scope="row">M8</th><td>هذا المسار <b>هو النمط C</b>، فلا يُسمح به إلا لمدخل كتالوج <b>صُنّف صراحةً</b> بأنه يجوز أن يهبط محلياً. وما يحمل بيانات شخصية يبقى مستبعَداً بالسياسة (E2).</td><td class="en">This path <b>is mode C</b>, permitted only for a catalogue entry <b>explicitly classified</b> as allowed to land locally. Anything carrying personal data remains excluded by policy (E2).</td></tr>
+          <tr><th scope="row">M9</th><td><b>تعريف التحميل جزء من تعريف النص:</b> صيغة الناتج، الفاصل، صفّ العناوين، الجدول الهدف، خريطة الأعمدة، مفاتيح التمييز، وسلوك المكرّر. وناتج <span class="path">PDF</span> <b>يُنزَّل ولا يُحمَّل</b> لأنه غير قابل للتحليل بثقة.</td><td class="en"><b>The load definition is part of the script definition:</b> output format, delimiter, header row, target table, column map, key columns and duplicate behaviour. A <span class="path">PDF</span> output is <b>fetched but not loaded</b>, because it cannot be parsed with confidence.</td></tr>
+          <tr><th scope="row">M10</th><td>التحميل <b>يقارن عدد الصفوف المحمَّلة بالإجمالي الذي أعلنه التقرير</b>؛ والنقص <b>فشل لا نتيجة</b>، ويُترك الجدول دون تغيير (امتداد E9 إلى التحميل).</td><td class="en">The load <b>compares the rows written with the total the report itself declared</b>; a shortfall is a <b>failure, not a result</b>, and the table is left unchanged (E9 extended to the load).</td></tr>
+          <tr><th scope="row">M11</th><td><b>لكل طور صفّ تدقيق:</b> الإرسال برقم الطلب، والاستطلاع بالطور والحالة، والتنزيل بحجم الملف وبصمته، والتحميل بعدد الصفوف والجدول الهدف.</td><td class="en"><b>An audit row per phase:</b> submit with the request id, poll with phase and status, fetch with file size and hash, load with row count and target table.</td></tr>
+          <tr><th scope="row">M12</th><td>المخزن المحلي يحمل <b>سجلّ التعاريف</b>: كود التقرير واسمه ومعاملاته وجدوله الهدف وخريطة أعمدته — ويُنشأ الجدول من التعريف إن لم يكن موجوداً، ولا يُنشأ يدوياً.</td><td class="en">The local store holds a <b>definition registry</b>: report code, name, parameters, target table and column map — and the table is created from the definition when missing, never by hand.</td></tr>
+          <tr><th scope="row">M13</th><td><b>احتفاظ معلن على المخزن المحلي</b> بمهمة تنظيف دورية. وكلمة مرور قاعدة Access <b>لا تُعدّ تشفيراً</b> ولا تُقدَّم على أنها كذلك؛ الحماية الفعلية تشفير القرص وصلاحيات المجلّد (G9).</td><td class="en">A <b>declared retention on the local store</b> with a periodic purge. An Access database password <b>is not encryption</b> and is never presented as such; the real protection is disk encryption and folder ACLs (G9).</td></tr>
+          <tr><th scope="row">M14</th><td><b>لوحة مهام</b> تعرض كل التقارير الجارية: النص، وقت الإرسال، رقم الطلب، الطور والحالة، موعد الاستطلاع القادم، المحاولات، وآخر خطأ — وأفعالها: تنزيل الآن، إعادة، إلغاء، فتح في أوراكل.</td><td class="en">A <b>jobs board</b> showing every running report: script, submitted at, request id, phase and status, next poll, attempts and last error — with actions: fetch now, retry, cancel, open in Oracle.</td></tr>
+          <tr><th scope="row">M15</th><td><b>انتهاء الجلسة يُوقف المهمة ولا يُعيد المصادقة:</b> المهمة تنتقل إلى «بانتظارك»، ويُعرض السبب، وتستأنف حين يسجّل المستخدم دخوله بنفسه. <b>ولا تحاول الأداة الدخول نيابةً عنه في أي حال.</b></td><td class="en"><b>An expired session parks the job; it never re-authenticates:</b> the job moves to "waiting for you" with the reason shown, and resumes when the user signs in himself. <b>The tool never attempts a sign-in on his behalf, under any circumstance.</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:1rem; margin-block:1.75rem .5rem">N · التغليف والتثبيت على أجهزة المستخدمين — Packaging and installation</h3>
+    <div class="prose" style="margin-block-end:.75rem">
+      <p>
+        كيف تصل الأداة إلى جهاز الموظّف، وماذا تحمل معها، وماذا <b>لا</b> تحمل.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          How the tool reaches an employee's machine, what it carries with it, and what it deliberately does <b>not</b>.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="reqtable">
+        <thead><tr><th scope="col">ID</th><th scope="col">المتطلّب</th><th scope="col">Requirement</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">N1</th><td><b>حزمة <span class="path">MSI</span> موقّعة</b> (WiX) عبر Intune أو SCCM: تثبيت لكل الجهاز في <span class="path">Program Files</span>، ورمز ترقية ثابت فتُرقّى النسخ فوق بعضها، وإزالة نظيفة. <b>هذا هو المسار الوحيد المعتمَد</b> — لا تنزيل من تطبيق الويب ولا تثبيت يقوده المستخدم (R5).</td><td class="en">A <b>signed <span class="path">MSI</span></b> (WiX) through Intune or SCCM: per-machine install into <span class="path">Program Files</span>, a stable upgrade code so versions replace each other cleanly, and a clean uninstall. <b>This is the only adopted route</b> — no download from the web application and no user-driven installation (R5).</td></tr>
+          <tr><th scope="row">N2</th><td>نشر <b>self-contained</b> لـ<span class="path">win-x64</span> (ملف واحد، ReadyToRun) — <b>فلا يحتاج تثبيت بيئة تشغيل ‎.NET على الجهاز</b>. الحجم أكبر، ويسقط في مقابله نقاشٌ كامل مع الـIT حول متطلّب مسبق.</td><td class="en">A <b>self-contained</b> <span class="path">win-x64</span> publish (single file, ReadyToRun) — <b>no .NET runtime prerequisite on the machine</b>. Larger, and in exchange an entire prerequisite negotiation with IT disappears.</td></tr>
+          <tr><th scope="row">N3</th><td><b>بيئة <span class="path">WebView2</span>:</b> يُفحص وجودها عند التثبيت، ويُحزَم معها <b>المثبّت المستقلّ دون اتصال</b> ويُشغَّل صامتاً عند غيابها (<span class="path">/silent /install</span>). <b>لا تنزيل من الإنترنت أثناء التثبيت</b> — لأن أجهزة المصنع قد لا تصل إلى خوادم مايكروسوفت.</td><td class="en"><b><span class="path">WebView2</span> runtime:</b> presence is checked at install time, the <b>offline standalone installer</b> is packaged alongside and run silently when it is missing (<span class="path">/silent /install</span>). <b>No download from the internet during installation</b> — plant machines may not reach Microsoft's servers.</td></tr>
+          <tr><th scope="row">N4</th><td>التوزيع عبر <b>Intune</b> (<span class="path">.intunewin</span>) أو <b>SCCM</b> أو سياسة المجموعة، <b>من داخل مستأجر الشركة</b>. لا متجر عام ولا قناة تحديث تعبر الحدود (G2).</td><td class="en">Distribution through <b>Intune</b> (<span class="path">.intunewin</span>), <b>SCCM</b> or Group Policy, <b>from inside the company tenant</b>. No public store and no update channel crossing the border (G2).</td></tr>
+          <tr><th scope="row">N5</th><td>توقيع رقمي <b>بشهادة الشركة</b> للملف التنفيذي وللحزمة معاً، وتُنشر <b>بصمة كل إصدار</b> ليطابقها المراجع بما هو مثبَّت فعلاً (G8).</td><td class="en">Both the executable and the package are <b>signed with the company's certificate</b>, and <b>each release's hash is published</b> so a reviewer can match it against what is actually installed (G8).</td></tr>
+          <tr><th scope="row">N6</th><td><b>لا إعدادات داخل الحزمة إطلاقاً.</b> كل ضبط يأتي من <b>سياسة السجلّ</b> تحت <span class="path">HKLM\SOFTWARE\Policies\CementOps\ErpAgent</span> تدفعها تقنية المعلومات: عنوان المنصة، الأصل المسموح للـERP، مدّة الاستطلاع، سقف الامتداد، مجلّد التنزيل، <span class="path">StopPollingOnLock</span>. والأداة تعرضها <b>للقراءة فقط</b>.</td><td class="en"><b>No configuration inside the package at all.</b> Every setting comes from <b>registry policy</b> under <span class="path">HKLM\SOFTWARE\Policies\CementOps\ErpAgent</span>, pushed by IT: platform address, allowed ERP origin, poll interval, extension ceiling, download folder, <span class="path">StopPollingOnLock</span>. The tool shows them <b>read-only</b>.</td></tr>
+          <tr><th scope="row">N7</th><td>يُسلَّم <b>قالب <span class="path">ADMX/ADML</span></b> مع الحزمة، فتضبط تقنية المعلومات الإعدادات من محرّر سياسة المجموعة كأي منتج مؤسسي — لا من مفاتيح سجلّ خام يكتبونها بأيديهم.</td><td class="en">An <b><span class="path">ADMX/ADML</span> template</b> ships with the package, so IT configures it from the Group Policy editor like any enterprise product — not from raw registry keys typed by hand.</td></tr>
+          <tr><th scope="row">N8</th><td><b>شهادة العميل (mTLS) تُدفَع بملفّ شهادات</b> من Intune أو سياسة المجموعة إلى مخزن الجهاز أو المستخدم. <b>الأداة لا تُنشئ ولا تحمل ولا تستورد مادة مفاتيح</b>، بل تستعمل الشهادة الموجودة.</td><td class="en">The <b>mTLS client certificate is delivered by a certificate profile</b> from Intune or Group Policy into the machine or user store. <b>The tool never generates, carries or imports key material</b>; it uses the certificate that is already there.</td></tr>
+          <tr><th scope="row">N9</th><td><b>التثبيت يحتاج صلاحية مسؤول؛ التشغيل لا</b> (G3). ملفات البرنامج للقراءة فقط، وبيانات كل مستخدم في <span class="path">%LOCALAPPDATA%\CementOps\ErpAgent</span> — ملفّ تعريف <span class="path">WebView2</span> والسجلّات والتفضيلات.</td><td class="en"><b>Installation needs administrator rights; running does not</b> (G3). Program files are read-only, and each user's data lives in <span class="path">%LOCALAPPDATA%\CementOps\ErpAgent</span> — the <span class="path">WebView2</span> profile, logs and preferences.</td></tr>
+          <tr><th scope="row">N10</th><td><b>حدّ أدنى لإصدار مدعوم:</b> الأداة تسأل المنصة عن أدنى إصدار مقبول عند الاقتران وترفض العمل دونه برسالة تطلب التحديث — <b>فلا يبقى عميل قديم يعمل بعد إصلاح أمني</b>.</td><td class="en"><b>A minimum supported version:</b> the tool asks the platform for the lowest accepted version at pairing and refuses to operate below it, with a message asking for the update — <b>so no stale client keeps working after a security fix</b>.</td></tr>
+          <tr><th scope="row">N11</th><td><b>الإزالة تمسح المخزن المحلي افتراضاً</b>، لأنه قد يحمل بيانات تقارير (M13) — ما لم تقرّر السياسة الاحتفاظ به صراحةً.</td><td class="en"><b>Uninstall purges the local store by default</b>, because it may hold report data (M13) — unless policy explicitly decides to keep it.</td></tr>
+          <tr><th scope="row">N12</th><td>يظهر البرنامج في جرد البرمجيات <b>باسم ناشر واضح ورقم إصدار</b>، فيُرى في أي مراجعة أصول بلا بحث.</td><td class="en">The application appears in software inventory with a <b>clear publisher name and version</b>, so it is visible in any asset review without hunting.</td></tr>
+          <tr><th scope="row">N13</th><td><b>الملف ليس الضابط — الصلاحية هي الضابط.</b> الأداة <b>خاملة تماماً</b> بلا حساب مصرّح له: لا تقترن، ولا تستقبل نصاً، ولا تنفّذ شيئاً. فلا يُحمى المنتج بإخفاء المثبّت، وسعة النشر ليست حدّاً أمنياً — وهذا يسمح بتوزيعه على كل الأجهزة المُدارة بلا قلق.</td><td class="en"><b>The file is not the control; the permission is.</b> Without an authorised account the tool is <b>completely inert</b>: it cannot pair, receive a script or execute anything. The product is not protected by hiding its installer, and deployment breadth is not a security boundary — which makes it safe to ship to every managed machine.</td></tr>
+          <tr><th scope="row">N15</th><td><b>لا ملف تنفيذي منفرد في مسار يكتب فيه المستخدم — في أي مرحلة.</b> ملفٌّ على سطح المكتب أو في مجلّد المستخدم <b>يستطيع أي شيء يعمل بحساب المستخدم استبداله</b>، فتسقط قيمة البصمة المنشورة (G8)، وتحجبه سياسات السماح بالتطبيقات (AppLocker / WDAC) افتراضاً. <b>ولا استثناء للتجربة</b>: التجربة تعمل على أجهزة مُدارة بنفس الحزمة.</td><td class="en"><b>No loose executable in a user-writable path, at any stage.</b> A file on the Desktop or in the user profile <b>can be replaced by anything running as that user</b>, which voids the published hash (G8), and application allowlisting (AppLocker / WDAC) blocks such paths by default. <b>No pilot exemption</b>: the pilot runs on managed machines with the same package.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 4 · لن تفعله ════════════════════════════════════════════════════ -->
+  <section class="section" id="never">
+    <h2><span class="num">4</span>ما لن تفعله الأداة أبداً</h2>
+    <p class="h2en">Negative assurances — what the tool will never do</p>
+    <div class="prose" style="margin-block-end:1rem">
+      <p>
+        هذه ليست وعوداً بل خصائص مفروضة في المحرّك، وكل واحدة منها لها اختبار في القسم 7.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          These are not promises but properties enforced in the engine, and each has a test in section 7.
+        </span>
+      </p>
+    </div>
+    <ul class="never">
+      <li><b>لن تطلب أو تخزّن أو تعرض حقلاً لكلمة مرور أوراكل.</b><span>Will never request, store or render a field for an Oracle password. <b>(A1)</b></span></li>
+      <li><b>لن تكتب في حقل كلمة مرور، ولا تعمل على صفحة مصادقة.</b><span>Will never type into a password field, and never operates on an authentication page. <b>(A2, D10)</b></span></li>
+      <li><b>لن تصل إلى الصفحة قبل أن يكمل المستخدم دخوله.</b><span>Will have no access to the page before the user completes sign-in. <b>(A3)</b></span></li>
+      <li><b>لن ترفع صلاحية ولا تبدّل دوراً ولا تتصرّف باسم مستخدم آخر.</b><span>Will never elevate a privilege, switch a role, or act as another user. <b>(B5, B8)</b></span></li>
+      <li><b>لن تنفّذ كوداً يصل وقت التشغيل ولا نصّاً غير موقّع.</b><span>Will never execute code delivered at runtime, or any unsigned script. <b>(C1, C3)</b></span></li>
+      <li><b>لن تلتقط الصفحة كاملة ولا تسجّل ضغطات المفاتيح.</b><span>Will never capture the full page or log keystrokes. <b>(F7)</b></span></li>
+      <li><b>لن تتصل بأي نظام تحكّم صناعي، ولا تفتح منفذاً وارداً.</b><span>Will never connect to an industrial control system, and never opens an inbound port. <b>(H1, H4)</b></span></li>
+      <li><b>لن ترسل بيانة واحدة إلى خارج المملكة.</b><span>Will never send a single data item outside the Kingdom. <b>(G5, H5)</b></span></li>
+      <li><b>لن تعمل بلا حضور المستخدم وموافقته على كل تشغيل.</b><span>Will never run unattended or without the user confirming each run. <b>(D8, D9)</b></span></li>
+    </ul>
+
+    <h3 style="font-size:1rem; margin-block:2rem .5rem">بدائل نُظر فيها ورُفضت — Considered and rejected</h3>
+    <div class="prose" style="margin-block-end:1rem">
+      <p>
+        تُذكر هنا لأن المراجع سيسأل عنها، ولأن <b>رفضاً مكتوباً بسببه أقوى من صمت</b>.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          Listed because a reviewer will ask, and because <b>a written refusal with its reason is stronger than silence</b>.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="threattable">
+        <thead><tr><th scope="col">#</th><th scope="col">البديل — Alternative</th><th scope="col">سبب الرفض — Why it was rejected</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">R1</th><td>حفظ اسم المستخدم وكلمة المرور <b>مشفّرَين في الذاكرة فقط</b> لمتابعة التقارير الطويلة تلقائياً.<span class="en" style="display:block;color:var(--muted)">Keeping username and password <b>encrypted in memory only</b>, to follow long-running reports automatically.</span></td><td><b>يُسقط الضمانة الأساسية كلّها.</b> مفتاح فكّ التشفير في الذاكرة نفسها، فتفريغ ذاكرة أو تقرير تعطّل يكشف الاثنين؛ والتقاط كلمة المرور أصلاً يستلزم قراءة حقل كلمة مرور فيُبطل A1 وA2 وA3 وD10 دفعة واحدة؛ ويسقط <b>عدم الإنكار</b> لأن المستخدم يصير قادراً على قول «لم أكن أنا»؛ ويتعطّل مع التحقق الثنائي؛ وإعادة المحاولة بكلمة مرور قديمة <b>تُقفل حساب الموظّف</b> في منتصف الوردية. والبديل الصحيح في A9 وA5.<span class="en" style="display:block;color:var(--muted)"><b>It collapses the core assurance.</b> The decryption key sits in the same memory, so a memory or crash dump yields both; capturing the password at all requires reading a password field, voiding A1, A2, A3 and D10 at once; <b>non-repudiation</b> is lost, because the user can now say "it was not me"; it breaks under MFA; and a retry with a stale password <b>locks the employee's account</b> mid-shift. The correct answer is A9 and A5.</span></td></tr>
+          <tr><th scope="row">R2</th><td>حساب خدمة مُعفى من التحقق الثنائي تعمل به الأداة دون حضور.<span class="en" style="display:block;color:var(--muted)">An MFA-exempt service account the tool runs under, unattended.</span></td><td>يُحوّل الأداة إلى روبوت ينتحل إنساناً، ويُلغي نسبة المستند إلى صاحبه، ويخلق حساباً دائم الصلاحية خارج مراجعة الصلاحيات. <b>والاحتياج غير المصاحب ليس عمل هذه الأداة</b> بل مسار وكيل المزامنة بحساب تكامل مصمَّم لذلك ومحفوظ في خزنة.<span class="en" style="display:block;color:var(--muted)">It turns the tool into a robot impersonating a person, destroys attribution, and creates a standing privileged account outside access review. <b>An unattended need is not this tool's job</b> — it belongs to the sync-agent path with a purpose-built integration account held in a vault.</span></td></tr>
+          <tr><th scope="row">R3</th><td>نبضات صناعية لإبقاء جلسة أوراكل حيّة إلى ما لا نهاية.<span class="en" style="display:block;color:var(--muted)">Synthetic keep-alive traffic to hold the Oracle session open indefinitely.</span></td><td>مهلة الخمول <b>ضابط أمني لتقنية المعلومات</b>، وتجاوزها بالحيلة بطلانٌ لضابط لا تحسينٌ لتجربة. والاستطلاع المعلن نشاط صفحة طبيعي ويُقبل بوصفه كذلك — <b>ويتوقّف بلا مهمة وعند انتهاء جلسة النظام، وله سقف امتداد مطلق، ومدّته ومفتاح إيقافه عند القفل بيد تقنية المعلومات</b> (A11–A16). وما زاد على ذلك يُطلب منهم كتغيير في المهلة لا كخدعة في الأداة.<span class="en" style="display:block;color:var(--muted)">The idle timeout is <b>IT's security control</b>; defeating it by trickery voids a control rather than improving an experience. Declared polling is ordinary page activity and is accepted as such; anything beyond it is requested from IT as a timeout change, not engineered around.</span></td></tr>
+          <tr><th scope="row">R5</th><td>تنزيل الأداة من تطبيق الويب وتشغيلها من مجلّد على سطح المكتب، بحيث يكون التنزيل نفسه هو ضابط من يستخدمها.<span class="en" style="display:block;color:var(--muted)">Downloading the tool from the web application and running it from a Desktop folder, with the download itself acting as the control over who uses it.</span></td><td>ملفٌّ في مسار يكتب فيه المستخدم <b>يستطيع أي شيء يعمل بحسابه استبداله</b>، فتسقط قيمة البصمة المنشورة (G8) وهي أساس «المسلَّم هو ما راجعتموه»؛ وتحجبه سياسات السماح بالتطبيقات افتراضاً فقد لا يعمل أصلاً على جهاز مُقسّى؛ ولا يظهر في جرد البرمجيات؛ ويُطبّع سلوك «نزّل ملفاً تنفيذياً من صفحة وشغّله» الذي تحاربه التوعية. <b>والأهمّ أن الفرضية مقلوبة: الملف ليس الضابط، الصلاحية هي الضابط</b> (N13) — فالأداة خاملة بلا حساب مصرّح له، ولا حاجة لحجب المثبّت أصلاً. المعتمَد: <span class="path">MSI</span> عبر Intune أو SCCM (N1)، ومنها أُخذ نصفها الجيّد: <b>الدخول بإجراء المنصة القائم</b> (A6).<span class="en" style="display:block;color:var(--muted)">A file in a user-writable path <b>can be replaced by anything running as that user</b>, voiding the published hash (G8) on which "what you received is what you reviewed" rests; application allowlisting blocks such paths by default, so it may not run at all on a hardened endpoint; it never appears in software inventory; and it normalises the "download an executable from a page and run it" behaviour awareness training exists to prevent. <b>Above all the premise is inverted: the file is not the control, the permission is</b> (N13) — the tool is inert without an authorised account, so there is nothing to gate. Adopted instead: <span class="path">MSI</span> through Intune or SCCM (N1) — and its good half was kept: <b>sign-in through the platform's existing procedure</b> (A6).</span></td></tr>
+          <tr><th scope="row">R4</th><td>الارتباط بمتصفّح المستخدم الحقيقي عبر منفذ تنقيح <span class="path">CDP</span> لإعادة استعمال جلسته.<span class="en" style="display:block;color:var(--muted)">Attaching to the user's real browser over the <span class="path">CDP</span> debug port to reuse his session.</span></td><td>تشغيل متصفّح مستخدم ومنفذ تنقيحه مفتوح <b>ملاحظة أمنية بذاتها</b>، ويمنح أي عملية على الجهاز التحكّم الكامل بذلك المتصفّح.<span class="en" style="display:block;color:var(--muted)">Running a user's browser with its debugging port open is <b>a finding in its own right</b>, and hands any process on the machine full control of that browser.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 5 · نموذج التهديد ═══════════════════════════════════════════════ -->
+  <section class="section" id="threats">
+    <h2><span class="num">5</span>نموذج التهديد والضوابط المانعة</h2>
+    <p class="h2en">Threat model and the control that stops each case</p>
+    <div class="scroller">
+      <table class="threattable">
+        <thead><tr><th scope="col">#</th><th scope="col">الحالة — Case</th><th scope="col">الضابط المانع — Mitigating control</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">T1</th><td>جهاز جوال مفقود أو مسروق<span class="en" style="display:block;color:var(--muted)">Lost or stolen phone</span></td><td>ربط الجهاز وإلغاؤه مركزياً، الطابور مشفّر ومربوط بالمستخدم، <b>ولا اعتماد أوراكل مخزّن في أي مكان</b>.<span class="en" style="display:block;color:var(--muted)">Device binding with central revocation, an encrypted per-user queue, and <b>no Oracle credential stored anywhere</b>. (A1, A6, I4)</span></td></tr>
+          <tr><th scope="row">T2</th><td>جوال مخترق يطلق مئات العمليات<span class="en" style="display:block;color:var(--muted)">Compromised phone firing hundreds of operations</span></td><td>حدّ معدّل وسقف يومي على الخادم، وخطوة تأكيد بشرية لكل تشغيل، وحضور المستخدم شرط.<span class="en" style="display:block;color:var(--muted)">Server-side rate limit and daily cap, a human confirmation per run, and attendance as a precondition. (J2, D8, D9)</span></td></tr>
+          <tr><th scope="row">T3</th><td>نصّ مزوّر أو معدَّل<span class="en" style="display:block;color:var(--muted)">Forged or altered script</span></td><td>توقيع الخادم والمفتاح العام مثبّت وقت البناء؛ والأداة ترفض ما لا يتحقّق توقيعه.<span class="en" style="display:block;color:var(--muted)">Server signature with the public key pinned at build time; the tool refuses anything whose signature does not verify. (C3)</span></td></tr>
+          <tr><th scope="row">T4</th><td>موظّف يحاول تجاوز صلاحياته عبر الأداة<span class="en" style="display:block;color:var(--muted)">An employee attempting to exceed his privileges through the tool</span></td><td>أوراكل نفسه يرفض؛ والأداة لا ترفع صلاحية ولا تبدّل دوراً، ولا تعمل إلا ضمن ما يسمح به حسابه.<span class="en" style="display:block;color:var(--muted)">Oracle itself refuses; the tool elevates nothing and switches nothing, and operates only within what his account permits. (B1, B5)</span></td></tr>
+          <tr><th scope="row">T5</th><td>انتحال شخصية زميل مسجَّل على الجهاز<span class="en" style="display:block;color:var(--muted)">Impersonating a colleague who is signed in on the machine</span></td><td>حارس الجلسة يقارن المستخدم المسجَّل في أوراكل بالمقترن بالمنصة ويوقف عند الاختلاف.<span class="en" style="display:block;color:var(--muted)">The session guard compares the Oracle signed-in user with the paired platform user and stops on a mismatch. (B8, I2)</span></td></tr>
+          <tr><th scope="row">T6</th><td>ترقيع أوراكل يغيّر الشاشة فتُكتب القيم في الحقل الخطأ<span class="en" style="display:block;color:var(--muted)">An Oracle patch changes the screen and values land in the wrong field</span></td><td>بصمة الصفحة وتحقّق هوية السجل يوقفان النص <b>قبل كتابة أي حرف</b>.<span class="en" style="display:block;color:var(--muted)">The page signature and the record-identity assertion stop the script <b>before a single character is written</b>. (C8, D4, D5)</span></td></tr>
+          <tr><th scope="row">T7</th><td>ازدواج مستند عند إعادة المحاولة<span class="en" style="display:block;color:var(--muted)">Duplicate document on retry</span></td><td>مفتاح عدم تكرار لكل عنصر، وتحقّق بالقراءة العائدة لرقم المستند.<span class="en" style="display:block;color:var(--muted)">An idempotency key per item and read-back verification of the document number. (I1, F4)</span></td></tr>
+          <tr><th scope="row">T8</th><td>تسريب تقرير خارج نطاق صاحبه<span class="en" style="display:block;color:var(--muted)">A report leaking beyond its owner's scope</span></td><td>كتالوج مغلق، تصنيف، ربط بالطالب ومصنعه تحت نطاق بيانات المنصة، احتفاظ قصير، علامة مائية، وتدقيق عند كل فتح.<span class="en" style="display:block;color:var(--muted)">A closed catalogue, classification, binding to requester and plant under the platform data scope, short retention, watermarking, and an audit row on every open. (E1, E2, E6, E7, E10)</span></td></tr>
+          <tr><th scope="row">T9</th><td>موظّف داخلي يستخرج بيانات ضخمة<span class="en" style="display:block;color:var(--muted)">An insider extracting bulk data</span></td><td>معاملات مقيّدة لا تتجاوز الكتالوج، سقف حجم وصفوف يوقف ولا يقتطع، ونمط افتراضي لا تخرج فيه بيانات أصلاً.<span class="en" style="display:block;color:var(--muted)">Parameters constrained to the catalogue, a size and row cap that stops rather than truncates, and a default mode in which no data leaves at all. (E1, E3, E8)</span></td></tr>
+          <tr><th scope="row">T10</th><td>خطوة خبيثة تُزرع في نص<span class="en" style="display:block;color:var(--muted)">A malicious step planted in a script</span></td><td>مفردات مغلقة بلا شبكة ولا ملفات، دورة اعتماد باسم معتمِد، ومراجعة شفرة المفسّر المتاحة للعميل.<span class="en" style="display:block;color:var(--muted)">A closed vocabulary with no network or file access, a named-approver workflow, and interpreter source available to the customer for review. (C2, C4, J6)</span></td></tr>
+          <tr><th scope="row">T11</th><td>الأداة نفسها تُستغَلّ كقناة إلى الشبكة<span class="en" style="display:block;color:var(--muted)">The tool itself abused as a channel into the network</span></td><td>اتصالات صادرة فقط، لا منفذ مستمع، لا منفذ تنقيح، وتثبيت على مضيف المنصة المتوقّع.<span class="en" style="display:block;color:var(--muted)">Outbound-only connections, no listening port, no debugging port, and pinning to the expected platform host. (H1, H2, H3)</span></td></tr>
+          <tr><th scope="row">T12</th><td>سلسلة التوريد: مكوّن خارجي يحمل شفرة خبيثة<span class="en" style="display:block;color:var(--muted)">Supply chain: an external component carrying malicious code</span></td><td>لا مكوّن أتمتة تجاري لطرف ثالث، قائمة مكوّنات مع كل إصدار، فحص تبعيات كل مرحلة، وتوقيع رقمي للملف التنفيذي.<span class="en" style="display:block;color:var(--muted)">No third-party commercial automation component, an SBOM with every release, a dependency scan each phase, and a code-signed executable. (G6, G7, G1)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 6 · الأطر التنظيمية ═════════════════════════════════════════════ -->
+  <section class="section" id="regulatory">
+    <h2><span class="num">6</span>الأطر التنظيمية الوطنية</h2>
+    <p class="h2en">National regulatory alignment</p>
+
+    <div class="callout warnbox" style="margin-block-end:1.25rem">
+      <h3>ملاحظة على هذا الجدول · A note on this table</h3>
+      <p>
+        الربط أدناه على مستوى <b>مجالات الضوابط</b> لا أرقامها. تحديد الأرقام والإصدارات السارية وتصنيف
+        النظام (هل هو «نظام حسّاس»؟) مسؤولية مسؤول الامتثال عند العميل، ويُستكمل قبل الاعتماد النهائي.
+      </p>
+      <p class="en" style="direction:ltr;text-align:start">
+        The mapping below is at the level of <b>control domains</b>, not control numbers. Fixing the numbers, the
+        applicable framework versions and the system's classification (is it a <i>critical system</i>?) is the
+        customer compliance officer's responsibility and is completed before final approval.
+      </p>
+    </div>
+
+    <div class="scroller">
+      <table class="maptable">
+        <thead><tr><th scope="col">الإطار — Framework</th><th scope="col">ما يعنينا منه — What it asks of us</th><th scope="col">أين يُلبّى — Where it is met</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">NCA ECC-2:2024<br><span style="font-weight:400;font-family:var(--font);font-size:.6875rem">يَخلف ECC-1:2018</span></th><td>إدارة الهوية والدخول، تسجيل الأحداث، حماية الأجهزة الطرفية، حماية البيانات، إدارة الثغرات<span class="en" style="display:block;color:var(--muted)">Identity and access management, event logging, endpoint protection, data protection, vulnerability management</span></td><td>A1–A8 · B1–B9 · F1–F7 · G1–G7</td></tr>
+          <tr><th scope="row">NCNICC-1:2025<br><span style="font-weight:400;font-family:var(--font);font-size:.6875rem">مُلزِم · نُشر يناير 2026</span></th><td>ضوابط الأمن السيبراني لمنشآت القطاع الخاص <b>غير المصنّفة بنية تحتية وطنية حرجة</b>: ٦٥ ضابطاً رئيساً و٤٧ فرعياً في ثلاثة مكوّنات — الحوكمة، والدفاع السيبراني، و<b>أمن الأطراف الثالثة والحوسبة السحابية</b> — متدرّجة بالحجم والإيرادات.<span class="en" style="display:block;color:var(--muted)">Cybersecurity controls for private-sector entities <b>not classified as critical national infrastructure</b>: 65 main and 47 sub-controls across Governance, Cyber Defense and <b>Third-Party and Cloud Cybersecurity</b>, tiered by size and revenue.</span></td><td>المجموعة K كاملة · E11 · F8 · G6–G9 · J8 · J9</td></tr>
+          <tr><th scope="row">لوائح الهيئة 2024<br><span style="font-weight:400;font-family:var(--font);font-size:.6875rem">NCA Regulations</span></th><td>صدرت ديسمبر 2024 ومنحت الهيئة سلطة <b>الإنفاذ وفرض العقوبات</b> على مخالفة معاييرها — فالامتثال لم يعد توصية.<span class="en" style="display:block;color:var(--muted)">Enacted December 2024, giving the authority <b>enforcement and penalty powers</b> over breaches of its standards — compliance is no longer advisory.</span></td><td>J1 · J4 · J5 · J7 · J8</td></tr>
+          <tr><th scope="row">NCA CSCC<br><span style="font-weight:400;font-family:var(--font);font-size:.6875rem">إن كانت المنشأة بنية تحتية وطنية حرجة</span></th><td>ضوابط أشدّ على الدخول والمراقبة والتغيير للأنظمة الحسّاسة<span class="en" style="display:block;color:var(--muted)">Stricter access, monitoring and change controls for critical systems</span></td><td>B6 · B8 · F1 · F6 · J1–J5 · مفتاح الإيقاف J3</td></tr>
+          <tr><th scope="row">NCA OTCC</th><td>حماية أنظمة التقنية التشغيلية<span class="en" style="display:block;color:var(--muted)">Protection of operational technology</span></td><td><b>خارج النطاق ويُقال صراحةً:</b> لا مسار بين الأداة وأي DCS أو PLC أو مؤرّخ.<span class="en" style="display:block;color:var(--muted)"><b>Out of scope, stated explicitly:</b> no path between the tool and any DCS, PLC or historian. (H4)</span></td></tr>
+          <tr><th scope="row">NCA DCC</th><td>تصنيف البيانات وتداولها والاحتفاظ بها وإتلافها<span class="en" style="display:block;color:var(--muted)">Data classification, handling, retention and disposal</span></td><td>E1–E10 · F7</td></tr>
+          <tr><th scope="row">NCA CCC</th><td>ضوابط الحوسبة السحابية إن استُضيفت المنصة سحابياً<span class="en" style="display:block;color:var(--muted)">Cloud controls where the platform is cloud-hosted</span></td><td>H5 · G5 · استضافة داخل المملكة</td></tr>
+          <tr><th scope="row">PDPL — SDAIA</th><td>تقليل البيانات، تحديد الغرض، حقوق صاحب البيانات، الإبلاغ عن الانتهاك<span class="en" style="display:block;color:var(--muted)">Data minimisation, purpose limitation, data-subject rights, breach notification</span></td><td>E2 · E6 · E7 · F7 · J7</td></tr>
+          <tr><th scope="row">CST Cloud Framework</th><td>إطار تنظيم الحوسبة السحابية إن استُضيفت خارج المقرّ<span class="en" style="display:block;color:var(--muted)">Cloud regulatory framework where hosting is off-premises</span></td><td>H5 · بند الاستضافة في بيان النطاق J1</td></tr>
+          <tr><th scope="row">ISO 27001 · OWASP ASVS L2</th><td>نظام إدارة أمن المعلومات وأمن التطبيقات<span class="en" style="display:block;color:var(--muted)">Information security management and application security</span></td><td>J4 · J5 · G6 · C1–C8</td></tr>
+          <tr><th scope="row">سيادة البيانات<br><span style="font-weight:400;font-family:var(--font);font-size:.6875rem">Data sovereignty</span></th><td>ألّا تغادر بيانات التشغيل أو السجلّات المملكة، وألّا يصل إليها مورّد أجنبي<span class="en" style="display:block;color:var(--muted)">Operational data and logs must not leave the Kingdom, and no foreign vendor may reach them</span></td><td>G5 · G7 · H5 · J6 · <b>لا دعم من خارج المملكة ولا وصول عن بُعد لمورّد أجنبي</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="margin-block-start:1.25rem">
+      <h3>ثلاث نقاط تخصّ الأمن الوطني تحديداً · Three points specific to national security</h3>
+      <ul>
+        <li>
+          <b>الأداة مبنيّة داخلياً بلا مكوّن أتمتة تجاري أجنبي</b>، فلا تبعية لمورّد خارجي ولا قناة تحديث تعبر الحدود.
+          <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted)">The tool is built in-house with no foreign commercial automation component — no external vendor dependency and no update channel crossing the border. (G7, G2)</span>
+        </li>
+        <li>
+          <b>لا قياس عن بُعد ولا تشخيص صادر</b>، فلا تتسرّب أنماط تشغيل المصنع في بيانات استخدام لدى طرف ثالث.
+          <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted)">No telemetry and no outbound diagnostics, so plant operating patterns do not leak into a third party's usage data. (G5)</span>
+        </li>
+        <li>
+          <b>عزل تامّ عن التقنية التشغيلية</b>: هذه الأداة تعمل على شبكة تقنية المعلومات فقط، ولا تملك مساراً إلى
+          أنظمة التحكّم — وهذا هو الحدّ الذي تحرسه ضوابط OTCC.
+          <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted)">Complete separation from operational technology: the tool lives on the IT network only and has no path to control systems — the boundary the OTCC controls exist to guard. (H4)</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══ 7 · اختبارات القبول ═════════════════════════════════════════════ -->
+  <section class="section" id="verification">
+    <h2><span class="num">7</span>اختبارات القبول — يشغّلها المراجع بنفسه</h2>
+    <p class="h2en">Acceptance tests — run by the reviewer, not demonstrated to him</p>
+    <div class="prose" style="margin-block-end:.5rem">
+      <p>
+        <b>لا تُقبل أي ضمانة في هذه الوثيقة بلا اختبارها.</b> كل اختبار أدناه ينتج نتيجة ظاهرة، ويُشير إلى
+        المتطلبات التي يُثبتها.
+        <span class="en" style="display:block;direction:ltr;text-align:start;color:var(--muted);margin-block-start:.4rem">
+          <b>No assurance in this document should be accepted without testing it.</b> Each test below produces a
+          visible result and names the requirements it proves.
+        </span>
+      </p>
+    </div>
+    <div class="scroller">
+      <table class="threattable">
+        <thead><tr><th scope="col">#</th><th scope="col">الاختبار — Test</th><th scope="col">النتيجة المتوقّعة — Expected result</th><th scope="col">يُثبت</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">V1</th><td>افتح الأداة واطلب تشغيل نص وأنت على صفحة دخول أوراكل.<span class="en" style="display:block;color:var(--muted)">Ask the tool to run a script while on the Oracle sign-in page.</span></td><td>رفض بسبب مكتوب، بلا أي خطوة.<span class="en" style="display:block;color:var(--muted)">Refusal with a written reason, and no step executed.</span></td><td>A2 · D1</td></tr>
+          <tr><th scope="row">V2</th><td>افحص الصفحة بأدوات المطوّر قبل تسجيل الدخول.<span class="en" style="display:block;color:var(--muted)">Inspect the page with developer tools before signing in.</span></td><td>لا نصّ محتوى محقون ولا مستمع أحداث للأداة.<span class="en" style="display:block;color:var(--muted)">No injected content script and no tool event listener present.</span></td><td>A3</td></tr>
+          <tr><th scope="row">V3</th><td>فتّش واجهة الأداة وتخزينها عن أي حقل أو مفتاح لبيانات اعتماد.<span class="en" style="display:block;color:var(--muted)">Search the tool's UI and storage for any credential field or key.</span></td><td>لا وجود لأي منهما.<span class="en" style="display:block;color:var(--muted)">Neither exists.</span></td><td>A1 · D10</td></tr>
+          <tr><th scope="row">V4</th><td>سجّل دخول مستخدم لا يملك صلاحية الإنشاء، ثم افتح قائمة النصوص.<span class="en" style="display:block;color:var(--muted)">Sign in as a user without the create privilege and open the script list.</span></td><td>النص يظهر مُعطَّلاً بسبب مكتوب، ولا يبدأ.<span class="en" style="display:block;color:var(--muted)">The script appears disabled with a written reason and does not start.</span></td><td>B2 · B3</td></tr>
+          <tr><th scope="row">V5</th><td>بدّل المستخدم داخل أوراكل مع إبقاء الأداة مقترنة بالمستخدم الأول.<span class="en" style="display:block;color:var(--muted)">Switch the Oracle user while the tool stays paired to the first one.</span></td><td>التنفيذ يتوقّف فوراً برسالة عدم تطابق.<span class="en" style="display:block;color:var(--muted)">Execution stops immediately with a mismatch message.</span></td><td>B8 · I2</td></tr>
+          <tr><th scope="row">V6</th><td>عدّل بايتاً واحداً في نص موقّع ثم شغّله.<span class="en" style="display:block;color:var(--muted)">Alter one byte in a signed script and run it.</span></td><td>رفض فوري قبل أي خطوة.<span class="en" style="display:block;color:var(--muted)">Immediate refusal before any step.</span></td><td>C3</td></tr>
+          <tr><th scope="row">V7</th><td>غيّر مرساة في نسخة اختبار من الصفحة ثم شغّل النص.<span class="en" style="display:block;color:var(--muted)">Change an anchor in a test copy of the page and run the script.</span></td><td>فشل على بصمة الصفحة قبل كتابة أي حرف، والصفحة تبقى كما هي.<span class="en" style="display:block;color:var(--muted)">Failure on the page signature before a character is written, page unchanged.</span></td><td>C8 · D5 · D7</td></tr>
+          <tr><th scope="row">V8</th><td>نفّذ عملية ثم افتح المستند في أوراكل وصفّ التدقيق عندنا.<span class="en" style="display:block;color:var(--muted)">Run one operation, then open the Oracle document and our audit row.</span></td><td>علامة الارتباط موجودة في المستند، ورقمه مسجَّل في صفّ التدقيق.<span class="en" style="display:block;color:var(--muted)">The correlation marker is on the document and its number is in the audit row.</span></td><td>F1 · F3 · F4</td></tr>
+          <tr><th scope="row">V9</th><td>أرسل نفس عنصر الطابور مرتين من جهازين.<span class="en" style="display:block;color:var(--muted)">Submit the same queued item twice from two machines.</span></td><td>مستند واحد فقط في أوراكل.<span class="en" style="display:block;color:var(--muted)">Exactly one document in Oracle.</span></td><td>I1</td></tr>
+          <tr><th scope="row">V10</th><td>اطلب تقريراً ليس في الكتالوج، أو وسّع مدى المعاملات.<span class="en" style="display:block;color:var(--muted)">Request a report outside the catalogue, or widen the parameter range.</span></td><td>رفض، ولا استخراج.<span class="en" style="display:block;color:var(--muted)">Refusal, and no extraction.</span></td><td>E1</td></tr>
+          <tr><th scope="row">V11</th><td>اطلب تقريراً يتجاوز سقف الصفوف.<span class="en" style="display:block;color:var(--muted)">Request a report exceeding the row cap.</span></td><td>توقّف معلن، <b>ولا اقتطاع صامت</b>.<span class="en" style="display:block;color:var(--muted)">A declared stop, <b>and no silent truncation</b>.</span></td><td>E8 · E9</td></tr>
+          <tr><th scope="row">V12</th><td>حاول فتح تقرير سحبه زميل في مصنع آخر.<span class="en" style="display:block;color:var(--muted)">Try to open a report another colleague pulled at a different plant.</span></td><td>غير مرئي أصلاً؛ ومحاولة الوصول تُسجَّل.<span class="en" style="display:block;color:var(--muted)">Not visible at all; the attempt is logged.</span></td><td>E6 · E10</td></tr>
+          <tr><th scope="row">V13</th><td>فعّل مفتاح الإيقاف العام ثم شغّل أي نص.<span class="en" style="display:block;color:var(--muted)">Activate the global kill switch and run any script.</span></td><td>كل تشغيل يُرفض، والسبب معروض للمستخدم.<span class="en" style="display:block;color:var(--muted)">Every run is refused and the reason is shown to the user.</span></td><td>J3</td></tr>
+          <tr><th scope="row">V14</th><td>راقب حركة الشبكة الصادرة من الجهاز طوال جلسة كاملة.<span class="en" style="display:block;color:var(--muted)">Monitor outbound network traffic from the machine for a full session.</span></td><td>وجهتان فقط: المنصة وأوراكل. <b>لا وجهة خارج المملكة ولا منفذ مستمع</b>.<span class="en" style="display:block;color:var(--muted)">Two destinations only: the platform and Oracle. <b>No destination outside the Kingdom and no listening port</b>.</span></td><td>G5 · H1 · H5</td></tr>
+          <tr><th scope="row">V15</th><td>نفّذ عملية ثم افتح نظام المراقبة عندكم.<span class="en" style="display:block;color:var(--muted)">Run one operation, then open your own SIEM.</span></td><td>الحدث وصل لحظياً بكل حقوله، ومطابق لصفّ التدقيق عندنا.<span class="en" style="display:block;color:var(--muted)">The event arrived in real time with all its fields, matching our audit row.</span></td><td>F8 · F1</td></tr>
+          <tr><th scope="row">V16</th><td>احسب بصمة الملف التنفيذي المثبَّت وقارنها بالبصمة المعلنة للإصدار.<span class="en" style="display:block;color:var(--muted)">Hash the installed executable and compare it with the published release hash.</span></td><td>تطابق تامّ — فالملف هو الشفرة التي رُوجعت.<span class="en" style="display:block;color:var(--muted)">An exact match — the binary is the source that was reviewed.</span></td><td>G8 · J6</td></tr>
+          <tr><th scope="row">V17</th><td>وجّه المسجّل إلى عنوان بيئة الإنتاج وحاول التسجيل.<span class="en" style="display:block;color:var(--muted)">Point the recorder at the production URL and try to record.</span></td><td>رفض مكتوب، ولا التقاط لأي خطوة.<span class="en" style="display:block;color:var(--muted)">A written refusal, and no step captured.</span></td><td>L1</td></tr>
+          <tr><th scope="row">V18</th><td>سجّل نصّاً ثم حاول اعتماده بنفس الحساب، وجرّب اعتماد نصّ لم يُختبر.<span class="en" style="display:block;color:var(--muted)">Record a script then try to approve it with the same account, and try to approve an untested script.</span></td><td>الاعتماد مرفوض في الحالتين بسبب مكتوب.<span class="en" style="display:block;color:var(--muted)">Approval refused in both cases, with a written reason.</span></td><td>L5 · L6 · L3</td></tr>
+          <tr><th scope="row">V19</th><td>سجّل دخول مستخدم عادي وابحث عن وضع المصمّم وأدوات التحرير.<span class="en" style="display:block;color:var(--muted)">Sign in as an ordinary user and look for designer mode and the authoring tools.</span></td><td>غير موجودة في الواجهة إطلاقاً، لا معطّلة.<span class="en" style="display:block;color:var(--muted)">Not present in the interface at all — not merely disabled.</span></td><td>L1</td></tr>
+          <tr><th scope="row">V20</th><td>أضف إلى نصّ تقرير سطر <span class="path">Set</span> على حقل ليس من معاملاته، ثم أرسله للاعتماد.<span class="en" style="display:block;color:var(--muted)">Add a <span class="path">Set</span> on a non-parameter field to a report script, then submit it for approval.</span></td><td>الاعتماد مرفوض آلياً بذكر السطر والحقل.<span class="en" style="display:block;color:var(--muted)">Approval refused automatically, naming the line and the field.</span></td><td>L19</td></tr>
+          <tr><th scope="row">V21</th><td>أرسل تقريراً ثم أغلق الأداة، وافتحها بعد ساعة بحساب المستخدم نفسه.<span class="en" style="display:block;color:var(--muted)">Submit a report, close the tool, and reopen it an hour later as the same user.</span></td><td>المهمة محفوظة وتستأنف عند الطور الصحيح — <b>ولم يُنفَّذ شيء والأداة مغلقة</b>.<span class="en" style="display:block;color:var(--muted)">The job is preserved and resumes at the right phase — and <b>nothing ran while the tool was closed</b>.</span></td><td>M1 · M2</td></tr>
+          <tr><th scope="row">V22</th><td>اجعل تقريراً ينتهي بحالة Error أو Terminated ثم راقب المهمة.<span class="en" style="display:block;color:var(--muted)">Make a report end in Error or Terminated and watch the job.</span></td><td>لا تنزيل، والحالة معروضة بنصّها، وسجلّ الطلب مرفق.<span class="en" style="display:block;color:var(--muted)">No download, the status shown verbatim, and the request log attached.</span></td><td>M5 · M11</td></tr>
+          <tr><th scope="row">V23</th><td>أرسل تقريراً، ثم اترك الجلسة تنتهي بالخمول، وراقب المهمة والأداة.<span class="en" style="display:block;color:var(--muted)">Submit a report, let the session idle out, then watch the job and the tool.</span></td><td>المهمة تنتقل إلى «بانتظارك» بسبب معروض، <b>ولا محاولة دخول واحدة</b>؛ وتفتيش الذاكرة والقرص لا يجد كلمة مرور.<span class="en" style="display:block;color:var(--muted)">The job moves to "waiting for you" with the reason shown and <b>not one sign-in attempt</b>; a memory and disk search finds no password.</span></td><td>M15 · A10 · R1</td></tr>
+          <tr><th scope="row">V24</th><td>افتح الأداة وسجّل الدخول <b>بلا أي مهمة</b>، واتركها مفتوحة أطول من مهلة الخمول.<span class="en" style="display:block;color:var(--muted)">Open the tool and sign in <b>with no job at all</b>, and leave it open longer than the idle timeout.</span></td><td>لا تُحمَّل صفحة واحدة، وتنتهي الجلسة في موعدها تماماً كأي مستخدم.<span class="en" style="display:block;color:var(--muted)">Not one page is loaded, and the session expires on time exactly as for any user.</span></td><td>A11</td></tr>
+          <tr><th scope="row">V25</th><td>اقفل محطّة العمل ومهمة قيد الاستطلاع، ثم <b>سجّل خروجاً</b>، وراقب سجلّات الوصول عندكم في الحالتين.<span class="en" style="display:block;color:var(--muted)">Lock the workstation with a job polling, then <b>sign out</b>, and watch your own access logs in both cases.</span></td><td>يستمرّ الاستطلاع مع القفل، و<b>يتوقّف فوراً عند تسجيل الخروج</b> — ولا طلب واحد بعده.<span class="en" style="display:block;color:var(--muted)">Polling continues while locked and <b>stops at once on sign-out</b> — not a single request after it.</span></td><td>A13</td></tr>
+          <tr><th scope="row">V27</th><td>اترك مهمة تستطلع أطول من سقف الامتداد المعلن.<span class="en" style="display:block;color:var(--muted)">Leave a job polling for longer than the declared extension ceiling.</span></td><td>تنتهي الجلسة عند السقف بالضبط وتنتقل المهمة إلى «بانتظارك».<span class="en" style="display:block;color:var(--muted)">The session ends exactly at the ceiling and the job parks as "waiting for you".</span></td><td>A14</td></tr>
+          <tr><th scope="row">V28</th><td>فعّلوا <span class="path">StopPollingOnLock</span> في سياستكم ثم اقفلوا المحطّة.<span class="en" style="display:block;color:var(--muted)">Enable <span class="path">StopPollingOnLock</span> in your policy, then lock the workstation.</span></td><td>يتوقّف الاستطلاع عند القفل — <b>الأداة تطيع سياستكم لا تفضيلها</b>.<span class="en" style="display:block;color:var(--muted)">Polling stops on lock — <b>the tool obeys your policy, not its own preference</b>.</span></td><td>A16</td></tr>
+          <tr><th scope="row">V26</th><td>اضبطوا مدّة الاستطلاع أطول من مهلة الخمول ثم شغّلوا تقريراً طويلاً.<span class="en" style="display:block;color:var(--muted)">Set the poll interval longer than the idle timeout, then run a long report.</span></td><td>تنتهي الجلسة والمهمة تنتقل إلى «بانتظارك» — <b>الميزة تتدرّج ولا تتجاوز الضابط</b>.<span class="en" style="display:block;color:var(--muted)">The session expires and the job parks — <b>the feature degrades and never defeats the control</b>.</span></td><td>A12 · M15</td></tr>
+          <tr><th scope="row">V29</th><td>ثبّت الحزمة على جهاز نظيف <b>بلا إنترنت</b> وبلا ‎.NET وبلا <span class="path">WebView2</span>.<span class="en" style="display:block;color:var(--muted)">Install the package on a clean machine with <b>no internet</b>, no .NET and no <span class="path">WebView2</span>.</span></td><td>يعمل البرنامج بعد التثبيت مباشرةً — البيئة رُكّبت من المثبّت المرفق دون اتصال.<span class="en" style="display:block;color:var(--muted)">The application runs straight after install — the runtime came from the packaged offline installer.</span></td><td>N2 · N3</td></tr>
+          <tr><th scope="row">V30</th><td>شغّل البرنامج <b>بحساب مستخدم عادي</b> بلا صلاحية مسؤول.<span class="en" style="display:block;color:var(--muted)">Run the application as a <b>standard user</b> with no administrator rights.</span></td><td>يعمل كاملاً، ولا يستطيع الكتابة في مجلّد البرنامج.<span class="en" style="display:block;color:var(--muted)">It works fully and cannot write into its own program folder.</span></td><td>N9</td></tr>
+          <tr><th scope="row">V31</th><td>غيّروا مفتاح سياسة (مثلاً مدّة الاستطلاع) ثم افتحوا الإعدادات في البرنامج.<span class="en" style="display:block;color:var(--muted)">Change a policy key — the poll interval, say — then open Settings in the application.</span></td><td>القيمة الجديدة سارية ومعروضة <b>للقراءة فقط</b>؛ ولا يستطيع المستخدم تعديلها.<span class="en" style="display:block;color:var(--muted)">The new value is in force and shown <b>read-only</b>; the user cannot change it.</span></td><td>N6 · N7</td></tr>
+          <tr><th scope="row">V32</th><td>ضعوا الملف التنفيذي على سطح المكتب وشغّلوه على جهاز عليه سياسة سماح بالتطبيقات.<span class="en" style="display:block;color:var(--muted)">Place the executable on the Desktop and run it on a machine with application allowlisting.</span></td><td>يُمنع — وهو سلوك السياسة الصحيح، ويُثبت لماذا <span class="path">MSI</span> هو المسار الوحيد.<span class="en" style="display:block;color:var(--muted)">It is blocked — the correct policy behaviour, and the proof that the <span class="path">MSI</span> route is the only one.</span></td><td>N15</td></tr>
+          <tr><th scope="row">V33</th><td>شغّلوا الأداة بحساب مستخدم <b>لا يملك صلاحية الأتمتة</b>.<span class="en" style="display:block;color:var(--muted)">Run the tool with an account that <b>has no automation permission</b>.</span></td><td>خاملة تماماً: لا اقتران ولا نصوص ولا تنفيذ — <b>فالملف ليس الضابط</b>.<span class="en" style="display:block;color:var(--muted)">Completely inert: no pairing, no scripts, no execution — <b>the file is not the control</b>.</span></td><td>N13</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 8 · المطلوب من تقنية المعلومات ══════════════════════════════════ -->
+  <section class="section" id="ask">
+    <h2><span class="num">8</span>المطلوب من تقنية المعلومات</h2>
+    <p class="h2en">What we need from IT</p>
+    <div class="bi">
+      <div>
+        <span class="lab">عربي</span>
+        <ul>
+          <li>حساب أوراكل لكل مستخدم مستهدف، بالصلاحيات اللازمة لعمله ولا شيء زيادة.</li>
+          <li>سياسة توزيع حزمة MSI عبر Intune أو SCCM من داخل المستأجر.</li>
+          <li>شهادة توقيع كود باسم الشركة.</li>
+          <li>شهادة عميل mTLS للأداة، وإجراء تجديدها.</li>
+          <li>قائمة الشاشات والمستندات المستهدفة، معتمَدة من مالك العملية.</li>
+          <li>بيئة اختبار أوراكل بنسخة مطابقة للإنتاج لتسجيل النصوص وبصماتها.</li>
+          <li>جهة اتصال في فريق أوراكل لإبلاغنا بالترقيعات قبل تطبيقها.</li>
+          <li>اعتماد بيان النطاق ومدّة الاحتفاظ وسقف القيمة.</li>
+          <li><b>تحديد نظام أوراكل ونسخته</b> — EBS أم Fusion — قبل تسجيل أي نص، لأنه يحدّد ما يمكن أتمتته أصلاً.</li>
+          <li><b>سياسة سجلّ</b> على الأجهزة لتفعيل مصادقة ويندوز المدمجة في <span class="path">WebView2</span> (A5) — لا يستطيع التطبيق ضبطها.</li>
+          <li><b>نقطة استقبال في نظام المراقبة (SIEM)</b> وصيغة الأحداث المتّفق عليها (F8).</li>
+          <li><b>جهاز اختبار مُدار ومتوافق</b> لتشغيل التجربة عليه (G9).</li>
+          <li><b>مالك مُسمّى لكل نص</b> في فريق التطبيقات، ومُعتمِد مختلف عن المسجّل (L6، L12).</li>
+          <li><b>مسار طلب تغيير</b> يُربط به كل نشر (L8)، وإشعار مسبق بكل ترقيع أوراكل (L9).</li>
+          <li><b>سياسة مجلّد التنزيل</b>: مسار ثابت بصلاحيات للمستخدم وحده على قرص مشفّر (M7).</li>
+          <li>قرار <b>المخزن المحلي</b>: Access أم SQLite — ومع Access تُحدَّد بِتّية مُشغّل ACE المثبَّت (O7).</li>
+          <li><b>قناة التوزيع</b>: Intune أم SCCM أم سياسة المجموعة، و<b>شهادة توقيع كود</b> باسم الشركة (N1، N4، N5).</li>
+          <li><b>ملفّ شهادات</b> يدفع شهادة عميل mTLS إلى أجهزة المستخدمين (N8)، و<b>نشر قالب ADMX</b> وضبط مفاتيح السياسة (N6، N7).</li>
+        </ul>
+      </div>
+      <div class="en">
+        <span class="lab">English</span>
+        <ul>
+          <li>An Oracle account for each target user, with the privileges his work needs and nothing beyond.</li>
+          <li>An MSI distribution policy through Intune or SCCM from inside the tenant.</li>
+          <li>A code-signing certificate in the company's name.</li>
+          <li>An mTLS client certificate for the tool, and its renewal procedure.</li>
+          <li>The list of target screens and documents, approved by the process owner.</li>
+          <li>An Oracle test environment at production parity, for recording scripts and their signatures.</li>
+          <li>A contact in the Oracle team to notify us of patches <b>before</b> they are applied.</li>
+          <li>Approval of the scope statement, the retention period and the value ceiling.</li>
+          <li><b>The Oracle system and its version</b> — EBS or Fusion — before any script is recorded, because it decides what can be automated at all.</li>
+          <li>A <b>machine registry policy</b> enabling Windows Integrated Authentication in <span class="path">WebView2</span> (A5) — the application cannot set it.</li>
+          <li>A <b>SIEM ingestion endpoint</b> and the agreed event format (F8).</li>
+          <li>A <b>managed, compliant test machine</b> to run the pilot on (G9).</li>
+          <li>A <b>named owner per script</b> in the applications team, and an approver who is not the recorder (L6, L12).</li>
+          <li>A <b>change-request route</b> that every publish is tied to (L8), and advance notice of every Oracle patch (L9).</li>
+          <li>A <b>download folder policy</b>: a fixed path, ACL'd to the user alone, on an encrypted disk (M7).</li>
+          <li>The <b>local store decision</b>: Access or SQLite — and with Access, the bitness of the installed ACE driver (O7).</li>
+          <li>The <b>distribution channel</b>: Intune, SCCM or Group Policy, and a <b>code-signing certificate</b> in the company's name (N1, N4, N5).</li>
+          <li>A <b>certificate profile</b> delivering the mTLS client certificate to user machines (N8), and <b>deployment of the ADMX template</b> with the policy keys set (N6, N7).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 9 · البنود المفتوحة ═════════════════════════════════════════════ -->
+  <section class="section" id="open">
+    <h2><span class="num">9</span>بنود مفتوحة تحتاج قراراً</h2>
+    <p class="h2en">Open items requiring a decision</p>
+    <div class="scroller">
+      <table class="maptable">
+        <thead><tr><th scope="col">#</th><th scope="col">البند — Item</th><th scope="col">صاحب القرار — Owner</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">O1</th><td>تكلفة تراخيص المستخدم المسمّى إن احتاج كل مستخدم مستهدف حساب أوراكل.<span class="en" style="display:block;color:var(--muted)">Named-user licence cost if every target user needs an Oracle account.</span></td><td>مسؤول تراخيص أوراكل · Oracle licensing owner</td></tr>
+          <tr><th scope="row">O2</th><td><b>هل المنشأة مصنّفة بنية تحتية وطنية حرجة (CNI) أم لا؟</b> هذا هو السؤال الحاكم لأنه يحدّد <b>أي إطار يحكم المشروع كلّه</b>: CSCC للحرجة، و<span class="path">NCNICC-1:2025</span> لغيرها. ومصنع الأسمنت قد يقع في الأولى.<span class="en" style="display:block;color:var(--muted)"><b>Is the entity classified as critical national infrastructure, or not?</b> This is the governing question because it decides <b>which framework governs the whole project</b>: CSCC if critical, <span class="path">NCNICC-1:2025</span> otherwise. A cement producer may fall into the first.</span></td><td>مسؤول الامتثال · Compliance officer</td></tr>
+          <tr><th scope="row">O3</th><td>من لا حساب له في أوراكل: يسلك مسار الحزمة الجاهزة أو مسار وكيل المزامنة. أيّهما يُعتمد؟<span class="en" style="display:block;color:var(--muted)">Users without an Oracle account: prepared-package path or sync-agent path. Which is adopted?</span></td><td>مالك العملية · Process owner</td></tr>
+          <tr><th scope="row">O4</th><td>مدّة الاحتفاظ المعتمدة للتقارير المسحوبة، وسقف الحجم وعدد الصفوف.<span class="en" style="display:block;color:var(--muted)">Approved retention for pulled reports, and the size and row caps.</span></td><td>أمن المعلومات · Information security</td></tr>
+          <tr><th scope="row">O5</th><td>سقف قيمة المستندات التي يُسمح بإنشائها عبر الأداة.<span class="en" style="display:block;color:var(--muted)">The value ceiling for documents the tool may create.</span></td><td>المالية ومالك العملية · Finance and process owner</td></tr>
+          <tr><th scope="row">O6</th><td>هل تُفعَّل مصادقة ويندوز المدمجة؟ تفعيلها يُلغي كتابة كلمة المرور نهائياً.<span class="en" style="display:block;color:var(--muted)">Will Windows Integrated Authentication be enabled? Doing so removes password entry entirely.</span></td><td>البنية التحتية · Infrastructure</td></tr>
+          <tr><th scope="row">O7</th><td><b>المخزن المحلي: Access أم SQLite؟</b> السؤال الحاسم واحد: <b>هل يفتح المستخدم القاعدة بنفسه ليكتب استعلاماته وتقاريره؟</b> إن نعم فـAccess هو الصحيح رغم حدوده. وإن كانت مجرّد مخزن تقرؤه الأداة، فـSQLite أفضل: بلا مُشغّل يُثبَّت، بلا حدّ ٢ جيجابايت، وبتشفير حقيقي.<span class="en" style="display:block;color:var(--muted)"><b>Local store: Access or SQLite?</b> One question decides it: <b>will the user open the database himself to write his own queries and reports?</b> If yes, Access is right despite its limits. If it is only a store the tool reads, SQLite is better: no driver to install, no 2 GB ceiling, and real encryption.</span></td><td>مالك العملية وتقنية المعلومات · Process owner and IT</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 10 · التدرّج ════════════════════════════════════════════════════ -->
+  <section class="section" id="rollout">
+    <h2><span class="num">10</span>التدرّج في التطبيق</h2>
+    <p class="h2en">Phased rollout, each phase with an exit gate</p>
+    <div class="phases">
+      <div class="phase">
+        <span class="when">PHASE 1 · REPORTS, MODE A</span>
+        <h3>تقارير «شغّل وأخبرني» فقط</h3>
+        <p class="en">Trigger-and-notify reports only: no write, and not a single data item leaves Oracle.</p>
+        <p class="gate"><b>بوابة الخروج:</b> اجتياز V1–V16 كاملة، وشهر تشغيل بلا حادثة، وأحداث تصل الـSIEM بلا انقطاع.</p>
+      </div>
+      <div class="phase">
+        <span class="when">PHASE 2 · REPORTS, MODES B AND C</span>
+        <h3>الصفوف ثم الملف، داخل الكتالوج</h3>
+        <p class="en">Row mode, then file mode, inside the approved catalogue only.</p>
+        <p class="gate"><b>بوابة الخروج:</b> جرد تدفّق البيانات معتمَد، والاحتفاظ والعلامة المائية شغّالان ومُختبَران.</p>
+      </div>
+      <div class="phase">
+        <span class="when">PHASE 3 · WRITE</span>
+        <h3>الكتابة البسيطة: بلاغ، ساعات، طلب شراء</h3>
+        <p class="en">Simple writes only — work request, time entry, purchase requisition — never a full closure.</p>
+        <p class="gate"><b>بوابة الخروج:</b> مراجعة أمنية بعد أول ترقيع أوراكل لإثبات الفشل الآمن على البصمة، واختبار اختراق، وتجديد بيان النطاق.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      CementOps · ADD-002 · مقترح مسار الكتابة ٨ ومسار التقارير ٥ — ملحق بورقة الخيارات
+      <span class="path">01-field-to-oracle-write-paths.html</span>.
+    </p>
+    <p class="en">
+      Companion to the options paper. Requirement identifiers (A1 … J7) are stable and may be quoted directly
+      in review minutes. Oracle interface and screen names are indicative and are confirmed with the customer's
+      Oracle team before recording any script.
+    </p>
+  </footer>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>واجهات ERP Agent</title>
+<style>
+/* ==========================================================================
+   نماذج واجهة ERP Agent (C# WinForms + WebView2) — للمراجعة والتعديل.
+   واجهة البرنامج إنجليزية افتراضاً ومبدّل للعربية. التخطيط ثابت:
+   بيئة العمل يساراً والمتصفّح يميناً، ولا ينعكس مع تبديل اللغة.
+   ألوان وخطوط CementOps من tokens.css. سمة واحدة، بلا CDN، تفتح دون إنترنت.
+   ========================================================================== */
+:root{
+  --ink:#102A43; --ink-2:#243B53; --ink-3:#334E68;
+  --teal:#0F766E; --teal-600:#115E59; --teal-50:#E6F4F2; --teal-2:#14B8A6;
+  --gold:#E9B949; --gold-700:#8A6914;
+  --cream:#F8F4EC; --cream-2:#F2ECE0; --paper:#FFFFFF;
+  --muted:#486581; --muted-2:#627D98;
+  --line:rgba(16,42,67,.10); --line-strong:rgba(16,42,67,.18);
+  --nav-bg:#0B1F33; --nav-fg:rgba(248,244,236,.88); --nav-fg-soft:rgba(248,244,236,.66);
+  --nav-accent:#5EEAD4;
+  --ok:#067647; --ok-bg:#ECFDF3; --ok-line:#ABEFC6;
+  --warn:#B54708; --warn-bg:#FFFAEB; --warn-line:#FEDF89;
+  --danger:#B42318; --danger-bg:#FEF3F2; --danger-line:#FDA29B;
+  --radius:1rem; --radius-sm:.625rem; --radius-xs:.4rem;
+  --shadow:0 16px 40px rgba(16,42,67,.10); --shadow-sm:0 6px 18px rgba(16,42,67,.07);
+  --shadow-xs:0 1px 2px rgba(16,42,67,.06);
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0; background:var(--cream); color:var(--ink); font-family:var(--font); font-size:1rem; line-height:1.7}
+h1,h2,h3{margin:0; text-wrap:balance; line-height:1.35; font-weight:700}
+p{margin:0} ul{margin:0; padding-inline-start:1.2rem} li{margin-block:.3rem}
+.path,code{
+  font-family:var(--font-mono); font-size:.8125em; direction:ltr; unicode-bidi:isolate;
+  display:inline-block; background:var(--cream-2); border:1px solid var(--line);
+  border-radius:var(--radius-xs); padding:.05em .4em; color:var(--ink-2);
+}
+.wrap{max-width:1180px; margin-inline:auto; padding-inline:20px}
+
+.masthead{background:var(--nav-bg); color:var(--nav-fg); padding-block:2.25rem 1.75rem}
+.masthead .eyebrow{font-size:.8125rem; letter-spacing:.06em; color:var(--nav-accent); font-weight:600}
+.masthead h1{font-size:clamp(1.5rem,3.6vw,2.125rem); color:#F8F4EC; margin-block-start:.5rem}
+.masthead .lede{margin-block-start:.9rem; max-width:66ch; color:var(--nav-fg-soft); font-size:1rem}
+
+main{padding-block:2.25rem 4rem}
+.section{margin-block-start:2.75rem}
+.section:first-child{margin-block-start:0}
+.section > h2{font-size:1.25rem; padding-block-end:.5rem; border-block-end:2px solid var(--teal); display:inline-block}
+.prose{display:grid; gap:.85rem; max-width:74ch; margin-block-start:1rem}
+.pnl__h{font-size:.6875rem; font-weight:700; color:var(--muted-2); letter-spacing:.04em}
+
+.legend{
+  display:flex; flex-wrap:wrap; gap:.7rem 1.5rem; font-size:.8125rem; color:var(--ink-2);
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:.8rem 1rem; margin-block-start:1rem;
+}
+.legend span{display:inline-flex; align-items:center; gap:.45rem}
+.rq{
+  font-family:var(--font-mono); font-size:.625rem; font-weight:700; color:var(--teal-600);
+  background:var(--teal-50); border:1px solid rgba(15,118,110,.25); border-radius:4px;
+  padding:0 .25rem; direction:ltr; display:inline-block; vertical-align:middle;
+}
+.rq--bad{color:var(--danger); background:var(--danger-bg); border-color:var(--danger-line)}
+
+.screen{margin-block-start:1.6rem}
+.screen__head{display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap; margin-block-end:.6rem}
+.screen__n{
+  flex:none; width:1.75rem; height:1.75rem; display:grid; place-items:center;
+  background:var(--ink); color:var(--cream); border-radius:var(--radius-xs); font-size:.8125rem; font-weight:700;
+}
+.screen__t{font-size:1.0625rem; flex:1 1 18rem}
+.screen__note{font-size:.8125rem; color:var(--muted); line-height:1.6; margin-block-start:.5rem; max-width:82ch}
+
+/* ─ نافذة البرنامج — LTR دائماً: العمل يساراً والمتصفّح يميناً ─────────── */
+.app{
+  direction:ltr; text-align:start;
+  border:1px solid var(--line-strong); border-radius:10px; overflow:hidden;
+  box-shadow:var(--shadow); background:var(--paper);
+}
+.app__title{
+  background:var(--nav-bg); color:var(--nav-fg-soft); display:flex; align-items:center;
+  gap:.6rem; padding:.45rem .7rem; font-size:.75rem; flex-wrap:wrap;
+}
+.app__title b{color:#F8F4EC; font-size:.8125rem}
+.app__title .sp{margin-inline-start:auto; display:flex; gap:.5rem; align-items:center}
+.lang{font-family:var(--font-mono); font-size:.625rem; border:1px solid rgba(248,244,236,.28); border-radius:4px; overflow:hidden; display:inline-flex}
+.lang span{padding:.08rem .4rem; color:var(--nav-fg-soft)}
+.lang .on{background:var(--nav-accent); color:#0B1F33; font-weight:700}
+.dot{width:.5rem; height:.5rem; border-radius:50%; display:inline-block}
+.dot--ok{background:var(--teal-2)} .dot--warn{background:var(--gold)} .dot--bad{background:#FDA29B}
+
+.app__url{background:var(--cream-2); border-block-end:1px solid var(--line); padding:.4rem .7rem; display:flex; gap:.5rem; align-items:center}
+.urlbox{
+  flex:1; background:var(--paper); border:1px solid var(--line); border-radius:999px;
+  padding:.2rem .6rem; font-family:var(--font-mono); font-size:.6875rem; color:var(--muted);
+  display:flex; gap:.4rem; align-items:center; overflow:hidden; white-space:nowrap;
+}
+.urlbox .lock{color:var(--ok); font-size:.75rem}
+
+.app__body{display:flex; min-height:300px; align-items:stretch}
+.ws{width:300px; flex:none; border-inline-end:1px solid var(--line); background:var(--cream); padding:.7rem; display:grid; gap:.55rem; align-content:start}
+.ws--ide{width:520px; padding:0; display:flex; gap:0}
+.ws--jobs{width:640px}
+.ws--jobs .tbl{font-size:.6875rem}
+.br{flex:1; background:#fff; padding:.9rem 1rem; display:grid; gap:.55rem; align-content:start; min-width:0}
+.app__status{background:var(--cream-2); border-block-start:1px solid var(--line); padding:.35rem .7rem; display:flex; gap:.5rem 1.1rem; font-size:.6875rem; color:var(--muted); flex-wrap:wrap}
+@media (max-width:820px){
+  .app__body{flex-direction:column}
+  .ws,.ws--ide{width:auto; border-inline-end:0; border-block-end:1px solid var(--line)}
+}
+
+.card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:.5rem .6rem; font-size:.8125rem; display:grid; gap:.2rem; box-shadow:var(--shadow-xs)}
+.card b{font-size:.8125rem}
+.card small{color:var(--muted); font-size:.6875rem; line-height:1.5}
+.card--off{background:var(--cream-2); box-shadow:none; border-style:dashed}
+.card--off b{color:var(--muted)} .card--off small{color:var(--warn)}
+.card--ok{border-color:var(--ok-line); background:var(--ok-bg)}
+.card--warn{border-color:var(--warn-line); background:var(--warn-bg)}
+.card--bad{border-color:var(--danger-line); background:var(--danger-bg)}
+.card--bad small{color:var(--danger)}
+.card--live{border-color:var(--teal); background:var(--teal-50)}
+
+.btn{display:inline-block; border:0; border-radius:6px; padding:.4rem .8rem; font-family:var(--font); font-size:.8125rem; font-weight:600; background:var(--teal); color:#fff; text-align:center}
+.btn--ghost{background:transparent; color:var(--teal-600); border:1px solid var(--line-strong)}
+.btn--danger{background:var(--danger)}
+.btn--block{display:block; width:100%}
+.btn--off{background:var(--cream-2); color:var(--muted-2); border:1px solid var(--line)}
+
+.chip{font-size:.625rem; font-weight:700; padding:.1rem .4rem; border-radius:999px; border:1px solid var(--line-strong); color:var(--muted); background:var(--cream-2)}
+.chip--ok{background:var(--ok-bg); border-color:var(--ok-line); color:var(--ok)}
+.chip--warn{background:var(--warn-bg); border-color:var(--warn-line); color:var(--warn)}
+.chip--bad{background:var(--danger-bg); border-color:var(--danger-line); color:var(--danger)}
+.chip--live{background:var(--teal-50); border-color:rgba(15,118,110,.3); color:var(--teal-600)}
+
+.steps{list-style:none; padding:0; margin:0; display:grid; gap:.28rem; font-size:.75rem}
+.steps li{display:flex; gap:.45rem; align-items:baseline; color:var(--ink-2)}
+.steps li::before{font-family:var(--font-mono); font-size:.6875rem; flex:none; width:1.1rem}
+.steps .s-ok::before{content:"OK"; color:var(--ok)}
+.steps .s-run::before{content:"..."; color:var(--teal)}
+.steps .s-wait::before{content:"-"; color:var(--muted-2)}
+.steps .s-wait{color:var(--muted-2)}
+
+/* ─ صفحة أوراكل المُبسّطة ─────────────────────────────────────────────── */
+.ora{display:grid; gap:.5rem}
+.ora__bar{height:24px; background:#e9eef3; border-radius:4px; display:flex; align-items:center; padding-inline:.55rem; font-size:10px; color:#5b7085; font-family:var(--font-mono); justify-content:space-between}
+.ora__crumb{font-size:10px; color:#8aa0b5; font-family:var(--font-mono)}
+.ora__title{font-size:13px; font-weight:700; color:#33475b}
+.ora__grid{display:grid; grid-template-columns:120px 1fr; gap:.35rem .6rem; align-items:center; font-size:11px}
+.ora__grid label{color:#5b7085; font-family:var(--font-mono); font-size:10px}
+.ora__in{height:21px; border:1px solid #cdd8e3; border-radius:3px; background:#fbfdff}
+.ora__in--filled{background:#FDF7E6; border-color:var(--gold-700)}
+.ora__in--pwd{background:#f4f6f9; border-style:dashed}
+.ora__in--target{outline:2px solid var(--teal); outline-offset:1px}
+.ora__row{display:flex; gap:.4rem; align-items:center; font-size:11px; color:#5b7085}
+.ora__btn{font-size:10px; border:1px solid #b9c7d6; background:#f2f6fa; border-radius:3px; padding:.1rem .5rem; color:#33475b; font-family:var(--font-mono)}
+.ora__note{font-size:10px; color:#8aa0b5; font-family:var(--font-mono)}
+
+/* ─ المحرّر والمنقّح ───────────────────────────────────────────────────── */
+.ide__tree{width:160px; flex:none; background:var(--cream); border-inline-end:1px solid var(--line); padding:.6rem .5rem; display:grid; gap:.12rem; align-content:start}
+.tree-i{display:flex; gap:.3rem; align-items:center; padding:.1rem .25rem; border-radius:4px; color:var(--ink-2); font-size:.6875rem; font-family:var(--font-mono)}
+.tree-i.is-on{background:var(--teal-50); color:var(--teal-600); font-weight:700}
+.tree-i.lvl2{padding-inline-start:.7rem} .tree-i.lvl3{padding-inline-start:1.4rem}
+.ide__main{flex:1; display:grid; grid-template-rows:auto auto 1fr; min-width:0; background:var(--paper)}
+.ide__bar{background:var(--cream-2); border-block-end:1px solid var(--line); padding:.35rem .5rem; display:flex; gap:.3rem; align-items:center; flex-wrap:wrap}
+.tb{font-size:.6875rem; font-family:var(--font-mono); border:1px solid var(--line-strong); background:var(--paper); border-radius:4px; padding:.1rem .4rem; color:var(--ink-2)}
+.tb--on{background:var(--teal); color:#fff; border-color:var(--teal)}
+.code{font-family:var(--font-mono); font-size:11px; line-height:1.75; background:#fff; padding:.4rem 0; overflow-x:auto}
+.code .ln{display:grid; grid-template-columns:28px 12px 1fr; align-items:start; padding-inline:.25rem}
+.code .n{color:#a8b8c8; text-align:end; padding-inline-end:.4rem}
+.code .bp{color:var(--danger); text-align:center; font-size:8px}
+.code .cur{background:#FFF8E1}
+.code .k{color:#0F766E; font-weight:700} .code .e{color:#8A6914}
+.code .s{color:#B42318} .code .v{color:#175CD3} .code .c{color:#8aa0b5}
+.acbox{border:1px solid var(--line-strong); border-radius:6px; background:var(--paper); box-shadow:var(--shadow-sm); font-size:10.5px; font-family:var(--font-mono); margin:.3rem .5rem .5rem; overflow:hidden}
+.acbox div{padding:.12rem .4rem; display:flex; gap:.4rem; align-items:baseline}
+.acbox .on{background:var(--teal-50)}
+.acbox .t{color:var(--muted-2); margin-inline-start:auto; font-size:9px; font-family:var(--font)}
+
+/* ─ جداول ────────────────────────────────────────────────────────────── */
+.scrollx{overflow-x:auto}
+.tbl{width:100%; border-collapse:collapse; font-size:.75rem}
+.tbl th,.tbl td{padding:.35rem .5rem; text-align:start; border-block-end:1px solid var(--line); vertical-align:top}
+.tbl thead th{background:var(--cream-2); font-size:.6875rem; color:var(--muted); white-space:nowrap}
+.tbl tbody tr:last-child td{border-block-end:0}
+.tbl--ltr{direction:ltr}
+.tbl td .chip{white-space:nowrap}
+.ide__main .tbl{min-width:440px}
+
+/* ─ قائمة تصفّح الوثيقة — مثبّتة أعلى اليسار ────────────────────────────── */
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.section{scroll-margin-top:1rem}
+body{padding-left:214px}
+.docnav{
+  position:fixed; left:0; top:0; bottom:0; width:206px; z-index:40;
+  background:var(--nav-bg); color:var(--nav-fg-soft);
+  display:flex; flex-direction:column; gap:.06rem; padding:.7rem .35rem .45rem;
+  font-size:.75rem; overflow-y:auto; direction:rtl;
+}
+.docnav__hd{padding:.2rem .55rem .7rem; display:grid; gap:.1rem}
+.docnav__hd b{color:#F8F4EC; font-size:.8125rem}
+.docnav__hd span{font-size:.625rem; color:rgba(248,244,236,.5); font-family:var(--font-mono); direction:ltr; text-align:start}
+.docnav__grp{font-size:.5625rem; letter-spacing:.09em; color:rgba(248,244,236,.36); padding:.55rem .55rem .2rem; font-weight:700}
+.docnav__i{
+  display:flex; align-items:center; gap:.55rem; padding:.34rem .55rem; border-radius:6px;
+  color:var(--nav-fg-soft); position:relative; white-space:nowrap; overflow:hidden;
+  text-decoration:none; cursor:pointer;
+}
+.docnav__i:hover{background:rgba(248,244,236,.065); color:#F8F4EC}
+.docnav__i.is-on{background:rgba(20,184,166,.17); color:#F8F4EC; font-weight:600}
+.docnav__i.is-on::before{content:""; position:absolute; inset-inline-start:0; top:.3rem; bottom:.3rem; width:2.5px; border-radius:2px; background:var(--nav-accent)}
+.docnav__i svg, .docnav__tgl svg{width:15px; height:15px; flex:none; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round}
+.docnav__b{margin-inline-start:auto; background:var(--nav-accent); color:#0B1F33; border-radius:999px; font-size:.5625rem; font-weight:700; padding:0 .32rem; min-width:1.05rem; text-align:center}
+.docnav__sep{height:1px; background:rgba(248,244,236,.09); margin:.4rem .35rem}
+.docnav__tgl{
+  margin-top:auto; display:flex; align-items:center; gap:.55rem; padding:.34rem .55rem;
+  color:rgba(248,244,236,.55); font-size:.6875rem; border-radius:6px; cursor:pointer;
+  background:none; border:0; font-family:var(--font); width:100%;
+}
+.docnav__tgl:hover{background:rgba(248,244,236,.065); color:#F8F4EC}
+.docnav__tgl .docnav__t{white-space:nowrap}
+.docnav__tgl kbd{font-family:var(--font-mono); font-size:.5625rem; border:1px solid rgba(248,244,236,.2); border-radius:3px; padding:0 .2rem; margin-inline-start:auto}
+
+body.mini{padding-left:58px}
+body.mini .docnav{width:50px}
+body.mini .docnav__grp,
+body.mini .docnav__t,
+body.mini .docnav__b,
+body.mini .docnav__hd,
+body.mini .docnav kbd{display:none}
+body.mini .docnav__i,
+body.mini .docnav__tgl{justify-content:center; padding-inline:0}
+body.mini .docnav__tgl svg{transform:scaleX(-1)}
+
+@media (max-width:1040px){
+  body,body.mini{padding-left:0}
+  .docnav,body.mini .docnav{
+    position:static; width:auto; flex-direction:row; flex-wrap:wrap; gap:.25rem;
+    padding:.5rem .7rem; overflow:visible; bottom:auto;
+  }
+  .docnav__hd,.docnav__grp,.docnav__sep,.docnav__tgl{display:none}
+  body.mini .docnav__t{display:inline}
+  .section{scroll-margin-top:.5rem}
+}
+@media print{ .docnav{display:none} body,body.mini{padding-left:0} }
+
+/* ─ قائمة التصفّح ─────────────────────────────────────────────────────── */
+.nav{
+  width:206px; flex:none; background:var(--nav-bg); color:var(--nav-fg-soft);
+  display:flex; flex-direction:column; gap:.06rem; padding:.45rem .35rem; font-size:.75rem;
+}
+.nav--mini{width:50px}
+.nav__grp{font-size:.5625rem; letter-spacing:.09em; color:rgba(248,244,236,.36); padding:.55rem .55rem .2rem; font-weight:700}
+.nav__i{
+  display:flex; align-items:center; gap:.55rem; padding:.32rem .55rem; border-radius:6px;
+  color:var(--nav-fg-soft); position:relative; white-space:nowrap; overflow:hidden;
+}
+.nav__i.is-on{background:rgba(20,184,166,.17); color:#F8F4EC; font-weight:600}
+.nav__i.is-on::before{content:""; position:absolute; inset-inline-start:0; top:.3rem; bottom:.3rem; width:2.5px; border-radius:2px; background:var(--nav-accent)}
+.nav__i svg, .nav__tgl svg{width:15px; height:15px; flex:none; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round}
+.nav__b{margin-inline-start:auto; background:var(--nav-accent); color:#0B1F33; border-radius:999px; font-size:.5625rem; font-weight:700; padding:0 .32rem; min-width:1.05rem; text-align:center}
+.nav__sep{height:1px; background:rgba(248,244,236,.09); margin:.4rem .35rem}
+.nav__foot{margin-top:auto; padding:.45rem .55rem .2rem; border-top:1px solid rgba(248,244,236,.09); font-size:.625rem; color:rgba(248,244,236,.5); display:grid; gap:.1rem}
+.nav__tgl{display:flex; align-items:center; gap:.55rem; padding:.3rem .55rem; color:rgba(248,244,236,.55); font-size:.6875rem; border-radius:6px}
+.nav__tgl kbd{font-family:var(--font-mono); font-size:.5625rem; border:1px solid rgba(248,244,236,.2); border-radius:3px; padding:0 .2rem; margin-inline-start:auto}
+.nav--mini .nav__grp, .nav--mini .nav__t, .nav--mini .nav__b, .nav--mini .nav__foot, .nav--mini kbd{display:none}
+.nav--mini .nav__i, .nav--mini .nav__tgl{justify-content:center; padding-inline:0}
+.nav--mini .nav__tgl{margin-top:auto}
+@media (max-width:820px){ .nav,.nav--mini{width:auto; flex-direction:row; flex-wrap:wrap; gap:.2rem} .nav__grp,.nav__foot,.nav__sep{display:none} }
+
+/* ─ حوار وصفحة الاستوديو ─────────────────────────────────────────────── */
+.dlg{direction:ltr; max-width:440px; background:var(--paper); border:1px solid var(--line-strong); border-radius:10px; box-shadow:var(--shadow); overflow:hidden}
+.dlg__h{background:var(--cream-2); padding:.6rem .85rem; font-size:.875rem; font-weight:700; border-block-end:1px solid var(--line)}
+.dlg__b{padding:.85rem; display:grid; gap:.6rem; font-size:.8125rem}
+.dlg__f{padding:.7rem .85rem; border-block-start:1px solid var(--line); display:flex; gap:.5rem; background:var(--cream)}
+.kv{display:grid; grid-template-columns:8rem 1fr; gap:.25rem .7rem; font-size:.75rem}
+.kv dt{color:var(--muted); font-family:var(--font-mono); font-size:.6875rem}
+.kv dd{margin:0; color:var(--ink-2)}
+.qr{width:100px; height:100px; border:1px solid var(--line-strong); border-radius:6px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px),
+             repeating-linear-gradient(0deg,var(--ink) 0 6px,transparent 6px 12px);
+  background-blend-mode:screen; opacity:.85}
+.web{direction:ltr; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; box-shadow:var(--shadow); background:var(--paper)}
+.web__h{background:var(--nav-bg); color:var(--nav-fg-soft); padding:.45rem .7rem; font-size:.75rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+.web__h b{color:#F8F4EC; font-size:.8125rem}
+.web__h .sp{margin-inline-start:auto; display:flex; gap:.4rem; align-items:center}
+.web__b{padding:.9rem 1rem; display:grid; gap:.85rem}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:.85rem; align-items:start}
+.chk{list-style:none; padding:0; margin:0; display:grid; gap:.28rem; font-size:.8125rem}
+.chk li{display:flex; gap:.45rem; align-items:baseline; color:var(--ink-2)}
+.chk li::before{font-family:var(--font-mono); font-size:.6875rem; flex:none; width:1.1rem}
+.chk .c-ok::before{content:"OK"; color:var(--ok)}
+.chk .c-no::before{content:"X"; color:var(--danger); font-weight:700}
+.chk .c-no{color:var(--danger)}
+.env{font-family:var(--font-mono); font-size:.625rem; font-weight:700; padding:.1rem .4rem; border-radius:4px}
+.env--test{background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn)}
+.env--prod{background:var(--danger-bg); border:1px solid var(--danger-line); color:var(--danger)}
+
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.25rem; margin-block-start:1rem}
+.qbox{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:1rem 1.1rem; display:grid; gap:.5rem; box-shadow:var(--shadow-xs)}
+.qbox h3{font-size:.9375rem; color:var(--teal-600)}
+.qbox p{font-size:.875rem; color:var(--ink-2)}
+.qbox .pick{font-size:.8125rem; color:var(--muted); border-block-start:1px dashed var(--line-strong); padding-block-start:.5rem}
+
+footer{margin-block-start:3rem; padding-block-start:1.1rem; border-block-start:1px solid var(--line); color:var(--muted); font-size:.8125rem}
+@media print{ body{background:#fff} .app,.dlg,.web,.qbox{box-shadow:none; break-inside:avoid}
+  .masthead{background:#fff;color:#102A43} .masthead h1{color:#102A43} }
+</style>
+</head>
+<body>
+
+<nav class="docnav" aria-label="تصفّح الوثيقة">
+  <div class="docnav__hd"><b>واجهات ERP Agent</b><span>ADD-002 &middot; v1.7</span></div>
+  <span class="docnav__grp">الشاشات</span>
+  <a class="docnav__i" href="#shell"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="docnav__t">الهيكل والقائمة</span></a>
+  <a class="docnav__i" href="#user"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="docnav__t">شاشات المستخدم</span><span class="docnav__b">9</span></a>
+  <a class="docnav__i" href="#designer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 5L3 8l3 3M10 5l3 3-3 3"/></svg><span class="docnav__t">شاشات المصمّم</span><span class="docnav__b">2</span></a>
+  <a class="docnav__i" href="#server"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="docnav__t">شاشات الخادم</span><span class="docnav__b">3</span></a>
+  <a class="docnav__i" href="#jobs"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="docnav__t">المهام الطويلة</span><span class="docnav__b">2</span></a>
+  <span class="docnav__sep"></span>
+  <span class="docnav__grp">المرجع</span>
+  <a class="docnav__i" href="#lang"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.6h6.4a2 2 0 0 1 2 2v8.8H5a2 2 0 0 0-2 2z"/><path d="M11.4 4.6H13v8.8"/></svg><span class="docnav__t">لغة النصوص</span></a>
+  <a class="docnav__i" href="#decisions"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="docnav__t">القرارات</span></a>
+  <a class="docnav__i" href="#howto"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="docnav__t">كيف تقرأ الصفحة</span></a>
+  <button class="docnav__tgl" type="button" id="navToggle" aria-label="طيّ القائمة"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="docnav__t">طيّ القائمة</span><kbd>Ctrl+B</kbd></button>
+</nav>
+
+
+<div class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">نماذج واجهة · للمراجعة والتعديل</p>
+    <h1>واجهات برنامج ERP Agent</h1>
+    <p class="lede">
+      ستّ عشرة شاشة وهيكل نافذة لبرنامج <span class="path">C# WinForms</span> بمتصفّح <span class="path">WebView2</span> ظاهر.
+      <b>واجهة البرنامج إنجليزية افتراضاً</b> ومبدّل للعربية في شريط العنوان. و<b>التخطيط ثابت بثلاثة أعمدة:</b> قائمة تصفّح قابلة للطيّ أقصى اليسار، ثم بيئة العمل
+      — الشجرة والنص وأدوات التشغيل والسجلّ — <b>يساراً</b>، والمتصفّح <b>يميناً</b>؛ ولا ينعكس مع تبديل اللغة.
+    </p>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="section" id="howto">
+    <h2>كيف تقرأ هذه الصفحة</h2>
+    <div class="legend">
+      <span><b class="rq">A4</b> العنصر يُنفّذ هذا المتطلّب من <span class="path">ERP_Agent.html</span></span>
+      <span><b class="rq rq--bad">A2</b> العنصر يمنع أو يرفض</span>
+      <span><span class="chip chip--ok">جاهز</span></span>
+      <span><span class="chip chip--warn">موقوف بسبب</span></span>
+      <span><span class="chip chip--bad">مرفوض أو فشل</span></span>
+    </div>
+    <div class="prose">
+      <p>
+        الصندوق الأبيض على <b>اليمين</b> في كل شاشة هو <b>متصفّح أوراكل الحقيقي</b> داخل نافذتنا — مرسوم
+        مُبسّطاً عمداً لأنه ليس تصميمنا. <b>وما نصمّمه هو العمود الأيسر والإطار فقط.</b> ونصوص الشاشات
+        إنجليزية لأنها واجهة المنتج الفعلية، والتعليق تحت كل شاشة عربي لأنه مراجعتنا نحن.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="shell">
+    <h2>هيكل النافذة وقائمة التصفّح</h2>
+    <div class="prose">
+      <p>
+        ثلاثة أعمدة ثابتة: <b>قائمة التصفّح</b> أقصى اليسار، ثم <b>بيئة العمل</b>، ثم <b>متصفّح أوراكل</b>
+        يميناً. والقائمة تُطوى إلى أيقونات بضغطة أو بـ<span class="path">Ctrl+B</span>، فيكسب المصمّم عرضاً
+        لمحرّره والمستخدم عرضاً لصفحته. و<b>مجموعة «التأليف» لا تظهر إلا لمن يملك صلاحية التصميم</b>
+        <span class="rq">L1</span> — غائبة لا معطّلة.
+      </p>
+    </div>
+
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">أ</span><h3 class="screen__t">مفتوحة — ٢٠٦ بكسل</h3><span class="chip">للمستخدم</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent</b><span>&middot;</span><span>Paired: A. Alzahrani</span><span class="sp"><span class="lang"><span class="on">EN</span><span>&#1593;</span></span><span class="dot dot--ok"></span> Oracle: AALZAHRANI</span></div>
+        <div class="app__body" style="min-height:330px">
+          <nav class="nav">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <div class="br" style="display:block; padding:1.2rem">
+            <div style="max-width:46ch; display:grid; gap:.6rem">
+              <span class="pnl__h">DESIGN NOTES</span>
+              <div class="card"><b>Grouped, not a flat list</b><small>WORK &middot; AUTHORING &middot; SYSTEM &mdash; so a new item has an obvious home and the list never becomes a drawer</small></div>
+              <div class="card"><b>One accent bar marks the active item</b><small>No second colour, no icon change &mdash; the bar and a weight change are enough</small></div>
+              <div class="card"><b>A badge only where a number means something</b><small>Jobs carries the count of outstanding requests; nothing else does</small></div>
+              <div class="card"><b>Identity sits at the foot, always visible</b><small>Who you are and which plant you are scoped to &mdash; the two facts that change what every screen shows</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">ب</span><h3 class="screen__t">مطويّة — ٥٠ بكسل</h3><span class="chip chip--live">للمصمّم</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent &mdash; Designer</b><span>&middot;</span><span>K. Almutairi</span><span class="sp"><span class="lang"><span class="on">EN</span><span>&#1593;</span></span><span class="env env--test">TEST</span></span></div>
+        <div class="app__body" style="min-height:330px">
+          <nav class="nav nav--mini">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">AUTHORING</span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 5L3 8l3 3M10 5l3 3-3 3"/></svg><span class="nav__t">Script designer</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <div class="br" style="display:block; padding:1.2rem">
+            <div style="max-width:46ch; display:grid; gap:.6rem">
+              <span class="pnl__h">COLLAPSED STATE</span>
+              <div class="card"><b>Icons only, same order, same accent</b><small>The muscle memory of the expanded menu still works &mdash; nothing moves</small></div>
+              <div class="card"><b>Group labels and the footer disappear</b><small>What cannot be read at 50px is not drawn at 50px</small></div>
+              <div class="card"><b>The state is remembered per user</b><small>A designer keeps it collapsed; a report user keeps it open</small></div>
+              <div class="card card--warn"><b>Tooltips are required here, not optional</b><small>An icon rail without labels on hover is a guessing game</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note">
+        <b>للمراجعة:</b> الأيقونات خطّية أحادية اللون بسمك واحد — لا أيقونات ملوّنة ولا رموز تعبيرية،
+        لأن القائمة إطار لا محتوى. والمجموعات الثلاث تعني أن أي شاشة جديدة لها مكان معروف مسبقاً،
+        فلا تتحوّل القائمة إلى درج.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="user">
+    <h2>شاشات المستخدم</h2>
+
+    <!-- 1 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١</span><h3 class="screen__t">الاقتران عند أول تشغيل</h3><span class="chip">مرّة لكل جهاز</span></div>
+      <div class="dlg">
+        <div class="dlg__h">Link this tool to your CementOps account</div>
+        <div class="dlg__b">
+          <p style="color:var(--muted); font-size:.8125rem">Scan the code with the CementOps app, or enter the code sent to your phone.</p>
+          <div style="display:flex; gap:.9rem; align-items:center">
+            <div class="qr" aria-hidden="true"></div>
+            <div style="display:grid; gap:.4rem; flex:1">
+              <div class="card"><b>One-time code</b><small>Valid 5 minutes &middot; bound to you and this device <span class="rq">A7</span></small></div>
+              <div style="display:flex; gap:.3rem">
+                <span class="ora__in" style="width:1.9rem"></span><span class="ora__in" style="width:1.9rem"></span>
+                <span class="ora__in" style="width:1.9rem"></span><span class="ora__in" style="width:1.9rem"></span>
+                <span class="ora__in" style="width:1.9rem"></span><span class="ora__in" style="width:1.9rem"></span>
+              </div>
+            </div>
+          </div>
+          <div class="card card--warn">
+            <b>You will never be asked for your Oracle password here</b>
+            <small>You sign in yourself, on the real Oracle page, in a moment <span class="rq rq--bad">A1</span></small>
+          </div>
+        </div>
+        <div class="dlg__f"><span class="btn">Link</span><span class="btn btn--ghost">Cancel</span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> البطاقة البرتقالية أول ما يُقرأ، وتزيل التوقّع الخاطئ قبل أن ينشأ — وهي نفس الجملة التي يقولها المستخدم لفريق الأمن حين يُسأل.</p>
+    </div>
+
+    <!-- 2 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٢</span><h3 class="screen__t">قبل تسجيل الدخول — المحرّك خامد</h3><span class="chip chip--warn">لا وصول إلى الصفحة</span></div>
+      <div class="app">
+        <div class="app__title">
+          <b>ERP Agent</b><span>&middot;</span><span>Paired: A. Alzahrani</span>
+          <span class="sp"><span class="lang"><span class="on">EN</span><span>ع</span></span><span class="dot dot--warn"></span> Waiting for your Oracle sign-in</span>
+        </div>
+        <div class="app__url"><span class="chip">Real page</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp.plant.local/OA_HTML/AppsLogin</span><span class="rq">A4</span></div>
+        <div class="app__body">
+          <nav class="nav">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws">
+            <span class="pnl__h">STATUS</span>
+            <div class="card card--warn"><b>Sign in yourself</b><small>The tool does not operate on sign-in, MFA or password-change pages <span class="rq rq--bad">A2</span></small></div>
+            <div class="card card--off"><b>Engine not loaded</b><small>Nothing is injected before the URL matches a post-login pattern <span class="rq rq--bad">A3</span></small></div>
+            <span class="pnl__h">SCRIPTS</span>
+            <div class="card card--off"><b>Weekly downtime report</b><small>Available after sign-in</small></div>
+            <div class="card card--off"><b>Open work orders</b><small>Available after sign-in</small></div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle E-Business Suite</span><span>Sign In</span></div>
+              <div style="height:.4rem"></div>
+              <div class="ora__grid"><label>User Name</label><span class="ora__in"></span><label>Password</label><span class="ora__in ora__in--pwd"></span></div>
+              <div class="ora__row"><span class="ora__btn">Log In</span><span class="ora__note">the user types here &mdash; never the tool</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status"><span>Version 1.0.0</span><span>Hash <span class="path">a91f…7d2c</span></span><span>Kill switch: off</span><span>Monitoring: connected</span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> أهم شاشة أمنياً. البطاقتان تقولان إن الأداة <em>لا تستطيع</em> رؤية الصفحة، لا إنها <em>تختار</em> ألّا تراها. ومبدّل اللغة <span class="path">EN | ع</span> ظاهر من أول شاشة.</p>
+    </div>
+
+    <!-- 3 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٣</span><h3 class="screen__t">بعد الدخول — جاهز وقائمة التقارير</h3><span class="chip chip--ok">حارس الجلسة مطابق</span></div>
+      <div class="app">
+        <div class="app__title">
+          <b>ERP Agent</b><span>&middot;</span><span>Paired: A. Alzahrani</span>
+          <span class="sp"><span class="lang"><span class="on">EN</span><span>ع</span></span><span class="dot dot--ok"></span> Oracle: AALZAHRANI</span>
+        </div>
+        <div class="app__url"><span class="chip">Real page</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp.plant.local/OA_HTML/OA.jsp?page=/oracle/apps/eam/…</span><span class="rq">A4</span></div>
+        <div class="app__body">
+          <nav class="nav">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws">
+            <div class="card card--ok"><b>Identity matches</b><small>Paired user = Oracle signed-in user <span class="rq">B8</span> &middot; detective control</small></div>
+            <span class="pnl__h">REPORTS AVAILABLE TO YOU</span>
+            <div class="card"><b>Weekly downtime report</b><small>Mode A &mdash; output stays in Oracle <span class="rq">E3</span></small><span class="btn btn--block" style="margin-block-start:.3rem">Run</span></div>
+            <div class="card"><b>Open work orders</b><small>Mode B &mdash; rows on the phone, no file <span class="rq">E4</span></small><span class="btn btn--block" style="margin-block-start:.3rem">Run</span></div>
+            <div class="card card--off"><b>Maintenance cost report</b><small>Your Oracle account lacks this privilege <span class="rq">B3</span></small></div>
+            <div class="card card--off"><b>Maintenance payroll</b><small>Excluded by policy &mdash; carries personal data <span class="rq">E2</span></small></div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle EBS &mdash; Maintenance</span><span>AALZAHRANI</span></div>
+              <div class="ora__crumb">Home &gt; Requests</div>
+              <div class="ora__title">Submit a New Request</div>
+              <div class="ora__grid"><label>Request Name</label><span class="ora__in"></span><label>Parameters</label><span class="ora__in"></span></div>
+              <div class="ora__row"><span class="ora__btn">Submit</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status"><span>Daily allowance: 18 of 20 left <span class="rq">J2</span></span><span>Kill switch: off <span class="rq">J3</span></span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة — أهم قرار تصميمي:</b> النصوص التي لا يملك صلاحيتها <b>تظهر معطّلة ولا تختفي</b>، وبسبب مكتوب — فيطلب صلاحيتها من مديره بدل أن يتصل بالدعم يسأل «وين التقرير؟».</p>
+    </div>
+
+    <!-- 4 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٤</span><h3 class="screen__t">معاملات التقرير — مقيّدة بالكتالوج</h3><span class="chip chip--live">تقارير</span></div>
+      <div class="dlg">
+        <div class="dlg__h">Weekly downtime report</div>
+        <div class="dlg__b">
+          <dl class="kv">
+            <dt>Plant</dt><dd>Plant 1 &mdash; Line 2 <span class="chip">fixed by your scope</span></dd>
+            <dt>From</dt><dd>2026-09-14</dd><dt>To</dt><dd>2026-09-20</dd>
+          </dl>
+          <div class="card card--warn"><b>Maximum range: 31 days</b><small>Validated on the server, not here, and cannot be widened from this machine <span class="rq">E1</span> <span class="rq">C6</span></small></div>
+          <div class="card"><b>Mode A &mdash; trigger and notify</b><small>The output stays in Oracle; no data leaves it <span class="rq">E3</span></small></div>
+        </div>
+        <div class="dlg__f"><span class="btn">Run</span><span class="btn btn--ghost">Cancel</span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> المصنع لا يُختار — يأتي من نطاق المستخدم؛ والمدى محدود بسبب مكتوب. هذان معاً يمنعان «تقرير صغير بمدى عشر سنين».</p>
+    </div>
+
+    <!-- 5 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٥</span><h3 class="screen__t">التأكيد قبل التشغيل</h3><span class="chip">إلزامي</span></div>
+      <div class="dlg">
+        <div class="dlg__h">Confirm &mdash; exactly what will happen</div>
+        <div class="dlg__b">
+          <ul class="steps">
+            <li class="s-wait">Open <span class="path">Submit a New Request</span></li>
+            <li class="s-wait">Type <b>EAM Downtime Analysis</b> into <span class="path">Request Name</span></li>
+            <li class="s-wait">Type the plant and the dates into the parameters</li>
+            <li class="s-wait">Press <span class="path">Submit</span></li>
+            <li class="s-wait">Read the request number from the confirmation</li>
+          </ul>
+          <div class="card"><b>Five steps &middot; no other field is written</b><small>Executed under your Oracle account and logged in Oracle under your name <span class="rq">D8</span> <span class="rq">F1</span></small></div>
+        </div>
+        <div class="dlg__f"><span class="btn">Run now</span><span class="btn btn--ghost">Cancel</span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> عرض الخطوات <em>بالاسم الحقيقي للحقل</em> مقصود — هو ما يحوّل الأداة من صندوق أسود إلى شيء يُرى قبل أن يحدث، وهو أول ما يطلبه المراجع.</p>
+    </div>
+
+    <!-- 6 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٦</span><h3 class="screen__t">أثناء التشغيل — خطوات حيّة</h3><span class="chip chip--live">Running</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent</b><span>&middot;</span><span>Running: Weekly downtime report</span><span class="sp"><span class="lang"><span class="on">EN</span><span>ع</span></span><span class="dot dot--ok"></span> Step 3 of 5</span></div>
+        <div class="app__url"><span class="chip">Real page</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp.plant.local/OA_HTML/OA.jsp?page=/oracle/apps/fnd/requests/…</span></div>
+        <div class="app__body">
+          <nav class="nav nav--mini">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws">
+            <div class="card card--live"><b>Do not close or navigate</b><small>Navigation or hiding the window stops the run immediately <span class="rq">D9</span></small></div>
+            <span class="pnl__h">STEPS</span>
+            <ul class="steps">
+              <li class="s-ok">Page and signature verified</li>
+              <li class="s-ok">Request name written</li>
+              <li class="s-run">Writing parameters</li>
+              <li class="s-wait">Press Submit</li>
+              <li class="s-wait">Read request number</li>
+            </ul>
+            <span class="btn btn--danger btn--block">Stop</span>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Submit a New Request</span><span>AALZAHRANI</span></div>
+              <div class="ora__grid">
+                <label>Request Name</label><span class="ora__in ora__in--filled"></span>
+                <label>Plant</label><span class="ora__in ora__in--filled"></span>
+                <label>From Date</label><span class="ora__in ora__in--filled"></span>
+                <label>To Date</label><span class="ora__in"></span>
+              </div>
+              <div class="ora__row"><span class="ora__btn">Submit</span><span class="ora__note">gold = written by the script</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status"><span>No full-page capture, no keystroke logging <span class="rq">F7</span></span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> الحقول التي كتبها النص مُظلّلة بالذهبي داخل صفحة أوراكل نفسها — ليست زينة، بل ما يجعل المستخدم يرى <em>أين</em> لمست الأداة الصفحة قبل الضغط على Submit.</p>
+    </div>
+
+    <!-- 7 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٧</span><h3 class="screen__t">النتيجة — نمط A</h3><span class="chip chip--ok">Done</span></div>
+      <div class="dlg">
+        <div class="dlg__h">Request submitted</div>
+        <div class="dlg__b">
+          <div class="card card--ok"><b>Oracle request number: 8841207</b><small>Read from the confirmation page &mdash; a run with no confirmed number counts as a failure <span class="rq">F4</span></small></div>
+          <dl class="kv">
+            <dt>Output</dt><dd>Stays in Oracle; no data left it <span class="rq">E3</span></dd>
+            <dt>Notification</dt><dd>Your phone gets an id only, when it is ready</dd>
+            <dt>Audit</dt><dd>One row here + one event in monitoring <span class="rq">F1</span> <span class="rq">F8</span></dd>
+          </dl>
+        </div>
+        <div class="dlg__f"><span class="btn btn--ghost">Open in Oracle</span><span class="btn btn--ghost">Close</span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> لا يوجد زرّ Download في النمط A، وهذا مقصود — الزرّ الوحيد يفتح الناتج <em>داخل أوراكل</em>، فلا يملك المستخدم نسخة يعيد توجيهها.</p>
+    </div>
+
+    <!-- 8 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٨</span><h3 class="screen__t">حالات الرفض الأربع</h3><span class="chip chip--bad">يتوقّف ولا يعالج</span></div>
+      <div class="two" style="margin-block-start:0">
+        <div class="app"><div class="app__title"><b>ERP Agent</b><span class="sp"><span class="dot dot--bad"></span> Stopped</span></div>
+          <div class="app__body" style="min-height:0"><aside class="ws" style="width:auto">
+            <div class="card card--bad"><b>The page has changed</b><small>Signature does not match what the script was recorded against. <b>Not a single character was written.</b> The applications team has been notified <span class="rq rq--bad">D5</span> <span class="rq">D7</span></small></div>
+          </aside></div></div>
+        <div class="app"><div class="app__title"><b>ERP Agent</b><span class="sp"><span class="dot dot--bad"></span> Stopped</span></div>
+          <div class="app__body" style="min-height:0"><aside class="ws" style="width:auto">
+            <div class="card card--bad"><b>Oracle user changed</b><small>Signed in now: <span class="path">MALOTAIBI</span>; paired: <span class="path">AALZAHRANI</span>. Re-pair, or sign in with your own account <span class="rq rq--bad">B8</span></small></div>
+          </aside></div></div>
+        <div class="app"><div class="app__title"><b>ERP Agent</b><span class="sp"><span class="dot dot--bad"></span> Stopped</span></div>
+          <div class="app__body" style="min-height:0"><aside class="ws" style="width:auto">
+            <div class="card card--bad"><b>Automation stopped centrally</b><small>Stopped by IT at 14:02 &mdash; reason: emergency Oracle maintenance <span class="rq rq--bad">J3</span></small></div>
+          </aside></div></div>
+        <div class="app"><div class="app__title"><b>ERP Agent</b><span class="sp"><span class="dot dot--bad"></span> Stopped</span></div>
+          <div class="app__body" style="min-height:0"><aside class="ws" style="width:auto">
+            <div class="card card--bad"><b>Daily limit reached</b><small>20 runs per day for this script. Resets tomorrow 00:00 <span class="rq rq--bad">J2</span></small></div>
+          </aside></div></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> كل رسالة تقول <b>ماذا حدث</b> و<b>ماذا يفعل المستخدم الآن</b>، بلا اعتذار وبلا «خطأ غير متوقّع». وأهمّها الأولى: «<b>لم يُكتب أي حرف</b>» هي ما يطمئن المستخدم والمراجع معاً.</p>
+    </div>
+
+    <!-- 9 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">٩</span><h3 class="screen__t">الواجهة بالعربية — نفس التخطيط</h3><span class="chip chip--live">مبدّل اللغة</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent</b><span>&middot;</span><span dir="rtl">مقترن: م. عبدالله الزهراني</span><span class="sp"><span class="lang"><span>EN</span><span class="on">ع</span></span><span class="dot dot--ok"></span> AALZAHRANI</span></div>
+        <div class="app__url"><span class="chip" dir="rtl">الصفحة الحقيقية</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp.plant.local/OA_HTML/OA.jsp?page=/oracle/apps/eam/…</span></div>
+        <div class="app__body">
+          <nav class="nav" dir="rtl">
+          <span class="nav__grp">العمل</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">الرئيسية</span></span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">التقارير</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">المهام</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">النتائج</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">الطابور</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">النظام</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">سجلّ التشغيل</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">النزاهة</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">الإعدادات</span></span>
+          <div class="nav__foot"><span>م. عبدالله الزهراني</span><span>مصنع ١ · خط ٢</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">طيّ</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws" dir="rtl">
+            <div class="card card--ok"><b>الهوية مطابقة</b><small>المقترن = المسجَّل في أوراكل <span class="rq">B8</span></small></div>
+            <span class="pnl__h">التقارير المتاحة لك</span>
+            <div class="card"><b>تقرير التوقفات الأسبوعي</b><small>نمط A — يبقى الناتج في أوراكل <span class="rq">E3</span></small><span class="btn btn--block" style="margin-block-start:.3rem">تشغيل</span></div>
+            <div class="card card--off"><b>تقرير تكلفة الصيانة</b><small>حسابك في أوراكل لا يملك صلاحية هذا التقرير <span class="rq">B3</span></small></div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle EBS &mdash; Maintenance</span><span>AALZAHRANI</span></div>
+              <div class="ora__title">Submit a New Request</div>
+              <div class="ora__grid"><label>Request Name</label><span class="ora__in"></span><label>Parameters</label><span class="ora__in"></span></div>
+              <div class="ora__row"><span class="ora__btn">Submit</span><span class="ora__note">Oracle's own page is unaffected by our language switch</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status" dir="rtl"><span>الإصدار 1.0.0</span><span>المتبقّي اليوم: ١٨ من ٢٠</span><span>مفتاح الإيقاف: غير مُفعَّل</span></div>
+      </div>
+      <p class="screen__note">
+        <b>للمراجعة — وهذا قرار يحتاج موافقتك:</b> عند التبديل للعربية <b>ينعكس اتجاه نصوصنا فقط، ولا ينعكس
+        التخطيط</b>: بيئة العمل تبقى يساراً والمتصفّح يميناً. السبب أن صفحة أوراكل والنص البرمجي كلاهما
+        إنجليزي LTR، فعكس النافذة كان سينقل الكود تحت قراءة المستخدم للصفحة. قل لي لو تريد انعكاساً كاملاً.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="designer">
+    <h2>شاشات المصمّم — بصلاحية من المسؤول</h2>
+    <div class="prose"><p>المستخدم العادي لا يرى هذه الأدوات إطلاقاً، لا معطّلة <span class="rq">L1</span>.</p></div>
+
+    <!-- 10 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٠</span><h3 class="screen__t">المصمّم — الشجرة والمحرّر والإكمال التلقائي</h3><span class="chip chip--warn">Designer</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent &mdash; Designer</b><span>&middot;</span><span>K. Almutairi</span><span class="sp"><span class="lang"><span class="on">EN</span><span>ع</span></span><span class="env env--test">TEST</span><span class="chip chip--warn">Draft</span></span></div>
+        <div class="app__url"><span class="chip chip--warn">Test environment</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp-test.plant.local/OA_HTML/OA.jsp?page=/oracle/apps/fnd/requests/</span><span class="rq">L13</span></div>
+        <div class="app__body">
+          <nav class="nav nav--mini">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">AUTHORING</span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 5L3 8l3 3M10 5l3 3-3 3"/></svg><span class="nav__t">Script designer</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws ws--ide">
+            <div class="ide__tree">
+              <span class="pnl__h">WORK TREE <span class="rq">L14</span></span>
+              <span class="tree-i">&#9662; Maintenance</span>
+              <span class="tree-i lvl2">&#9662; Reports</span>
+              <span class="tree-i lvl3 is-on">RPT-DOWNTIME-W</span>
+              <span class="tree-i lvl3">RPT-OPEN-WO</span>
+              <span class="tree-i lvl2">&#9656; Write</span>
+              <span class="tree-i">&#9656; Warehouse</span>
+              <span class="tree-i">&#9656; Purchasing</span>
+              <span class="tree-i" style="color:var(--teal-600)">+ New folder</span>
+            </div>
+            <div class="ide__main">
+              <div class="ide__bar"><span class="tb tb--on">Run</span><span class="tb">Pause</span><span class="tb">Step In</span><span class="tb">Dry run</span><span class="tb">Save</span><span class="tb" style="margin-inline-start:auto">Upload <span class="rq">L14</span></span></div>
+              <div class="code">
+                <div class="ln"><span class="n">1</span><span class="bp"></span><span class="c">// RPT-DOWNTIME-W &middot; weekly downtime</span></div>
+                <div class="ln"><span class="n">2</span><span class="bp"></span><span class="c">// params: plant, from, to</span></div>
+                <div class="ln"><span class="n">3</span><span class="bp"></span><span></span></div>
+                <div class="ln"><span class="n">4</span><span class="bp"></span><span><span class="k">WaitFor</span>(<span class="s">"Submit a New Request"</span>, <span class="e">Fields.Page</span>)</span></div>
+                <div class="ln"><span class="n">5</span><span class="bp"></span><span><span class="k">Assert</span>(<span class="k">Exists</span>(<span class="s">"Request Name"</span>), <span class="s">"wrong page"</span>)</span></div>
+                <div class="ln"><span class="n">6</span><span class="bp"></span><span></span></div>
+                <div class="ln"><span class="n">7</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Request Name"</span>, <span class="s">"EAM Downtime Analysis"</span>)</span></div>
+                <div class="ln"><span class="n">8</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Plant"</span>, <span class="v">plant</span>, <span class="e">Fields.Option</span>)</span></div>
+                <div class="ln"><span class="n">9</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"From Date"</span>, <span class="v">from</span>) <span class="c">// Right by default</span></span></div>
+                <div class="ln"><span class="n">10</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"To Date"</span>, <span class="v">to</span>)</span></div>
+                <div class="ln"><span class="n">11</span><span class="bp"></span><span><span class="k">Click</span>(<span class="s">"Submit"</span>, <span class="e">Fields.Button</span>)</span></div>
+                <div class="ln cur"><span class="n">12</span><span class="bp"></span><span><span class="v">id</span> = <span class="k">Get</span>(<span class="s">"</span></span></div>
+              </div>
+              <div class="acbox">
+                <div class="on"><span>Request</span><span class="t">label &middot; from page</span></div>
+                <div><span>Request Name</span><span class="t">input &middot; from page</span></div>
+                <div><span>Phase</span><span class="t">label &middot; from page</span></div>
+                <div><span>Status</span><span class="t">label &middot; from page</span></div>
+              </div>
+            </div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle EBS TEST &mdash; Submit a New Request</span><span>K.DESIGNER</span></div>
+              <div class="ora__grid"><label>Request Name</label><span class="ora__in"></span><label>Plant</label><span class="ora__in"></span><label>From Date</label><span class="ora__in"></span></div>
+              <div class="ora__row"><span class="ora__btn">Submit</span><span class="ora__note">anchors come from the accessibility tree</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status"><span>Autocomplete reads labels from the open page <span class="rq">L16</span></span><span>Closed language: no network, files or open loops <span class="rq">L15</span></span></div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> الشجرة والمحرّر وأدوات التشغيل كلها في العمود الأيسر، والصفحة الحقيقية يميناً — فيكتب المصمّم وهو ينظر إلى ما يكتب عنه. والشجرة <b>نفسها كتالوج الخادم</b>، فلا يوجد ترتيبان لشيء واحد.</p>
+    </div>
+
+    <!-- 11 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١١</span><h3 class="screen__t">المنقّح — نقطة توقّف، إبراز العنصر، وشبكة السجلّ</h3><span class="chip chip--live">Paused at line 9</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent &mdash; Designer</b><span>&middot;</span><span>RPT-DOWNTIME-W</span><span class="sp"><span class="lang"><span class="on">EN</span><span>ع</span></span><span class="env env--test">TEST</span><span class="chip chip--live">Paused</span></span></div>
+        <div class="app__body">
+          <nav class="nav nav--mini">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">AUTHORING</span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 5L3 8l3 3M10 5l3 3-3 3"/></svg><span class="nav__t">Script designer</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws ws--ide">
+            <div class="ide__tree">
+              <span class="pnl__h">VARIABLES</span>
+              <span class="tree-i"><span style="color:#175CD3">plant</span> = "CP-01"</span>
+              <span class="tree-i"><span style="color:#175CD3">from</span> = "2026-09-14"</span>
+              <span class="tree-i"><span style="color:#175CD3">to</span> = "2026-09-20"</span>
+              <span class="tree-i"><span style="color:#175CD3">id</span> = &mdash;</span>
+              <span class="pnl__h" style="margin-block-start:.5rem">BREAKPOINTS</span>
+              <span class="tree-i" style="color:var(--danger)">&#9679; line 9</span>
+              <span class="tree-i" style="color:var(--danger)">&#9679; line 11</span>
+            </div>
+            <div class="ide__main">
+              <div class="ide__bar"><span class="tb">Run</span><span class="tb tb--on">Pause</span><span class="tb tb--on">Step In</span><span class="tb">Stop</span><span class="tb" style="margin-inline-start:auto">Errors only <span class="rq">L18</span></span></div>
+              <div class="code">
+                <div class="ln"><span class="n">7</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Request Name"</span>, <span class="s">"EAM Downtime Analysis"</span>)</span></div>
+                <div class="ln"><span class="n">8</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Plant"</span>, <span class="v">plant</span>, <span class="e">Fields.Option</span>)</span></div>
+                <div class="ln cur"><span class="n">9</span><span class="bp">&#9679;</span><span><span class="k">Set</span>(<span class="s">"From Date"</span>, <span class="v">from</span>)</span></div>
+                <div class="ln"><span class="n">10</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"To Date"</span>, <span class="v">to</span>)</span></div>
+                <div class="ln"><span class="n">11</span><span class="bp">&#9679;</span><span><span class="k">Click</span>(<span class="s">"Submit"</span>, <span class="e">Fields.Button</span>)</span></div>
+              </div>
+              <div class="scrollx" style="border-block-start:1px solid var(--line)">
+                <table class="tbl tbl--ltr">
+                  <thead><tr><th>Time</th><th>Line</th><th>Action</th><th>Target</th><th>Result</th><th>ms</th></tr></thead>
+                  <tbody>
+                    <tr><td>04:12:07</td><td>4</td><td>WaitFor</td><td>Submit a New Request</td><td><span class="chip chip--ok">ok</span></td><td>320</td></tr>
+                    <tr><td>04:12:07</td><td>5</td><td>Assert</td><td>Request Name</td><td><span class="chip chip--ok">ok</span></td><td>12</td></tr>
+                    <tr><td>04:12:08</td><td>7</td><td>Set</td><td>Request Name</td><td><span class="chip chip--ok">ok</span></td><td>90</td></tr>
+                    <tr><td>04:12:08</td><td>8</td><td>Set</td><td>Plant &middot; Option</td><td><span class="chip chip--ok">ok</span></td><td>140</td></tr>
+                    <tr style="background:var(--danger-bg)"><td>04:12:09</td><td>9</td><td>Set</td><td>From Date</td><td><span class="chip chip--bad">bad date format</span></td><td>1204</td></tr>
+                    <tr><td>04:12:09</td><td>&mdash;</td><td>&mdash;</td><td>Halted &mdash; rest not executed</td><td><span class="chip chip--warn">halted</span></td><td>&mdash;</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle EBS TEST &mdash; Submit a New Request</span><span>K.DESIGNER</span></div>
+              <div class="ora__grid">
+                <label>Request Name</label><span class="ora__in ora__in--filled"></span>
+                <label>Plant</label><span class="ora__in ora__in--filled"></span>
+                <label>From Date</label><span class="ora__in ora__in--target"></span>
+                <label>To Date</label><span class="ora__in"></span>
+              </div>
+              <div class="ora__row"><span class="ora__note">the paused line's target is outlined on the real page</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note">
+        <b>للمراجعة — أهم فكرة في المحرّر كلّه:</b> عند التوقّف يُرسَم <b>إطار تركوازي حول الحقل الهدف على صفحة
+        أوراكل الحقيقية يميناً</b> <span class="rq">L17</span>، فيرى المصمّم <em>أي</em> حقل سيلمسه السطر قبل
+        تنفيذه — وهذا ما يمنع أشهر خطأ في أتمتة الواجهات: <b>مرساة صحيحة على حقل خاطئ</b>. وسجلّ التشغيل
+        والأخطاء <b>شبكة واحدة</b> بمرشّح، لا نافذتان.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="server">
+    <h2>شاشات الخادم — الاعتماد والنشر</h2>
+
+    <!-- 12 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٢</span><h3 class="screen__t">الاستوديو — تعريف النص وحدوده</h3><span class="chip">صفحة في المنصة</span></div>
+      <div class="web">
+        <div class="web__h"><b>CementOps</b><span>&rsaquo;</span><span>Integration</span><span>&rsaquo;</span><span>Script Studio</span><span class="sp"><span class="chip chip--warn">Draft &middot; v3</span></span></div>
+        <div class="web__b">
+          <div class="grid2">
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">DEFINITION</span>
+              <dl class="kv">
+                <dt>Name</dt><dd>Weekly downtime report</dd>
+                <dt>Code</dt><dd><span class="path">RPT-DOWNTIME-W</span></dd>
+                <dt>Owner</dt><dd>K. Almutairi &mdash; Applications <span class="rq">L12</span></dd>
+                <dt>Privilege</dt><dd><span class="path">EAM_MAINT_USER</span> / <span class="path">FND_REQUEST_SUBMIT</span> <span class="rq">B2</span></dd>
+                <dt>Origin</dt><dd><span class="path">https://erp.plant.local/OA_HTML/*</span> <span class="rq">C5</span></dd>
+                <dt>Signature</dt><dd><span class="path">7f19c2…</span> captured on TEST <span class="rq">C8</span></dd>
+              </dl>
+            </div>
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">REPORT LIMITS</span>
+              <dl class="kv">
+                <dt>Mode</dt><dd>A &mdash; trigger and notify <span class="rq">E3</span></dd>
+                <dt>Classification</dt><dd>Internal &middot; no personal data <span class="rq">E2</span></dd>
+                <dt>Max range</dt><dd>31 days <span class="rq">E1</span></dd>
+                <dt>Row cap</dt><dd>5,000 &mdash; halts, never truncates <span class="rq">E8</span></dd>
+                <dt>Retention</dt><dd>n/a &mdash; nothing leaves Oracle <span class="rq">E7</span></dd>
+                <dt>Daily cap</dt><dd>20 runs per user <span class="rq">J2</span></dd>
+              </dl>
+            </div>
+          </div>
+          <span class="pnl__h">STEPS AND ASSERTIONS &mdash; read only, authored in the tool</span>
+          <div class="scrollx">
+            <table class="tbl tbl--ltr">
+              <thead><tr><th>#</th><th>Action</th><th>Field / anchor</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Assert</td><td>page signature <span class="path">7f19c2…</span></td><td>match</td></tr>
+                <tr><td>2</td><td>Assert</td><td>record identity &mdash; <span class="path">Request Name</span> empty</td><td>new request screen <span class="rq">D4</span></td></tr>
+                <tr><td>3</td><td>Set</td><td><span class="path">Request Name</span> &middot; label-for</td><td>EAM Downtime Analysis</td></tr>
+                <tr><td>4</td><td>Set</td><td><span class="path">Plant</span> &middot; aria-label</td><td><span class="path">{plant}</span> from user scope</td></tr>
+                <tr><td>5</td><td>Set</td><td><span class="path">From / To Date</span></td><td><span class="path">{from}</span> &middot; <span class="path">{to}</span></td></tr>
+                <tr><td>6</td><td>Click</td><td><span class="path">Submit</span></td><td>&mdash;</td></tr>
+                <tr><td>7</td><td>Get</td><td>request number from confirmation</td><td>stored in the audit <span class="rq">F4</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> الخطوات <b>لا تُحرَّر هنا</b> — تُقرأ فقط، لأنها صُنعت في الأداة على الصفحة نفسها. التعديل يعني فتحها في المصمّم وإعادة الاختبار.</p>
+    </div>
+
+    <!-- 13 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٣</span><h3 class="screen__t">الاستوديو — بوابة الاختبار</h3><span class="chip chip--warn">TEST</span></div>
+      <div class="web">
+        <div class="web__h"><b>CementOps</b><span>&rsaquo;</span><span>Script Studio</span><span>&rsaquo;</span><span>Testing</span><span class="sp"><span class="env env--test">TEST</span></span></div>
+        <div class="web__b">
+          <div class="grid2">
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">RUNS</span>
+              <div class="card"><b>Dry run</b><small>Executes every step and stops before <span class="path">Submit</span> &mdash; proves the path without creating a document <span class="rq">L4</span></small></div>
+              <div class="card card--ok"><b>Full run &mdash; passed</b><small>Created <span class="path">TEST-5510934</span> on 2026-09-21 04:12 <span class="rq">L5</span></small></div>
+              <ul class="steps"><li class="s-ok">Signature match</li><li class="s-ok">Record identity</li><li class="s-ok">4 write steps</li><li class="s-ok">Request number read</li></ul>
+            </div>
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">CANNOT BE APPROVED UNTIL</span>
+              <ul class="chk">
+                <li class="c-ok">Record-identity assertion present <span class="rq">L3</span></li>
+                <li class="c-ok">Page signature captured <span class="rq">C8</span></li>
+                <li class="c-ok">Passed a full run on test <span class="rq">L5</span></li>
+                <li class="c-ok">Parameters described by a schema <span class="rq">C6</span></li>
+                <li class="c-ok">No <span class="path">Set</span> outside the report parameters <span class="rq">L19</span></li>
+                <li class="c-no">Approver other than the author &mdash; not chosen <span class="rq">L6</span></li>
+                <li class="c-no">Change request number &mdash; not entered <span class="rq">L8</span></li>
+              </ul>
+              <span class="btn btn--off btn--block">Submit for approval &mdash; disabled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> هذه القائمة هي قلب الحوكمة. الزرّ معطّل <b>بالآلة لا بالانضباط</b>، ولا طريق لتجاوزه — وهي نفسها القائمة التي تُعرض على المدقّق.</p>
+    </div>
+
+    <!-- 14 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٤</span><h3 class="screen__t">الاعتماد والنشر، وكتالوج النصوص</h3><span class="chip chip--ok">فصل مهام</span></div>
+      <div class="web">
+        <div class="web__h"><b>CementOps</b><span>&rsaquo;</span><span>Script Studio</span><span>&rsaquo;</span><span>Approve &amp; publish</span><span class="sp"><span class="env env--prod">PROD</span></span></div>
+        <div class="web__b">
+          <div class="grid2">
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">APPROVAL</span>
+              <dl class="kv">
+                <dt>Authored by</dt><dd>K. Almutairi &mdash; 2026-09-21 03:40</dd>
+                <dt>Approved by</dt><dd>F. Alharbi &mdash; Applications Manager <span class="rq">L6</span></dd>
+                <dt>Change request</dt><dd><span class="path">CHG-2026-0914</span> <span class="rq">L8</span></dd>
+              </dl>
+              <div class="card card--ok"><b>Production signature matches</b><small>Checked before publish &mdash; a mismatch would have blocked it <span class="rq">L7</span></small></div>
+              <div class="card"><b>Diff against v2</b><small>One step added &middot; one assertion tightened</small></div>
+              <span class="btn btn--block">Sign and publish <span class="rq">C3</span></span>
+            </div>
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">STATE</span>
+              <ul class="steps"><li class="s-ok">draft &rarr; authored</li><li class="s-ok">in test &rarr; passed</li><li class="s-run">pending approval</li><li class="s-wait">approved &rarr; published</li></ul>
+              <div class="card card--warn"><b>Emergencies stop, they never release</b><small>A script may be suspended instantly without approval; it may never be published that way <span class="rq">L11</span></small></div>
+            </div>
+          </div>
+          <span class="pnl__h">CATALOGUE &mdash; state and signature health</span>
+          <div class="scrollx">
+            <table class="tbl tbl--ltr">
+              <thead><tr><th>Script</th><th>v</th><th>State</th><th>Last test</th><th>Prod signature</th><th>Owner</th></tr></thead>
+              <tbody>
+                <tr><td>Weekly downtime report</td><td>3</td><td><span class="chip chip--warn">pending approval</span></td><td>today 04:12</td><td><span class="chip chip--ok">match</span></td><td>K. Almutairi</td></tr>
+                <tr><td>Open work orders</td><td>2</td><td><span class="chip chip--ok">published</span></td><td>6 days ago</td><td><span class="chip chip--ok">match</span></td><td>K. Almutairi</td></tr>
+                <tr><td>Daily stock movement</td><td>5</td><td><span class="chip chip--bad">auto-suspended</span></td><td>2 days ago</td><td><span class="chip chip--bad">drifted after patch</span></td><td>S. Alqahtani <span class="rq">L9</span></td></tr>
+                <tr><td>Maintenance cost report</td><td>1</td><td><span class="chip">retired</span></td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note"><b>للمراجعة:</b> الصفّ الثالث هو المهم — نصّ <b>عُلِّق آلياً</b> لأن ترقيع أوراكل غيّر الصفحة، واكتُشف بإعادة التحقّق المجدولة <span class="rq">L9</span> <b>قبل أن يصطدم به مستخدم</b>. هذا هو الفرق بين «ينكسر» و«ينكسر بأمان».</p>
+    </div>
+  </section>
+
+  <section class="section" id="jobs">
+    <h2>شاشات المهام الطويلة — التقرير أربعة أطوار لا فعل واحد</h2>
+    <div class="prose">
+      <p>
+        الإرسال يُرجع رقم طلب، ثم انتظار قد يمتدّ ساعات، ثم فحص الطور والحالة، ثم تنزيل وتحميل.
+        و<b>لا شيء يعمل والنافذة مغلقة</b> <span class="rq">M2</span> — المهمة محفوظة على الخادم، والتنفيذ
+        يستأنف حين تفتح الأداة وتسجّل دخولك.
+      </p>
+    </div>
+
+    <!-- 15 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٥</span><h3 class="screen__t">لوحة المهام — كل التقارير الجارية</h3><span class="chip chip--live">many reports</span></div>
+      <div class="app">
+        <div class="app__title"><b>ERP Agent</b><span>&middot;</span><span>Jobs</span><span class="sp"><span class="lang"><span class="on">EN</span><span>&#1593;</span></span><span class="dot dot--ok"></span> Oracle: AALZAHRANI</span></div>
+        <div class="app__url"><span class="chip">Real page</span><span class="urlbox"><span class="lock">&#128274;</span> https://erp.plant.local/OA_HTML/OA.jsp?page=/oracle/apps/fnd/requests/Requests</span></div>
+        <div class="app__body">
+          <nav class="nav">
+          <span class="nav__grp">WORK</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 7L8 2.2 13.8 7v6a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z"/></svg><span class="nav__t">Home</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 8h3.6M6.2 10.6h3.6"/></svg><span class="nav__t">Reports</span></span>
+          <span class="nav__i is-on"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.6V8l2.4 1.4"/></svg><span class="nav__t">Jobs</span><span class="nav__b">3</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span class="nav__t">Results</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.4 9.2h3.2l.9 1.8h3l.9-1.8h3.2"/><path d="M3.4 2.8h9.2l1.2 6.4v4H1.4v-4z"/></svg><span class="nav__t">Queue</span></span>
+          <span class="nav__sep"></span>
+          <span class="nav__grp">SYSTEM</span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h7"/></svg><span class="nav__t">Run log</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l5 1.9v3.9c0 3.2-2.1 6-5 6.9-2.9-.9-5-3.7-5-6.9V3.5z"/></svg><span class="nav__t">Integrity</span></span>
+          <span class="nav__i"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t">Settings</span></span>
+          <div class="nav__foot"><span>A. Alzahrani</span><span>Plant 1 · Line 2</span></div>
+          <span class="nav__tgl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span class="nav__t">Collapse</span><kbd>Ctrl+B</kbd></span>
+          </nav>
+          <aside class="ws ws--jobs">
+            <div class="card card--live"><b>Nothing runs while this window is closed</b><small>Jobs are kept on the server and resume under your own session <span class="rq">M2</span></small></div>
+            <div class="card"><b>Polling continues while your screen is locked</b><small>It stops on sign-out, shutdown or policy logoff, and never past the extension ceiling <span class="rq">A13</span> <span class="rq">A14</span></small></div>
+            <div class="scrollx">
+              <table class="tbl tbl--ltr">
+                <thead><tr><th>Report</th><th>Request</th><th>Phase / Status</th><th>Next poll</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>Weekly downtime<br><span style="color:var(--muted-2)">today 04:12</span></td><td>8841207</td><td><span class="chip chip--ok">Completed / Normal</span></td><td>&mdash;</td><td><span class="btn" style="padding:.15rem .5rem; font-size:.6875rem">Fetch now</span></td></tr>
+                  <tr><td>Open work orders<br><span style="color:var(--muted-2)">today 03:50</span></td><td>8841190</td><td><span class="chip chip--live">Running / Normal</span></td><td>in 10 min <span class="rq">M6</span></td><td><span class="btn btn--off" style="padding:.15rem .5rem; font-size:.6875rem">Cancel</span></td></tr>
+                  <tr><td>Cost summary<br><span style="color:var(--muted-2)">today 03:10</span></td><td>8841102</td><td><span class="chip chip--warn">Inactive / Scheduled</span></td><td>in 30 min</td><td><span class="btn btn--off" style="padding:.15rem .5rem; font-size:.6875rem">Cancel</span></td></tr>
+                  <tr style="background:var(--danger-bg)"><td>Stock movement<br><span style="color:var(--muted-2)">yesterday 22:10</span></td><td>8840551</td><td><span class="chip chip--bad">Completed / Error</span></td><td>&mdash;</td><td><span class="btn btn--ghost" style="padding:.15rem .5rem; font-size:.6875rem">View log</span></td></tr>
+                  <tr><td>Aging report<br><span style="color:var(--muted-2)">2 days ago</span></td><td>8837744</td><td><span class="chip">Abandoned &mdash; 24h ceiling</span></td><td>&mdash;</td><td><span class="btn btn--ghost" style="padding:.15rem .5rem; font-size:.6875rem">Resubmit</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card"><b>Phases of job 8841207</b>
+              <ul class="steps" style="margin-block-start:.3rem">
+                <li class="s-ok">Submit &mdash; request 8841207 <span class="rq">M1</span></li>
+                <li class="s-ok">Poll &mdash; Completed / Normal <span class="rq">M4</span></li>
+                <li class="s-run">Fetch &mdash; waiting for you</li>
+                <li class="s-wait">Load &mdash; 0 rows</li>
+              </ul>
+            </div>
+          </aside>
+          <div class="br">
+            <div class="ora">
+              <div class="ora__bar"><span>Oracle EBS &mdash; Requests</span><span>AALZAHRANI</span></div>
+              <div class="ora__crumb">Home &gt; Requests &gt; View</div>
+              <div class="scrollx"><table class="tbl tbl--ltr" style="font-size:10px">
+                <thead><tr><th>Request ID</th><th>Name</th><th>Phase</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>8841207</td><td>EAM Downtime Analysis</td><td>Completed</td><td>Normal</td></tr>
+                  <tr><td>8841190</td><td>Open Work Orders</td><td>Running</td><td>Normal</td></tr>
+                  <tr><td>8840551</td><td>Stock Movement</td><td>Completed</td><td>Error</td></tr>
+                </tbody>
+              </table></div>
+              <div class="ora__row"><span class="ora__btn">View Output</span><span class="ora__btn">View Log</span><span class="ora__note">phase and status are two fields, read from the customer's own lookups</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="app__status"><span>Download folder set by policy <span class="rq">M7</span></span><span>File deleted after a successful load <span class="rq">M7</span></span><span>One audit row per phase <span class="rq">M11</span></span></div>
+      </div>
+      <p class="screen__note">
+        <b>للمراجعة:</b> الصفّ الأخير مهم — مهمة <b>متروكة</b> بعد سقف الأربع والعشرين ساعة، فلا يبقى استطلاع
+        معلّق إلى الأبد <span class="rq">M6</span>. والصفّ الأحمر <b>Completed / Error</b> يوضّح لماذا لا يكفي
+        حقل حالة واحد: التقرير «اكتمل» لكنه فشل — ولا يُنزَّل <span class="rq">M5</span>.
+      </p>
+    </div>
+
+    <!-- 16 -->
+    <div class="screen">
+      <div class="screen__head"><span class="screen__n">١٦</span><h3 class="screen__t">تعريف التحميل وسجلّ التعاريف</h3><span class="chip">في الاستوديو</span></div>
+      <div class="web">
+        <div class="web__h"><b>CementOps</b><span>&rsaquo;</span><span>Script Studio</span><span>&rsaquo;</span><span>Load definition</span><span class="sp"><span class="chip chip--warn">Mode C &middot; lands locally</span></span></div>
+        <div class="web__b">
+          <div class="grid2">
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">OUTPUT</span>
+              <dl class="kv">
+                <dt>Format</dt><dd>CSV &middot; comma &middot; header row 1 <span class="rq">M9</span></dd>
+                <dt>Target table</dt><dd><span class="path">TBL_DOWNTIME_W</span></dd>
+                <dt>Key columns</dt><dd><span class="path">PLANT_CODE</span> + <span class="path">EVENT_ID</span></dd>
+                <dt>Duplicates</dt><dd>Update existing row</dd>
+                <dt>Row check</dt><dd>Loaded rows must equal the report total <span class="rq">M10</span></dd>
+                <dt>Classification</dt><dd>Internal &mdash; approved to land locally <span class="rq">M8</span></dd>
+              </dl>
+              <div class="card card--warn"><b>PDF output is fetched, never loaded</b><small>It cannot be parsed with confidence <span class="rq">M9</span></small></div>
+            </div>
+            <div style="display:grid; gap:.5rem">
+              <span class="pnl__h">COLUMN MAP</span>
+              <div class="scrollx"><table class="tbl tbl--ltr">
+                <thead><tr><th>CSV column</th><th>Table column</th><th>Type</th></tr></thead>
+                <tbody>
+                  <tr><td>Plant</td><td>PLANT_CODE</td><td>Text 20</td></tr>
+                  <tr><td>Event Id</td><td>EVENT_ID</td><td>Long</td></tr>
+                  <tr><td>Equipment</td><td>EQUIP_CODE</td><td>Text 40</td></tr>
+                  <tr><td>Start</td><td>START_AT</td><td>Date/Time</td></tr>
+                  <tr><td>Minutes</td><td>DURATION_MIN</td><td>Double</td></tr>
+                  <tr><td>Reason</td><td>REASON</td><td>Text 120</td></tr>
+                </tbody>
+              </table></div>
+              <div class="card"><b>The table is created from this definition</b><small>Never by hand, so the registry and the store never drift apart <span class="rq">M12</span></small></div>
+            </div>
+          </div>
+          <span class="pnl__h">LOCAL DEFINITION REGISTRY &mdash; the user registers the report here</span>
+          <div class="scrollx"><table class="tbl tbl--ltr">
+            <thead><tr><th>Code</th><th>Report</th><th>Table</th><th>Last load</th><th>Rows</th><th>Retention</th></tr></thead>
+            <tbody>
+              <tr><td>RPT-DOWNTIME-W</td><td>Weekly downtime</td><td>TBL_DOWNTIME_W</td><td>today 04:31</td><td>1,284</td><td>90 days <span class="rq">M13</span></td></tr>
+              <tr><td>RPT-OPEN-WO</td><td>Open work orders</td><td>TBL_OPEN_WO</td><td>today 03:58</td><td>412</td><td>30 days</td></tr>
+              <tr><td>RPT-STOCK-MOV</td><td>Stock movement</td><td>TBL_STOCK_MOV</td><td>&mdash; failed</td><td>0</td><td>90 days</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+      <p class="screen__note">
+        <b>للمراجعة — وهنا تنبيه:</b> هذا المسار <b>هو النمط C</b>: بيانات تهبط على جهاز الموظّف وتبقى في
+        قاعدة محلية. فلا يُفتح إلا لتقرير <b>صُنّف صراحةً</b> بأنه يجوز أن يهبط <span class="rq">M8</span>،
+        والمجلّد تحدّده السياسة ويُمسح الملف بعد التحميل <span class="rq">M7</span>، والاحتفاظ معلن وله
+        تنظيف دوري <span class="rq">M13</span>.
+      </p>
+    </div>
+
+    <div class="two">
+      <div class="qbox"><h3>القرار الذي يحسم المخزن المحلي</h3>
+        <p><b>هل يفتح المستخدم قاعدة البيانات بنفسه ليكتب استعلاماته وتقاريره؟</b></p>
+        <p><b>نعم</b> ← Access هو الصحيح رغم حدوده: ٢ جيجابايت للملف، ومُشغّل ACE يجب أن يطابق بِتّية تطبيقنا، وكلمة مروره <b>ليست تشفيراً</b>.</p>
+        <p><b>لا، هو مخزن تقرؤه الأداة فقط</b> ← <span class="path">SQLite</span> أفضل بوضوح: بلا مُشغّل يُثبَّت، وبلا حدّ عملي، وبتشفير حقيقي، وهو نفسه المستعمل في عميل الجوال.</p>
+        <p class="pick"><b>البند المفتوح:</b> <span class="path">O7</span> في وثيقة المتطلبات.</p></div>
+      <div class="qbox"><h3>وقرار ثانٍ: متى يُحمَّل؟</h3>
+        <p>حالياً: التنزيل والتحميل يحتاجان ضغطة «Fetch now» من المستخدم بعد أن يصير التقرير جاهزاً.</p>
+        <p class="pick"><b>البدائل:</b> بضغطة دائماً · تلقائياً حين تكون الأداة مفتوحة · تلقائياً للتقارير المصنّفة داخلية فقط.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="lang">
+    <h2>لغة النصوص — المسوّدة الأولى</h2>
+    <div class="prose"><p>مبنية على أمثلتك: متغيّرات بلا أنواع، وثوابت <span class="path">Fields.*</span> و<span class="path">Locations.*</span>، وموضع افتراضي <span class="path">Locations.Right</span>. وكل دالة تُرجع قيمة يمكن إسنادها.</p></div>
+
+    <div class="web" style="margin-block-start:1rem">
+      <div class="web__h"><b>Example</b><span>&middot;</span><span>RPT-DOWNTIME-W</span></div>
+      <div class="code" style="padding:.6rem">
+        <div class="ln"><span class="n">1</span><span class="bp"></span><span class="c">// Locations.Right is the default &mdash; written only for exceptions</span></div>
+        <div class="ln"><span class="n">2</span><span class="bp"></span><span><span class="k">WaitFor</span>(<span class="s">"Submit a New Request"</span>, <span class="e">Fields.Page</span>)</span></div>
+        <div class="ln"><span class="n">3</span><span class="bp"></span><span><span class="k">Assert</span>(<span class="k">Exists</span>(<span class="s">"Request Name"</span>, <span class="e">Fields.Input</span>), <span class="s">"not the request screen"</span>)</span></div>
+        <div class="ln"><span class="n">4</span><span class="bp"></span><span></span></div>
+        <div class="ln"><span class="n">5</span><span class="bp"></span><span><span class="v">name</span> = <span class="k">Get</span>(<span class="s">"Name"</span>, <span class="e">Fields.Input</span>, <span class="e">Locations.Right</span>)</span></div>
+        <div class="ln"><span class="n">6</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Name 2"</span>, <span class="v">name</span>, <span class="e">Fields.Input</span>)</span></div>
+        <div class="ln"><span class="n">7</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Plant"</span>, <span class="v">plant</span>, <span class="e">Fields.Option</span>)</span></div>
+        <div class="ln"><span class="n">8</span><span class="bp"></span><span><span class="k">Set</span>(<span class="s">"Active"</span>, <span class="s">"true"</span>, <span class="e">Fields.Checkbox</span>)</span></div>
+        <div class="ln"><span class="n">9</span><span class="bp"></span><span></span></div>
+        <div class="ln"><span class="n">10</span><span class="bp"></span><span><span class="v">ok</span> = <span class="k">Click</span>(<span class="s">"Submit"</span>, <span class="e">Fields.Button</span>)</span></div>
+        <div class="ln"><span class="n">11</span><span class="bp"></span><span><span class="v">id</span> = <span class="k">Get</span>(<span class="s">"Request"</span>, <span class="e">Fields.Text</span>)</span></div>
+        <div class="ln"><span class="n">12</span><span class="bp"></span><span><span class="k">Assert</span>(<span class="v">id</span> != <span class="s">""</span>, <span class="s">"no request number returned"</span>)</span></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-block-start:1rem">
+      <div class="scrollx">
+        <span class="pnl__h">الدوال</span>
+        <table class="tbl" style="margin-block-start:.35rem">
+          <thead><tr><th>الدالة</th><th>تُرجع</th><th>الوصف</th></tr></thead>
+          <tbody>
+            <tr><td><span class="path">Get(label, field?, loc?)</span></td><td>نص</td><td>يقرأ قيمة العنصر المرتبط بالعنوان</td></tr>
+            <tr><td><span class="path">Set(label, value, field?, loc?)</span></td><td>—</td><td>يكتب قيمة — الفعل الوحيد الذي يُعدّل</td></tr>
+            <tr><td><span class="path">Click(label, field?, loc?)</span></td><td>صواب/خطأ</td><td>يضغط زراً أو رابطاً</td></tr>
+            <tr><td><span class="path">Exists(label, field?, loc?)</span></td><td>صواب/خطأ</td><td>هل العنصر موجود</td></tr>
+            <tr><td><span class="path">WaitFor(label, field?)</span></td><td>صواب/خطأ</td><td>ينتظر الاستقرار بمهلة معلنة <span class="rq">D3</span></td></tr>
+            <tr><td><span class="path">Assert(condition, message)</span></td><td>—</td><td>يوقف النص عند الفشل بلا تعافٍ <span class="rq">D7</span></td></tr>
+            <tr><td><span class="path">Rows(table)</span> · <span class="path">Cell(table,r,col)</span></td><td>عدد · نص</td><td>قراءة جدول — لتقارير النمط B</td></tr>
+            <tr><td><span class="path">Total(table)</span></td><td>عدد</td><td>الإجمالي المعلن على الصفحة — لمقارنة الصفوف <span class="rq">E9</span></td></tr>
+            <tr><td><span class="path">Log(text)</span> · <span class="path">Fail(reason)</span></td><td>—</td><td>سطر في شبكة السجلّ · إنهاء بفشل مسمّى</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <span class="pnl__h">الثوابت</span>
+        <div class="card" style="margin-block-start:.35rem"><b>Fields</b>
+          <small><span class="path">Input</span> <span class="path">Option</span> <span class="path">Button</span> <span class="path">Link</span> <span class="path">Checkbox</span> <span class="path">Radio</span> <span class="path">Date</span> <span class="path">Area</span> <span class="path">Text</span> <span class="path">Table</span> <span class="path">Tab</span> <span class="path">Page</span></small>
+          <small>الافتراضي <span class="path">Fields.Input</span></small></div>
+        <div class="card" style="margin-block-start:.5rem"><b>Locations</b>
+          <small><span class="path">Right</span> <span class="path">Left</span> <span class="path">Below</span> <span class="path">Above</span> <span class="path">Inside</span> <span class="path">Next</span></small>
+          <small>الافتراضي <span class="path">Locations.Right</span> — وهو الصحيح لصفحات أوراكل الإنجليزية</small></div>
+        <div class="card card--ok" style="margin-block-start:.5rem"><b>المتغيّرات بلا أنواع</b>
+          <small><span class="path">name = Get(...)</span> · المعاملات تصل كمتغيّرات جاهزة مُتحقَّقاً منها على الخادم <span class="rq">C6</span></small></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-block-start:1rem">
+      <div class="card card--bad"><b>ما هو غائب عمداً</b>
+        <small>لا <span class="path">eval</span> ولا استدعاء ديناميكي · لا شبكة ولا ملفات ولا حافظة · لا تكرار غير محدود · لا انتقال إلى عنوان حرّ · لا كتابة في حقل كلمة مرور. <b>كل غياب منها بند في المواصفة، لا نقص في اللغة</b> <span class="rq">C2</span> <span class="rq">L15</span> <span class="rq">D10</span></small></div>
+      <div class="qbox"><h3>سؤال اللغة المفتوح</h3>
+        <p>المتغيّرات تستدعي منطقاً: هل نسمح بـ<span class="path">if</span> على مقارنة بسيطة و<span class="path">Repeat(n)</span> بحدّ أقصى معلن؟ يزيد القدرة ويزيد سطح المراجعة بالقدر نفسه.</p>
+        <p class="pick"><b>البدائل:</b> بلا منطق · <span class="path">if</span> فقط · <span class="path">if</span> و<span class="path">Repeat</span> محدود.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="decisions">
+    <h2>قرارات تحتاج رأيك</h2>
+    <div class="two">
+      <div class="qbox"><h3>١ · انعكاس التخطيط مع العربية</h3>
+        <p>حالياً: تنعكس نصوصنا فقط، ويبقى المتصفّح يميناً وبيئة العمل يساراً في اللغتين.</p>
+        <p class="pick"><b>البدائل:</b> تخطيط ثابت · انعكاس كامل مع اللغة.</p></div>
+      <div class="qbox"><h3>٢ · عرض العمود الأيسر</h3>
+        <p>٣٠٠ بكسل للمستخدم و٥٢٠ للمصمّم. والبديل أن يكون قابلاً للسحب والطيّ.</p>
+        <p class="pick"><b>البدائل:</b> ثابت · قابل للسحب · قابل للطيّ.</p></div>
+      <div class="qbox"><h3>٣ · النصوص غير المصرّح بها</h3>
+        <p>تظهر معطّلة بسبب مكتوب، فيعرف المستخدم أن يطلب صلاحيتها.</p>
+        <p class="pick"><b>البدائل:</b> إظهار معطّل · إخفاء تام.</p></div>
+      <div class="qbox"><h3>٤ · تظليل الحقول المكتوبة</h3>
+        <p>ذهبي داخل صفحة أوراكل — أي أننا نعدّل مظهر صفحتهم أثناء التشغيل.</p>
+        <p class="pick"><b>البدائل:</b> تظليل ثم إزالته · بلا تظليل.</p></div>
+      <div class="qbox"><h3>٥ · تحرير الخطوات في الاستوديو</h3>
+        <p>قراءة فقط: التعديل يعني فتحها في المصمّم وإعادة الاختبار.</p>
+        <p class="pick"><b>البدائل:</b> قراءة فقط · تحرير المعاملات · تحرير كامل بإعادة اختبار إلزامية.</p></div>
+      <div class="qbox"><h3>٦ · شاشة النزاهة</h3>
+        <p>البصمة وحالة المراقبة والشبكة — للمدقّق لا للمستخدم؛ حُذفت من هذه النسخة ريثما تقرّر موضعها.</p>
+        <p class="pick"><b>البدائل:</b> داخل النافذة · شاشة مستقلّة بصلاحية.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>CementOps · نماذج واجهة ERP Agent — مرافقة لوثيقة المتطلبات <span class="path">ERP_Agent.html</span> (ADD-002 v1.3). معرّفات المتطلبات على الشاشات تشير إليها مباشرة.</p>
+    <p>صفحات أوراكل المرسومة تخطيطية ومُبسّطة عمداً: شكلها ملك لأوراكل ويُثبَّت من بيئة العميل عند تسجيل أول نص.</p>
+  </footer>
+
+</main>
+
+
+<script>
+(function () {
+  var body = document.body;
+  var toggle = document.getElementById('navToggle');
+  var links = Array.prototype.slice.call(document.querySelectorAll('.docnav__i'));
+  var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+
+  try { if (localStorage.getItem('docnav') === 'mini') body.classList.add('mini'); } catch (e) {}
+
+  function flip() {
+    body.classList.toggle('mini');
+    try { localStorage.setItem('docnav', body.classList.contains('mini') ? 'mini' : 'full'); } catch (e) {}
+  }
+  if (toggle) toggle.addEventListener('click', flip);
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); flip(); }
+  });
+
+  function mark() {
+    var best = 0, bestTop = -Infinity, y = 90;
+    for (var i = 0; i < targets.length; i++) {
+      if (!targets[i]) continue;
+      var top = targets[i].getBoundingClientRect().top;
+      if (top <= y && top > bestTop) { bestTop = top; best = i; }
+    }
+    for (var j = 0; j < links.length; j++) links[j].classList.toggle('is-on', j === best);
+  }
+  mark();
+  var tick = false;
+  window.addEventListener('scroll', function () {
+    if (tick) return;
+    tick = true;
+    window.requestAnimationFrame(function () { mark(); tick = false; });
+  }, { passive: true });
+  window.addEventListener('resize', mark);
+})();
+</script>
+</body>
+</html>

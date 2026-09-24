@@ -79,6 +79,7 @@ button:disabled{cursor:not-allowed}
 /* ─ القائمة ─ */
 .nav{width:216px; flex:none; display:flex; flex-direction:column; gap:.06rem; padding:.3rem .35rem .45rem; overflow-y:auto}
 .nav__sub{display:flex; flex-direction:column; gap:.06rem}
+.nav > *,.nav__sub > *{flex-shrink:0}   /* قائمة طويلة تُمرَّر ولا تنضغط */
 .nav__grp{font-size:.75rem; letter-spacing:.08em; color:rgba(248,244,236,.62); padding:.6rem .55rem .2rem; font-weight:700}
 .nav__i{display:flex; align-items:center; gap:.55rem; padding:.36rem .55rem; border-radius:6px; color:var(--nav-fg-soft);
   position:relative; white-space:nowrap; overflow:hidden; background:none; border:0; width:100%; text-align:start; font-size:.8125rem}
@@ -362,17 +363,24 @@ button:disabled{cursor:not-allowed}
       <button class="nav__i" data-go="settings"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></svg><span class="nav__t"><span class="t-en">Settings</span><span class="t-ar">الإعدادات</span></span></button>
       <button class="nav__i" data-go="help"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M6.2 6.2a1.9 1.9 0 1 1 2.5 1.8c-.5.2-.7.6-.7 1.1v.3"/><path d="M8 11.6v.4"/></svg><span class="nav__t"><span class="t-en">Help &amp; about</span><span class="t-ar">المساعدة</span></span></button>
 
-      <div class="nav__sub nav__rv rv">
-        <span class="nav__grp nav__grp--rv"><span class="t-en">REVIEW ONLY</span><span class="t-ar">للمراجعة فقط</span></span>
-        <button class="nav__i" data-go="flow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 3.6v4.8a2 2 0 0 0 2 2h4.8"/><path d="M4.6 10.4h6.8"/><circle cx="4.6" cy="2.4" r="1.3"/><circle cx="12.6" cy="8.4" r="1.3"/><circle cx="12.6" cy="12.4" r="1.3"/></svg><span class="nav__t"><span class="t-en">State flow</span><span class="t-ar">مخطّط الحالات</span></span></button>
-        <button class="nav__i" data-go="index"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="9" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="2.4" y="9" width="4.6" height="4.6" rx="1"/><rect x="9" y="9" width="4.6" height="4.6" rx="1"/></svg><span class="nav__t"><span class="t-en">Screen index</span><span class="t-ar">فهرس الشاشات</span></span></button>
-        <button class="nav__i" data-go="pairing"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.4" cy="8" r="2.6"/><path d="M8 8h5.6M11.6 8v2M13.4 8v1.6"/></svg><span class="nav__t"><span class="t-en">Pairing</span><span class="t-ar">الاقتران</span></span></button>
-        <button class="nav__i" data-go="presignin"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="7" width="9.2" height="6.4" rx="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7"/></svg><span class="nav__t"><span class="t-en">Before sign-in</span><span class="t-ar">قبل الدخول</span></span></button>
-        <button class="nav__i" data-go="refusals"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M4 12L12 4"/></svg><span class="nav__t"><span class="t-en">Refusals</span><span class="t-ar">حالات الرفض</span></span></button>
-        <button class="nav__i" data-demo="dlgp"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/><path d="M6 3v3M10.5 6.5v3M5 10v3"/></svg><span class="nav__t"><span class="t-en">Report parameters</span><span class="t-ar">معاملات التقرير</span></span></button>
-        <button class="nav__i" data-demo="dlgc"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="2.6" width="9.2" height="11.4" rx="1.2"/><path d="M6 2.6h4v1.6H6z"/><path d="M5.8 9l1.6 1.6 3-3.2"/></svg><span class="nav__t"><span class="t-en">Confirm run</span><span class="t-ar">التأكيد قبل التشغيل</span></span></button>
-        <button class="nav__i" data-demo="running"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M6.8 5.6v4.8L10.4 8z"/></svg><span class="nav__t"><span class="t-en">Running state</span><span class="t-ar">أثناء التشغيل</span></span></button>
-        <button class="nav__i" data-demo="dlgr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5L4.8 13.5M11.2 2.5L10 13.5M2.8 6h11M2.2 10h11"/></svg><span class="nav__t"><span class="t-en">Result</span><span class="t-ar">النتيجة</span></span></button>
+      <!-- ─ شاشات أخرى: كل ما لا تصل إليه القائمة الرئيسية، ظاهرة دائماً للمراجعة ─ -->
+      <div class="nav__sub nav__rv">
+        <span class="nav__grp nav__grp--rv"><span class="t-en">OTHER SCREENS</span><span class="t-ar">شاشات أخرى</span></span>
+        <button class="nav__i" data-other="pairing"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.4" cy="8" r="2.6"/><path d="M8 8h5.6M11.6 8v2M13.4 8v1.6"/></svg><span class="nav__t"><span class="t-en">Pairing</span><span class="t-ar">الاقتران</span></span></button>
+        <button class="nav__i" data-other="code"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="3" width="11.2" height="10" rx="1.4"/><path d="M5 8h.01M8 8h.01M11 8h.01"/></svg><span class="nav__t"><span class="t-en">One-time code</span><span class="t-ar">الرمز لمرة واحدة</span></span></button>
+        <button class="nav__i" data-other="presignin"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="7" width="9.2" height="6.4" rx="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7"/></svg><span class="nav__t"><span class="t-en">Before sign-in</span><span class="t-ar">قبل الدخول</span></span></button>
+        <button class="nav__i" data-other="dlgp"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/><path d="M6 3v3M10.5 6.5v3M5 10v3"/></svg><span class="nav__t"><span class="t-en">Report parameters</span><span class="t-ar">معاملات التقرير</span></span></button>
+        <button class="nav__i" data-other="dlgc"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="2.6" width="9.2" height="11.4" rx="1.2"/><path d="M6 2.6h4v1.6H6z"/><path d="M5.8 9l1.6 1.6 3-3.2"/></svg><span class="nav__t"><span class="t-en">Confirm run</span><span class="t-ar">التأكيد قبل التشغيل</span></span></button>
+        <button class="nav__i" data-other="running"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M6.8 5.6v4.8L10.4 8z"/></svg><span class="nav__t"><span class="t-en">Running state</span><span class="t-ar">أثناء التشغيل</span></span></button>
+        <button class="nav__i" data-other="dlgr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5L4.8 13.5M11.2 2.5L10 13.5M2.8 6h11M2.2 10h11"/></svg><span class="nav__t"><span class="t-en">Result</span><span class="t-ar">النتيجة</span></span></button>
+        <button class="nav__i" data-other="refusals"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M4 12L12 4"/></svg><span class="nav__t"><span class="t-en">Refusals</span><span class="t-ar">حالات الرفض</span></span></button>
+        <button class="nav__i" data-other="dbg"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.8"/><path d="M6.6 5.6v4.8M9.4 5.6v4.8"/></svg><span class="nav__t"><span class="t-en">Debugger — paused</span><span class="t-ar">المنقّح — متوقّف</span></span></button>
+        <button class="nav__i" data-other="sdef"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.2 1.8h4.6l3 3v9.4H4.2z"/><path d="M6.2 7.4h3.6M6.2 9.8h3.6M6.2 12.2h2.2"/></svg><span class="nav__t"><span class="t-en">Studio — definition</span><span class="t-ar">الاستوديو — التعريف</span></span></button>
+        <button class="nav__i" data-other="stest"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.2 2h3.6M7 2v4.2L3.4 12.6a1 1 0 0 0 .9 1.4h7.4a1 1 0 0 0 .9-1.4L9 6.2V2"/><path d="M5 10h6"/></svg><span class="nav__t"><span class="t-en">Studio — test gate</span><span class="t-ar">الاستوديو — بوابة الاختبار</span></span></button>
+        <button class="nav__i" data-other="spub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10.6V2.6M5.2 5.4L8 2.6l2.8 2.8"/><path d="M2.6 10.2v2.4a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1v-2.4"/></svg><span class="nav__t"><span class="t-en">Studio — approval</span><span class="t-ar">الاستوديو — الاعتماد</span></span></button>
+        <button class="nav__i" data-other="sload"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/><path d="M8 6.6v4.6M6.2 9.4L8 11.2l1.8-1.8"/></svg><span class="nav__t"><span class="t-en">Studio — load definition</span><span class="t-ar">الاستوديو — تعريف التحميل</span></span></button>
+        <button class="nav__i" data-other="flow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 3.6v4.8a2 2 0 0 0 2 2h4.8"/><path d="M4.6 10.4h6.8"/><circle cx="4.6" cy="2.4" r="1.3"/><circle cx="12.6" cy="8.4" r="1.3"/><circle cx="12.6" cy="12.4" r="1.3"/></svg><span class="nav__t"><span class="t-en">State flow</span><span class="t-ar">مخطّط الحالات</span></span></button>
+        <button class="nav__i" data-other="index"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="9" y="2.4" width="4.6" height="4.6" rx="1"/><rect x="2.4" y="9" width="4.6" height="4.6" rx="1"/><rect x="9" y="9" width="4.6" height="4.6" rx="1"/></svg><span class="nav__t"><span class="t-en">Screen index</span><span class="t-ar">فهرس الشاشات</span></span></button>
       </div>
 
       <div class="nav__foot"><span data-who="name"></span><span data-who="unit"></span></div>
@@ -1060,7 +1068,7 @@ button:disabled{cursor:not-allowed}
     views.forEach(function (x) { x.hidden = x.getAttribute('data-view') !== name; });
     var hl = opt.nav || v.nav || name;
     navs.forEach(function (b) {
-      var on = (b.getAttribute('data-go') || b.getAttribute('data-demo')) === hl;
+      var on = (b.getAttribute('data-go') || b.getAttribute('data-demo') || b.getAttribute('data-other')) === hl;
       b.classList.toggle('on', on);
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
@@ -1638,6 +1646,20 @@ button:disabled{cursor:not-allowed}
     if (v === 'paused') dJumpToPause();
   }
 
+  /* شاشات أخرى: تفتح أدوات المراجعة، وتضبط الدور المناسب لكل شاشة */
+  var AUTHORED = {dbg:1, sdef:1, stest:1, spub:1, sload:1};
+  function other(k) {
+    if (run && run.state === 'running') return toast(L('Stop the running report first', 'أوقف التقرير الجاري أولاً'));
+    if (openId) closeDlg();
+    if (body.getAttribute('data-review') !== 'on') setReview(true);
+    setPersona(AUTHORED[k] ? 'designer' : 'user');
+    if (k === 'dbg') { go('designer', {nav:'dbg'}); dJumpToPause(); }
+    else if (AUTHORED[k]) go('studio', {tab:k, nav:k});
+    else if (k === 'code') { go('pairing', {nav:'code'}); openDlg('dlgPair'); }
+    else if (VIEWS[k]) go(k);
+    else demo(k);
+  }
+
   /* ─ إشعار ─ */
   var toastEl = null, toastT = null;
   var TOASTS = {oracle:['Opens the request in Oracle — not simulated here', 'يفتح الطلب في أوراكل — غير محاكى هنا']};
@@ -1656,6 +1678,7 @@ button:disabled{cursor:not-allowed}
   document.addEventListener('click', function (e) {
     var el;
     if ((el = e.target.closest('[data-go]'))) return go(el.getAttribute('data-go'));
+    if ((el = e.target.closest('[data-other]'))) return other(el.getAttribute('data-other'));
     if ((el = e.target.closest('[data-demo]'))) return demo(el.getAttribute('data-demo'));
     if ((el = e.target.closest('[data-run]'))) return openParams(el.getAttribute('data-run'));
     if ((el = e.target.closest('[data-jact]'))) return jobAct(+el.getAttribute('data-job'), el.getAttribute('data-jact'));
